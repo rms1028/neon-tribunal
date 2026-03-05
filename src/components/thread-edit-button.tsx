@@ -51,6 +51,7 @@ export function ThreadEditButton({
   if (!mounted || !user || user.id !== threadCreatedBy || isClosed) return null
 
   async function handleSave() {
+    if (!user) return
     const trimmedTitle = title.trim()
     const trimmedContent = content.trim()
 
@@ -69,7 +70,7 @@ export function ThreadEditButton({
         updated_at: new Date().toISOString(),
       })
       .eq("id", threadId)
-      .eq("created_by", user!.id)
+      .eq("created_by", user.id)
 
     setSaving(false)
 
@@ -91,6 +92,7 @@ export function ThreadEditButton({
   }
 
   async function handleDelete() {
+    if (!user) return
     const ok = await confirm({
       title: "토론 삭제",
       message: "정말 이 토론을 삭제하시겠습니까? 삭제하면 되돌릴 수 없습니다.",
@@ -104,7 +106,7 @@ export function ThreadEditButton({
       .from("threads")
       .delete()
       .eq("id", threadId)
-      .eq("created_by", user!.id)
+      .eq("created_by", user.id)
 
     if (error) {
       showToast("토론 삭제에 실패했습니다.", "error")

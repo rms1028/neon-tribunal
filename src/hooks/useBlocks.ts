@@ -10,11 +10,13 @@ export function useBlocks() {
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set())
 
   const { data } = useSupabaseFetch<{ blocked_id: string }[]>(
-    () =>
-      supabase
+    () => {
+      if (!user) return Promise.resolve({ data: null, error: null })
+      return supabase
         .from("blocks")
         .select("blocked_id")
-        .eq("blocker_id", user!.id) as any,
+        .eq("blocker_id", user.id) as any
+    },
     [user?.id],
     { enabled: !!user }
   )

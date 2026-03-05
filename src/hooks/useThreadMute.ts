@@ -10,13 +10,15 @@ export function useThreadMute(threadId: string) {
   const [muted, setMuted] = useState(false)
 
   const { loading, data } = useSupabaseFetch<{ id: string } | null>(
-    () =>
-      supabase
+    () => {
+      if (!user) return Promise.resolve({ data: null, error: null })
+      return supabase
         .from("thread_mutes")
         .select("id")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .eq("thread_id", threadId)
-        .maybeSingle() as any,
+        .maybeSingle() as any
+    },
     [user?.id, threadId],
     { enabled: !!user }
   )

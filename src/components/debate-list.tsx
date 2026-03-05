@@ -300,7 +300,7 @@ function DebateCard({
                 <span className="text-zinc-500">참여</span>
               </span>
               {debate.createdAt && (
-                <span className="inline-flex items-center gap-1 text-zinc-600">
+                <span className="inline-flex items-center gap-1 text-zinc-600" suppressHydrationWarning>
                   <Clock className="size-3" />
                   {timeAgo(debate.createdAt)}
                 </span>
@@ -419,7 +419,7 @@ function DebateCard({
                 {formatCompact(total)}명 참여
               </span>
               {debate.createdAt && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1" suppressHydrationWarning>
                   <Clock className="size-3 text-zinc-500" />
                   {timeAgo(debate.createdAt)}
                 </span>

@@ -25,14 +25,14 @@ function formatRemaining(ms: number): string {
 }
 
 export function DebateCountdown({ expiresAt, isClosed, onExpire, size = "md" }: Props) {
-  const [msLeft, setMsLeft] = useState(() => {
-    if (!expiresAt) return -1
-    return Math.max(0, new Date(expiresAt).getTime() - Date.now())
-  })
+  const [msLeft, setMsLeft] = useState(-1) // server-safe initial; computed on client
   const firedRef = useRef(false)
 
   useEffect(() => {
-    if (!expiresAt || isClosed) return
+    if (!expiresAt || isClosed) {
+      setMsLeft(expiresAt ? 0 : -1)
+      return
+    }
 
     const tick = () => {
       const remaining = Math.max(0, new Date(expiresAt).getTime() - Date.now())

@@ -138,7 +138,7 @@ export function NotificationBell() {
                           &ldquo;{n.thread_title}&rdquo;
                         </p>
                       )}
-                      <p className="mt-1 text-[10px] text-zinc-600">
+                      <p className="mt-1 text-[10px] text-zinc-600" suppressHydrationWarning>
                         {timeAgo(n.created_at)}
                       </p>
                     </div>

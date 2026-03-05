@@ -86,23 +86,24 @@ export function NotificationProvider({
     let cancelled = false
 
     async function load() {
+      if (!user) return
       // 알림 설정 + 알림 목록 + 뮤트 스레드 병렬 로드
       const [{ data: settingsData }, { data }, { data: mutesData }] = await Promise.all([
         supabase
           .from("notification_settings")
           .select("*")
-          .eq("user_id", user!.id)
+          .eq("user_id", user.id)
           .maybeSingle(),
         supabase
           .from("notifications")
           .select("*")
-          .eq("user_id", user!.id)
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(20),
         supabase
           .from("thread_mutes")
           .select("thread_id")
-          .eq("user_id", user!.id),
+          .eq("user_id", user.id),
       ])
 
       if (cancelled) return

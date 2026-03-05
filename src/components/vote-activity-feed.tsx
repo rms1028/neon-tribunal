@@ -150,7 +150,7 @@ export function VoteActivityFeed({ threadId }: { threadId: string }) {
               </div>
 
               {/* 시간 */}
-              <span className="shrink-0 text-[10px] text-zinc-600">
+              <span className="shrink-0 text-[10px] text-zinc-600" suppressHydrationWarning>
                 {relativeTime(log.created_at)}
               </span>
             </div>
