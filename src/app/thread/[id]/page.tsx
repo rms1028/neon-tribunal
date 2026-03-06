@@ -291,31 +291,29 @@ export default async function ThreadDetailPage({
   return (
     <div className="flex h-full flex-col overflow-hidden text-zinc-100" style={{ background: "#0a0f14" }}>
       {/* ═══ Header ═══ */}
-      <div className="shrink-0 px-4 pb-2 pt-3 md:px-6" style={{ background: "#0a0f14", position: "relative", zIndex: 10 }}>
-        {/* 1줄: 뒤로 + 제목 + 액션 */}
-        <div className="mb-2 flex items-start gap-2">
-          <Link href="/" className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-white/[0.06] bg-white/[0.03] text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200">
+      <div className="shrink-0 border-b border-white/[0.04] px-3 pb-2 pt-3 md:px-6" style={{ background: "#0a0f14", position: "relative", zIndex: 10 }}>
+        {/* 1줄: ← + 제목 + 액션 */}
+        <div className="flex items-center gap-2">
+          <Link href="/" className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200">
             <ArrowLeft className="size-4" />
           </Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="line-clamp-2 text-base font-black leading-snug tracking-wide text-zinc-100 md:text-xl">{title}</h1>
-            {content && <p className="mt-1 line-clamp-1 text-[12px] leading-relaxed text-zinc-500">{content}</p>}
-            <div className="mt-1 flex items-center gap-2">
-              {tag && <span className="text-[10px] font-bold tracking-wider text-zinc-600">#{tag}</span>}
-              {threadUpdatedAt && <span className="text-[9px] text-zinc-700">(수정됨)</span>}
-              <CountdownWrapper expiresAt={expiresAt} isClosed={isClosed} threadId={id} />
-            </div>
-          </div>
+          <h1 className="min-w-0 flex-1 truncate text-[16px] font-bold leading-snug text-zinc-100 md:text-xl md:font-black">{title}</h1>
           <div className="flex shrink-0 items-center gap-1">
+            <ShareButton title={title} threadId={id} />
             <ThreadEditButton threadId={id} threadCreatedBy={createdBy} initialTitle={title} initialContent={content} initialTag={tag} isClosed={isClosed} />
             <MuteButton threadId={id} />
-            <ShareButton title={title} threadId={id} />
           </div>
+        </div>
+        {/* 2줄: 태그 + 카운트다운 */}
+        <div className="mt-1.5 flex items-center gap-2 pl-12">
+          {tag && <span className="text-[10px] font-bold tracking-wider text-zinc-600">#{tag}</span>}
+          {threadUpdatedAt && <span className="text-[9px] text-zinc-700">(수정됨)</span>}
+          <CountdownWrapper expiresAt={expiresAt} isClosed={isClosed} threadId={id} />
         </div>
       </div>
 
       {/* ═══ Card Grid ═══ */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 pb-20 md:pb-0">
         <BattleComments
           threadId={id} comments={commentDtos} isClosed={isClosed}
           threadCreatedBy={createdBy} template="free"

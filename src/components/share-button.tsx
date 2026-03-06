@@ -29,14 +29,13 @@ export function ShareButton({
   }
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
+    <button
+      type="button"
       onClick={handleShare}
-      className="border-white/15 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-100"
+      className="inline-flex size-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-100 md:h-8 md:w-auto md:gap-1.5 md:rounded-md md:px-3"
     >
       <Link2 className="size-3.5" />
-      공유
-    </Button>
+      <span className="hidden md:inline text-[12px] font-medium">공유</span>
+    </button>
   )
 }

@@ -14,7 +14,7 @@ export function MuteButton({ threadId }: { threadId: string }) {
     <button
       onClick={toggleMute}
       disabled={loading}
-      className={`inline-flex items-center justify-center rounded-lg border p-1.5 text-xs transition ${
+      className={`hidden md:inline-flex items-center justify-center rounded-lg border size-9 text-xs transition ${
         muted
           ? "border-amber-400/30 bg-amber-400/10 text-amber-300"
           : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"

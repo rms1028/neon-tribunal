@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowUpDown, Clock, Loader2, ThumbsUp, X } from "lucide-react"
+import { ArrowUpDown, Clock, Loader2, MessageSquarePlus, ThumbsUp, X } from "lucide-react"
 import Link from "next/link"
 
 import { CommentComposer } from "@/components/comment-composer"
@@ -187,68 +187,52 @@ export function BattleComments({
   return (
     <section className="flex h-full flex-col" style={{ background: "#0a0f14" }}>
       {/* ═══ Sticky Header ═══ */}
-      <header className="px-4 py-2.5 md:px-6" style={{
+      <header className="px-3 py-2 md:px-6" style={{
         position: "sticky", top: 0, zIndex: 20, flexShrink: 0,
-        background: "rgba(10,15,20,0.92)", backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.03)",
+        background: "#0a0f14",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
       }}>
-        {/* 1줄: 정보 + 의견쓰기 */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <p className="whitespace-nowrap text-[11px] text-zinc-600">
-              자유토론 · {sortedComments.length}개 의견
-            </p>
-            {totalReactions > 0 && (
-              <span className="whitespace-nowrap text-[11px] text-zinc-600">
-                · {totalReactions} 반응
-              </span>
-            )}
+          <p className="whitespace-nowrap text-[11px] text-zinc-600">
+            자유토론 · {sortedComments.length}개 의견{totalReactions > 0 ? ` · ${totalReactions} 반응` : ""}
+          </p>
+          {/* 정렬 토글 — 가로 스크롤 */}
+          <div className="flex shrink-0 items-center gap-0.5 overflow-x-auto scrollbar-hide rounded-lg border border-white/[0.06] bg-white/[0.02] p-0.5">
+            <button
+              type="button"
+              onClick={() => setFreeSortBy("hot")}
+              className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[10px] font-semibold transition-all ${
+                freeSortBy === "hot"
+                  ? "bg-amber-500/15 text-amber-300 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              <ThumbsUp className="size-2.5" />
+              좋아요
+            </button>
+            <button
+              type="button"
+              onClick={() => setFreeSortBy("latest")}
+              className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[10px] font-semibold transition-all ${
+                freeSortBy === "latest"
+                  ? "bg-cyan-500/15 text-cyan-300 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              <Clock className="size-2.5" />
+              최신
+            </button>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {/* 정렬 토글 */}
-            <div className="flex items-center gap-0.5 rounded-lg border border-white/[0.06] bg-white/[0.02] p-0.5">
-              <button
-                type="button"
-                onClick={() => setFreeSortBy("hot")}
-                className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-semibold transition-all ${
-                  freeSortBy === "hot"
-                    ? "bg-amber-500/15 text-amber-300 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                <ThumbsUp className="size-2.5" />
-                좋아요
-              </button>
-              <button
-                type="button"
-                onClick={() => setFreeSortBy("latest")}
-                className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-semibold transition-all ${
-                  freeSortBy === "latest"
-                    ? "bg-cyan-500/15 text-cyan-300 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                <Clock className="size-2.5" />
-                최신
-              </button>
-            </div>
-            {!isClosed && (
-              <button
-                type="button"
-                onClick={() => setComposeOpen(true)}
-                style={{
-                  padding: "8px 20px", borderRadius: 12, border: "none",
-                  background: "rgba(255,255,255,0.06)", color: "#ccc",
-                  fontSize: 13, fontWeight: 700, cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                className="hover:!bg-white hover:!text-black"
-              >
-                의견 쓰기
-              </button>
-            )}
-          </div>
+          {/* Desktop 의견 쓰기 */}
+          {!isClosed && (
+            <button
+              type="button"
+              onClick={() => setComposeOpen(true)}
+              className="hidden md:inline-flex items-center rounded-xl border-none bg-white/[0.06] px-5 py-2 text-[13px] font-bold text-zinc-300 transition hover:bg-white hover:text-black"
+            >
+              의견 쓰기
+            </button>
+          )}
         </div>
       </header>
 
@@ -277,7 +261,7 @@ export function BattleComments({
                 <div style={{ fontSize: 12, color: "#333" }}>첫 번째 의견을 남겨보세요</div>
               </div>
             ) : (
-              <div style={{ columns: "2 320px", columnGap: 16 }}>
+              <div className="md:columns-2 md:gap-4" style={{ columnGap: 16 }}>
                 {sortedComments.map((c, i) => {
                   const color = getColor(i)
                   const likeCount = (counts[c.id]?.like ?? c.likeCount)
@@ -495,6 +479,17 @@ export function BattleComments({
           </>
         )}
       </div>
+
+      {/* ═══ Floating "의견 쓰기" — mobile only ═══ */}
+      {!isClosed && !composeOpen && !isPanelOpen && (
+        <button
+          type="button"
+          onClick={() => setComposeOpen(true)}
+          className="fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-cyan-400 text-black shadow-[0_4px_24px_rgba(34,211,238,0.4)] transition active:scale-95 md:hidden"
+        >
+          <MessageSquarePlus className="size-6" />
+        </button>
+      )}
 
       {/* ═══ Compose Modal ═══ */}
       {composeOpen && (

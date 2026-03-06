@@ -3,7 +3,6 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Flag, Loader2, Pencil, Pin, Settings2, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 import { CommentComposer } from "@/components/comment-composer"
 import { MarkdownContent } from "@/components/markdown-content"
@@ -170,7 +169,7 @@ export function ProConBattle({
 
           {/* Message body */}
           <div
-            className="group relative max-w-[85%] md:max-w-[65%]"
+            className="group relative max-w-[80%] md:max-w-[65%]"
             style={{
               padding: "10px 16px",
               borderRadius: 12,
@@ -372,17 +371,16 @@ export function ProConBattle({
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#0a0a0f", color: "#eee" }}>
       {/* ═══ HEADER ═══ */}
       <header className="px-3 py-2.5 md:px-5 md:py-3" style={{
-        background: "rgba(10,10,15,0.9)", backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.03)",
+        background: "#0a0a0f",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
         flexShrink: 0,
       }}>
-        {/* 1줄: ← 뒤로 + 제목 + 액션 */}
-        <div className="mb-2 flex items-center gap-2">
-          <Link href="/" className="inline-flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-white/[0.06] bg-white/[0.03] text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200 md:size-9" style={{ fontSize: 18 }}>
+        {/* 1줄: ← + 제목 + 액션 */}
+        <div className="flex items-center gap-2">
+          <Link href="/" className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200" style={{ fontSize: 18 }}>
             {"\u2190"}
           </Link>
-          <h1 className="min-w-0 flex-1 truncate text-[15px] font-extrabold tracking-tight text-zinc-100 md:text-base" style={{ letterSpacing: -0.3 }}>
+          <h1 className="min-w-0 flex-1 truncate text-[16px] font-bold text-zinc-100 md:text-lg md:font-extrabold" style={{ letterSpacing: -0.3 }}>
             {title}
           </h1>
           <div className="flex shrink-0 items-center gap-1">
@@ -391,26 +389,24 @@ export function ProConBattle({
         </div>
 
         {/* 2줄: 카운트다운 + 참여 + 도구 */}
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mt-1.5 flex items-center gap-2 pl-12">
           {countdown}
           <span className="whitespace-nowrap text-[11px] text-zinc-600">
             {participantCount}명 참여
           </span>
           <div className="flex-1" />
-          <Button
+          <button
             type="button"
-            size="sm"
-            variant="outline"
             onClick={() => setToolsOpen(true)}
-            className="border-emerald-400/25 bg-emerald-400/8 text-emerald-300 hover:bg-emerald-400/15"
+            className="inline-flex size-9 items-center justify-center rounded-lg border border-emerald-400/25 bg-emerald-400/8 text-emerald-300 transition hover:bg-emerald-400/15 md:h-8 md:w-auto md:gap-1.5 md:px-3"
           >
             <Settings2 className="size-3.5" />
-            <span className="hidden sm:inline">도구</span>
-          </Button>
+            <span className="hidden md:inline text-[12px] font-medium">도구</span>
+          </button>
         </div>
 
-        {/* Ratio bar — integrated in header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* 3줄: 찬반 비율 바 */}
+        <div className="mt-2 flex items-center gap-2">
           <span style={{ fontSize: 11, fontWeight: 800, color: PRO, fontFamily: "var(--font-orbitron), monospace", minWidth: 32 }}>{proPercent}%</span>
           <div style={{ flex: 1, display: "flex", height: 3, borderRadius: 2, gap: 2 }}>
             <div style={{ width: `${proPercent}%`, background: PRO, borderRadius: 2, transition: "width 0.5s" }} />
@@ -468,7 +464,8 @@ export function ProConBattle({
         <div style={{
           flexShrink: 0,
           display: "flex", alignItems: "center", gap: 6,
-          padding: "10px 16px 60px",
+          padding: "10px 16px",
+          marginBottom: 60,
           background: "rgba(14,14,20,0.95)", backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,255,255,0.03)",
