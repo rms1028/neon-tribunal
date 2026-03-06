@@ -1,12 +1,15 @@
 import Link from "next/link"
 import {
+  BookOpen,
   Bot,
   Briefcase,
+  Coffee,
   Flame,
   Globe,
   GraduationCap,
   Landmark,
   Leaf,
+  Medal,
   Monitor,
   MoreHorizontal,
   Palette,
@@ -32,19 +35,22 @@ export const revalidate = 30
 type ThreadRow = Record<string, unknown>
 
 const PRESET_TAGS = [
-  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "기타",
+  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "스포츠", "일상", "철학", "기타",
 ]
 
 const TAG_ICON_MAP: Record<string, { icon: typeof Globe; colorClass: string }> = {
-  AI:   { icon: Bot,            colorClass: "text-cyan-400" },
-  정치: { icon: Landmark,       colorClass: "text-rose-400" },
-  경제: { icon: Briefcase,      colorClass: "text-emerald-400" },
-  사회: { icon: Users,          colorClass: "text-amber-400" },
-  기술: { icon: Monitor,        colorClass: "text-blue-400" },
-  문화: { icon: Palette,        colorClass: "text-purple-400" },
-  교육: { icon: GraduationCap,  colorClass: "text-teal-400" },
-  환경: { icon: Leaf,           colorClass: "text-green-400" },
-  기타: { icon: MoreHorizontal, colorClass: "text-zinc-400" },
+  AI:     { icon: Bot,            colorClass: "text-cyan-400" },
+  정치:   { icon: Landmark,       colorClass: "text-rose-400" },
+  경제:   { icon: Briefcase,      colorClass: "text-emerald-400" },
+  사회:   { icon: Users,          colorClass: "text-amber-400" },
+  기술:   { icon: Monitor,        colorClass: "text-blue-400" },
+  문화:   { icon: Palette,        colorClass: "text-purple-400" },
+  교육:   { icon: GraduationCap,  colorClass: "text-teal-400" },
+  환경:   { icon: Leaf,           colorClass: "text-green-400" },
+  스포츠: { icon: Medal,          colorClass: "text-orange-400" },
+  일상:   { icon: Coffee,         colorClass: "text-yellow-400" },
+  철학:   { icon: BookOpen,       colorClass: "text-indigo-400" },
+  기타:   { icon: MoreHorizontal, colorClass: "text-zinc-400" },
 }
 
 function clampPct(n: number) {
@@ -154,13 +160,15 @@ function threadToDebate(row: ThreadRow): Debate | null {
     expiresAt,
     isClosed,
     aiVerdict,
+    optionALabel: pickString(row, ["option_a_label"], "") || undefined,
+    optionBLabel: pickString(row, ["option_b_label"], "") || undefined,
   }
 }
 
 async function fetchDebates(tag?: string): Promise<Debate[]> {
   let query = supabase
     .from("threads")
-    .select("id, title, content, tag, pro_count, con_count, created_at, is_closed, expires_at, template, ai_verdict, comments(count)")
+    .select("id, title, content, tag, pro_count, con_count, created_at, is_closed, expires_at, template, ai_verdict, option_a_label, option_b_label, comments(count)")
     .order("created_at", { ascending: false })
     .limit(30)
 
@@ -188,7 +196,7 @@ async function fetchDebates(tag?: string): Promise<Debate[]> {
 async function fetchTopBattles(): Promise<Debate[]> {
   const { data, error } = await supabase
     .from("threads")
-    .select("id, title, content, tag, pro_count, con_count, created_at, is_closed, expires_at, template, ai_verdict")
+    .select("id, title, content, tag, pro_count, con_count, created_at, is_closed, expires_at, template, ai_verdict, option_a_label, option_b_label")
     .order("pro_count", { ascending: false })
     .limit(20)
 

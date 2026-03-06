@@ -76,11 +76,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased pb-16 md:pb-0`}
       >
         <Providers>{children}</Providers>
-        <footer className="relative border-t border-white/[0.06] bg-black/60 px-4 py-6 text-center text-[11px] text-zinc-600 md:pb-6">
-          <div className="mx-auto flex max-w-md flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <span>&copy; {new Date().getFullYear()} 네온 아고라</span>
-            <Link href="/terms" className="transition hover:text-zinc-300">이용약관</Link>
-            <Link href="/privacy" className="transition hover:text-zinc-300">개인정보처리방침</Link>
+        <footer className="relative border-t border-white/[0.06] bg-black px-4 py-8 text-center text-[11px] text-zinc-500 md:pb-8">
+          <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+            <div className="flex items-center gap-3">
+              <Link href="/terms" className="transition hover:text-zinc-200">이용약관</Link>
+              <span className="text-zinc-700">·</span>
+              <Link href="/privacy" className="transition hover:text-zinc-200">개인정보처리방침</Link>
+            </div>
+            <span className="text-zinc-600">&copy; {new Date().getFullYear()} 네온 아고라</span>
           </div>
         </footer>
       </body>

@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const revalidate = 300
 
-const PRESET_TAGS = ["AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "기타"]
+const PRESET_TAGS = ["AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "스포츠", "일상", "철학", "기타"]
 
 const TAG_COLORS: Record<string, string> = {
   AI: "#22d3ee",

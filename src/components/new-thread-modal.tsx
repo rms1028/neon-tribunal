@@ -16,7 +16,7 @@ const DRAFT_KEY = "neon_thread_draft"
 const DRAFT_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7일
 
 const CATEGORIES = [
-  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "기타",
+  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "스포츠", "일상", "철학", "기타",
 ]
 
 export function NewThreadModal() {
@@ -31,6 +31,9 @@ export function NewThreadModal() {
   const [tag, setTag] = useState("")
   const [template, setTemplate] = useState<string>("free")
   const [durationMinutes, setDurationMinutes] = useState(1440)
+  const [labelMode, setLabelMode] = useState<"default" | "custom">("default")
+  const [optionALabel, setOptionALabel] = useState("찬성")
+  const [optionBLabel, setOptionBLabel] = useState("반대")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -104,6 +107,9 @@ export function NewThreadModal() {
     setTag("")
     setTemplate("free")
     setDurationMinutes(1440)
+    setLabelMode("default")
+    setOptionALabel("찬성")
+    setOptionBLabel("반대")
     setError("")
   }
 
@@ -129,16 +135,22 @@ export function NewThreadModal() {
     setLoading(true)
     setError("")
 
+    const insertData: Record<string, unknown> = {
+      title: title.trim(),
+      content: content.trim(),
+      ...(tag ? { tag } : {}),
+      template,
+      created_by: user.id,
+      expires_at: new Date(Date.now() + durationMinutes * 60_000).toISOString(),
+    }
+    if (template === "strict" && labelMode === "custom") {
+      if (optionALabel.trim()) insertData.option_a_label = optionALabel.trim()
+      if (optionBLabel.trim()) insertData.option_b_label = optionBLabel.trim()
+    }
+
     const { error: dbError } = await supabase
       .from("threads")
-      .insert({
-        title: title.trim(),
-        content: content.trim(),
-        ...(tag ? { tag } : {}),
-        template,
-        created_by: user.id,
-        expires_at: new Date(Date.now() + durationMinutes * 60_000).toISOString(),
-      })
+      .insert(insertData)
 
     setLoading(false)
 
@@ -166,7 +178,7 @@ export function NewThreadModal() {
             onClick={handleClose}
           >
             <div
-              className="relative w-full max-w-xl rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-2xl"
+              className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 닫기 버튼 */}
@@ -205,7 +217,7 @@ export function NewThreadModal() {
                     {/* 자유 토론 */}
                     <button
                       type="button"
-                      onClick={() => { setTemplate("free"); saveDraft(title, content, tag, "free", durationMinutes) }}
+                      onClick={() => { setTemplate("free"); setLabelMode("default"); setOptionALabel("찬성"); setOptionBLabel("반대"); saveDraft(title, content, tag, "free", durationMinutes) }}
                       className={[
                         "group relative overflow-hidden rounded-xl border p-4 text-left transition-all duration-300",
                         isFree
@@ -294,6 +306,65 @@ export function NewThreadModal() {
                     </button>
                   </div>
                 </div>
+
+                {/* ── 커스텀 투표 라벨 (찬반 격돌 전용) ── */}
+                {isClash && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-zinc-400">
+                      투표 선택지
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setLabelMode("default"); setOptionALabel("찬성"); setOptionBLabel("반대") }}
+                        className={[
+                          "rounded-lg border px-3 py-2 text-xs font-medium transition",
+                          labelMode === "default"
+                            ? "border-[#00FFD1]/40 bg-[#00FFD1]/10 text-[#00FFD1]"
+                            : "border-white/10 bg-white/5 text-zinc-400 hover:border-white/20",
+                        ].join(" ")}
+                      >
+                        기본 (찬성 vs 반대)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLabelMode("custom")}
+                        className={[
+                          "rounded-lg border px-3 py-2 text-xs font-medium transition",
+                          labelMode === "custom"
+                            ? "border-[#FF00FF]/40 bg-[#FF00FF]/10 text-[#FF00FF]"
+                            : "border-white/10 bg-white/5 text-zinc-400 hover:border-white/20",
+                        ].join(" ")}
+                      >
+                        직접 입력
+                      </button>
+                    </div>
+                    {labelMode === "custom" && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <input
+                            value={optionALabel}
+                            onChange={(e) => setOptionALabel(e.target.value)}
+                            placeholder="예: 짜장면"
+                            maxLength={10}
+                            className="w-full rounded-lg border border-[#00FFD1]/20 bg-white/5 px-3 py-2 text-sm text-cyan-100 placeholder:text-zinc-600 outline-none focus:border-[#00FFD1]/50 focus:ring-1 focus:ring-[#00FFD1]/30"
+                          />
+                          <div className="mt-1 text-right text-[10px] text-zinc-600">{optionALabel.length}/10</div>
+                        </div>
+                        <div>
+                          <input
+                            value={optionBLabel}
+                            onChange={(e) => setOptionBLabel(e.target.value)}
+                            placeholder="예: 짬뽕"
+                            maxLength={10}
+                            className="w-full rounded-lg border border-[#FF00FF]/20 bg-white/5 px-3 py-2 text-sm text-fuchsia-100 placeholder:text-zinc-600 outline-none focus:border-[#FF00FF]/50 focus:ring-1 focus:ring-[#FF00FF]/30"
+                          />
+                          <div className="mt-1 text-right text-[10px] text-zinc-600">{optionBLabel.length}/10</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* 제목 */}
                 <div className="space-y-2">

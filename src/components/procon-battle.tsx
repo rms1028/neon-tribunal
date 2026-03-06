@@ -29,6 +29,7 @@ export function ProConBattle({
   expiresAt, threadUpdatedAt,
   comments, hasMoreComments, nextCursor,
   headerActions, countdown, toolsBlock,
+  optionALabel, optionBLabel,
 }: {
   threadId: string; title: string; description?: string; tag: string
   isClosed: boolean; threadCreatedBy: string; template: string
@@ -40,6 +41,7 @@ export function ProConBattle({
   nextCursor: { created_at: string; id: string } | null
   headerActions?: ReactNode; countdown?: ReactNode
   toolsBlock?: ReactNode
+  optionALabel?: string; optionBLabel?: string
 }) {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [inputSide, setInputSide] = useState<"pro" | "con">("pro")
@@ -476,8 +478,8 @@ export function ProConBattle({
           {/* Side toggle — compact pills */}
           <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
             {([
-              { id: "pro" as const, label: "찬성", color: PRO },
-              { id: "con" as const, label: "반대", color: CON },
+              { id: "pro" as const, label: optionALabel || "찬성", color: PRO },
+              { id: "con" as const, label: optionBLabel || "반대", color: CON },
             ]).map(s => (
               <button
                 key={s.id}

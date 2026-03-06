@@ -69,7 +69,9 @@ export async function generateMetadata({
   const title = String(t.title ?? "토론")
   const pro = Number(t.pro_count) || 0
   const con = Number(t.con_count) || 0
-  const desc = `찬성 ${pro} vs 반대 ${con} — ${String(t.content ?? "").slice(0, 120)}`
+  const labelA = typeof t.option_a_label === "string" && t.option_a_label ? t.option_a_label : "찬성"
+  const labelB = typeof t.option_b_label === "string" && t.option_b_label ? t.option_b_label : "반대"
+  const desc = `${labelA} ${pro} vs ${labelB} ${con} — ${String(t.content ?? "").slice(0, 120)}`
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://neon-agora.vercel.app"
   const ogImage = `${siteUrl}/og-default.png`
 
@@ -221,6 +223,9 @@ export default async function ThreadDetailPage({
     }
   })
 
+  const optionALabel = pickString(row, ["option_a_label"], "") || undefined
+  const optionBLabel = pickString(row, ["option_b_label"], "") || undefined
+
   const isStrict = template === "strict"
 
   /* ═══════════════════════════════════════════
@@ -282,6 +287,7 @@ export default async function ThreadDetailPage({
         hasMoreComments={hasMoreComments} nextCursor={nextCursor}
         headerActions={headerActions} countdown={countdownSlot}
         toolsBlock={proconToolsBlock}
+        optionALabel={optionALabel} optionBLabel={optionBLabel}
       />
     )
   }

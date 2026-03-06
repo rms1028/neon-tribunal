@@ -56,6 +56,8 @@ export type Debate = {
   commentCount?: number
   expiresAt?: string
   aiVerdict?: string | null
+  optionALabel?: string
+  optionBLabel?: string
 }
 
 const TEMPLATE_BADGES: Record<string, { label: string; color: string }> = {
@@ -66,7 +68,7 @@ type SortBy = "latest" | "popular" | "hot" | "ending"
 type StatusFilter = "all" | "live" | "settled" | "my"
 
 const PRESET_TAGS = [
-  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "기타",
+  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "스포츠", "일상", "철학", "기타",
 ]
 
 const PAGE_SIZE = 20
@@ -182,6 +184,8 @@ function rawToDebate(row: Record<string, unknown>): Debate {
     commentCount: typeof row.comment_count === "number" ? row.comment_count : undefined,
     expiresAt: typeof row.expires_at === "string" ? row.expires_at : undefined,
     aiVerdict: typeof row.ai_verdict === "string" ? row.ai_verdict : null,
+    optionALabel: typeof row.option_a_label === "string" ? row.option_a_label : undefined,
+    optionBLabel: typeof row.option_b_label === "string" ? row.option_b_label : undefined,
   }
 }
 
@@ -209,6 +213,8 @@ function DebateCard({
   onShare?: (debate: Debate) => void
 }) {
   const isFree = !debate.template || debate.template === "free"
+  const labelA = debate.optionALabel || "찬성"
+  const labelB = debate.optionBLabel || "반대"
   const total = debate.proCount + debate.conCount
   const proPct = total > 0 ? Math.round((debate.proCount / total) * 100) : 50
   const conPct = 100 - proPct
@@ -421,7 +427,7 @@ function DebateCard({
             {/* 찬반 퍼센티지 — Polymarket 스타일 큰 숫자 */}
             <div className="mb-3 flex items-end justify-between">
               <div className="space-y-0.5">
-                <div className="text-[10px] text-zinc-500">찬성</div>
+                <div className="text-[10px] text-zinc-500">{labelA}</div>
                 <div className={`text-2xl font-extrabold tabular-nums leading-none ${
                   winner === "pro" ? "text-cyan-300" : "text-cyan-300/70"
                 }`}>
@@ -429,7 +435,7 @@ function DebateCard({
                 </div>
               </div>
               <div className="space-y-0.5 text-right">
-                <div className="text-[10px] text-zinc-500">반대</div>
+                <div className="text-[10px] text-zinc-500">{labelB}</div>
                 <div className={`text-2xl font-extrabold tabular-nums leading-none ${
                   winner === "con" ? "text-fuchsia-300" : "text-fuchsia-300/70"
                 }`}>
@@ -500,7 +506,7 @@ function DebateCard({
                 }`}
               >
                 <ThumbsUp className="size-3.5" />
-                찬성
+                {labelA}
               </Button>
               <Button
                 size="sm"
@@ -517,7 +523,7 @@ function DebateCard({
                 }`}
               >
                 <ThumbsDown className="size-3.5" />
-                반대
+                {labelB}
               </Button>
 
               {/* 북마크 + 공유 */}

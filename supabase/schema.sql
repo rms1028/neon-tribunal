@@ -148,6 +148,10 @@ ALTER TABLE threads ADD COLUMN IF NOT EXISTS template TEXT NOT NULL DEFAULT 'fre
 -- v17: auto-close timer
 ALTER TABLE threads ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 
+-- custom voting labels
+ALTER TABLE threads ADD COLUMN IF NOT EXISTS option_a_label TEXT DEFAULT '찬성' CHECK (char_length(option_a_label) <= 10);
+ALTER TABLE threads ADD COLUMN IF NOT EXISTS option_b_label TEXT DEFAULT '반대' CHECK (char_length(option_b_label) <= 10);
+
 ALTER TABLE threads ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "threads_select" ON threads;

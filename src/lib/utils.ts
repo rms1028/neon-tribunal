@@ -24,6 +24,14 @@ export function getDisplayName(
   return "익명"
 }
 
+/** thread → 커스텀 투표 라벨 (fallback: 찬성/반대) */
+export function getVoteLabels(thread: { optionALabel?: string | null; optionBLabel?: string | null } | null | undefined): { a: string; b: string } {
+  return {
+    a: thread?.optionALabel || "찬성",
+    b: thread?.optionBLabel || "반대",
+  }
+}
+
 /** ISO 날짜 문자열 → 상대 시간 ("방금 전", "3분 전", "2시간 전" 등) */
 export function timeAgo(date: string | Date | null | undefined): string {
   if (!date) return ""

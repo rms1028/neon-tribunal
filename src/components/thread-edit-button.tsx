@@ -12,7 +12,7 @@ import { useToast } from "@/components/toast-provider"
 import { useConfirm } from "@/components/confirm-dialog"
 
 const CATEGORIES = [
-  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "기타",
+  "AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "스포츠", "일상", "철학", "기타",
 ]
 
 export function ThreadEditButton({
