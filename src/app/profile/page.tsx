@@ -96,7 +96,7 @@ function Bone({ className }: { className?: string }) {
 
 function ProfileSkeleton() {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 24, padding: "24px 40px" }}>
+    <div className="grid grid-cols-1 gap-6 px-4 py-6 md:grid-cols-[1fr_360px] md:px-10 md:py-6">
       <div className="space-y-6">
         <Bone className="h-40 rounded-[20px]" />
         <div className="grid grid-cols-3 gap-3">
@@ -301,7 +301,7 @@ export default function ProfilePage() {
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 400, background: "radial-gradient(ellipse at 30% 0%, rgba(0,228,165,0.04) 0%, transparent 60%), radial-gradient(ellipse at 70% 0%, rgba(192,132,252,0.03) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       {/* Header */}
-      <header style={{ padding: "16px 40px", borderBottom: "1px solid rgba(255,255,255,0.03)", background: "rgba(10,10,15,0.8)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <header className="px-4 md:px-10" style={{ paddingTop: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.03)", background: "rgba(10,10,15,0.8)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link href="/" style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.06)", color: "#666", fontSize: 13, padding: "6px 16px", borderRadius: 8, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
             <ArrowLeft style={{ width: 14, height: 14 }} /> 홈
@@ -319,7 +319,7 @@ export default function ProfilePage() {
       </header>
 
       {/* Content: 2 column */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 24, padding: "24px 40px 60px", position: "relative" }}>
+      <div className="grid grid-cols-1 gap-6 px-4 py-6 pb-16 md:grid-cols-[1fr_360px] md:px-10 md:py-6 md:pb-16" style={{ position: "relative" }}>
 
         {/* ─── LEFT: Profile + Activity ─── */}
         <div>
@@ -457,7 +457,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ─── RIGHT: HUD Panel ─── */}
-        <div style={{ position: "sticky", top: 100, alignSelf: "start" }}>
+        <div className="md:sticky md:top-[100px] md:self-start">
           {/* HUD Header + Rank */}
           <div className="profile-fadeUp" style={{ padding: "18px 20px", borderRadius: 16, background: "linear-gradient(135deg, rgba(0,228,165,0.04), rgba(192,132,252,0.03))", border: "1px solid rgba(0,228,165,0.08)", marginBottom: 12, animationDelay: "0.1s" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Loader2, X } from "lucide-react"
+import { ArrowUpDown, Clock, Loader2, ThumbsUp, X } from "lucide-react"
 import Link from "next/link"
 
 import { CommentComposer } from "@/components/comment-composer"
@@ -48,6 +48,7 @@ export function BattleComments({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
+  const [freeSortBy, setFreeSortBy] = useState<"hot" | "latest">("hot")
   const panelRef = useRef<HTMLDivElement>(null)
 
   const state = useCommentState({ threadId, comments, template })
@@ -87,16 +88,24 @@ export function BattleComments({
     return { topComments: top, replyMap: rm }
   }, [localComments])
 
-  /* ─── Sort: hot by default ─── */
+  /* ─── Sort ─── */
   const sortedComments = useMemo(() => {
     const arr = [...topComments]
-    arr.sort((a, b) => {
-      const scoreA = (counts[a.id]?.like ?? a.likeCount) + (counts[a.id]?.fire ?? a.fireCount) * 2 + getReplyCount(a.id, replyMap)
-      const scoreB = (counts[b.id]?.like ?? b.likeCount) + (counts[b.id]?.fire ?? b.fireCount) * 2 + getReplyCount(b.id, replyMap)
-      return scoreB - scoreA
-    })
+    if (freeSortBy === "latest") {
+      arr.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0
+        return tb - ta
+      })
+    } else {
+      arr.sort((a, b) => {
+        const scoreA = (counts[a.id]?.like ?? a.likeCount) + (counts[a.id]?.fire ?? a.fireCount) * 2 + getReplyCount(a.id, replyMap)
+        const scoreB = (counts[b.id]?.like ?? b.likeCount) + (counts[b.id]?.fire ?? b.fireCount) * 2 + getReplyCount(b.id, replyMap)
+        return scoreB - scoreA
+      })
+    }
     return arr
-  }, [topComments, counts, replyMap])
+  }, [topComments, counts, replyMap, freeSortBy])
 
   /* Total reactions count */
   const totalReactions = useMemo(() => {
@@ -186,10 +195,37 @@ export function BattleComments({
         padding: "12px 24px",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 11, color: "#444", marginTop: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <p style={{ fontSize: 11, color: "#444", marginTop: 0, whiteSpace: "nowrap" }}>
               자유토론 · {sortedComments.length}개 의견 · {totalReplies}개 댓글
             </p>
+            {/* 정렬 토글 */}
+            <div className="flex items-center gap-0.5 rounded-lg border border-white/[0.06] bg-white/[0.02] p-0.5">
+              <button
+                type="button"
+                onClick={() => setFreeSortBy("hot")}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-all ${
+                  freeSortBy === "hot"
+                    ? "bg-amber-500/15 text-amber-300 shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <ThumbsUp className="size-2.5" />
+                좋아요순
+              </button>
+              <button
+                type="button"
+                onClick={() => setFreeSortBy("latest")}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-all ${
+                  freeSortBy === "latest"
+                    ? "bg-cyan-500/15 text-cyan-300 shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <Clock className="size-2.5" />
+                최신순
+              </button>
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {totalReactions > 0 && (

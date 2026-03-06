@@ -21,7 +21,6 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
-import { NewThreadModal } from "@/components/new-thread-modal"
 import { DebateList } from "@/components/debate-list"
 import type { Debate } from "@/components/debate-list"
 import { HeaderAuth } from "@/components/header-auth"
@@ -273,17 +272,14 @@ export default async function Home({
 
         {/* ═══ 타이틀 바 ═══ */}
         <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] text-zinc-300">
-                <Sparkles className="size-3 text-cyan-300" />
-                CYBERPUNK DISCUSSION PLAZA
-              </div>
-              <h1 className="hero-title-glow text-2xl font-extrabold tracking-tight text-zinc-50 sm:text-4xl">
-                네온 아고라
-              </h1>
+          <div>
+            <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] text-zinc-300">
+              <Sparkles className="size-3 text-cyan-300" />
+              CYBERPUNK DISCUSSION PLAZA
             </div>
-            <NewThreadModal />
+            <h1 className="hero-title-glow text-2xl font-extrabold tracking-tight text-zinc-50 sm:text-4xl">
+              네온 아고라
+            </h1>
           </div>
 
           <div className="grid grid-cols-3 gap-2 md:w-[440px]">
@@ -303,6 +299,41 @@ export default async function Home({
               value={`${hotCount}개`}
             />
           </div>
+        </div>
+
+        {/* ═══ 모바일 카테고리 칩 바 ═══ */}
+        <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-hide md:hidden">
+          <Link
+            href="/"
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${
+              activeTag === null
+                ? "bg-cyan-400/10 text-cyan-200 ring-1 ring-cyan-400/25"
+                : "border border-white/10 text-zinc-400"
+            }`}
+          >
+            <Globe className="size-3 text-cyan-400" />
+            전체
+          </Link>
+          {PRESET_TAGS.map((tag) => {
+            const tagMeta = TAG_ICON_MAP[tag]
+            const IconComp = tagMeta?.icon ?? Zap
+            const iconColor = tagMeta?.colorClass ?? "text-zinc-400"
+            const isActive = activeTag === tag
+            return (
+              <Link
+                key={tag}
+                href={`/?tag=${tag}`}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${
+                  isActive
+                    ? "bg-fuchsia-400/10 text-fuchsia-200 ring-1 ring-fuchsia-400/25"
+                    : "border border-white/10 text-zinc-400"
+                }`}
+              >
+                <IconComp className={`size-3 ${isActive ? "text-fuchsia-300" : iconColor}`} />
+                {tag}
+              </Link>
+            )
+          })}
         </div>
 
         {/* ═══ 2컬럼 대시보드 레이아웃 ═══ */}

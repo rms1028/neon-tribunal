@@ -270,19 +270,15 @@ export function AuthModal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleOAuth("kakao")}
-                  disabled={oauthLoading !== null}
-                  className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-yellow-400/30 py-2.5 text-sm font-medium text-zinc-900 transition hover:brightness-95 disabled:opacity-50"
-                  style={{ backgroundColor: "#FEE500" }}
+                  disabled
+                  className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-yellow-400/20 py-2.5 text-sm font-medium text-zinc-500 cursor-not-allowed opacity-50"
+                  style={{ backgroundColor: "#FEE50044" }}
+                  title="카카오 로그인은 준비 중입니다"
                 >
-                  {oauthLoading === "kakao" ? (
-                    <RefreshCw className="size-4 animate-spin text-zinc-700" />
-                  ) : (
-                    <svg className="size-4" viewBox="0 0 24 24">
-                      <path fill="#3C1E1E" d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.75 4.93 4.38 6.24l-1.12 4.16a.3.3 0 0 0 .45.34l4.84-3.2c.47.05.95.08 1.45.08 5.52 0 10-3.36 10-7.62C22 6.36 17.52 3 12 3z" />
-                    </svg>
-                  )}
-                  카카오로 계속하기
+                  <svg className="size-4" viewBox="0 0 24 24">
+                    <path fill="#3C1E1E" d="M12 3C6.48 3 2 6.36 2 10.44c0 2.62 1.75 4.93 4.38 6.24l-1.12 4.16a.3.3 0 0 0 .45.34l4.84-3.2c.47.05.95.08 1.45.08 5.52 0 10-3.36 10-7.62C22 6.36 17.52 3 12 3z" />
+                  </svg>
+                  카카오 (준비 중)
                 </button>
               </div>
 

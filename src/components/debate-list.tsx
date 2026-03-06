@@ -233,7 +233,7 @@ function DebateCard({
       }}
       aria-label={`토론 상세 보기: ${debate.title}`}
     >
-      <div className="flex h-full flex-col p-4">
+      <div className="flex h-full min-h-[280px] flex-col p-4">
         {/* 상단: 태그 + 뱃지 */}
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
           <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${
@@ -274,31 +274,76 @@ function DebateCard({
         </h3>
 
         {isFree ? (
-          /* ━━━ 자유 토론: 미리보기 + 메타 + 입장 버튼 ━━━ */
+          /* ━━━ 자유 토론: 미리보기 + 참여 현황 + 입장 버튼 ━━━ */
           <>
             {/* 본문 미리보기 */}
             {debate.description ? (
-              <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-zinc-400">
+              <p className="mb-2 line-clamp-2 text-[13px] leading-relaxed text-zinc-400">
                 {debate.description}
               </p>
             ) : (
-              <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-zinc-600 italic">
+              <p className="mb-2 line-clamp-2 text-[13px] leading-relaxed text-zinc-600 italic">
                 자유롭게 의견을 나눠보세요. 첫 번째 댓글의 주인공이 되어보세요!
               </p>
             )}
 
-            {/* 메타 정보 — 얇은 한 줄 */}
-            <div className="mb-3 flex flex-wrap items-center gap-2.5 text-[11px]">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-900/20 px-2.5 py-1 text-teal-400">
-                <MessageSquareText className="size-3" />
-                <span className="font-semibold tabular-nums">{debate.commentCount ?? 0}</span>
-                <span className="text-teal-400/60">댓글</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.04] px-2.5 py-1 text-zinc-400">
-                <Users className="size-3" />
-                <span className="font-semibold tabular-nums">{formatCompact(total)}</span>
-                <span className="text-zinc-500">참여</span>
-              </span>
+            {/* 참여 현황 패널 — CLASH의 찬반 비율 영역 대응 */}
+            <div className="mb-3 rounded-lg border border-[#39FF14]/[0.06] bg-[#39FF14]/[0.02] p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* 참여자 아바타 겹침 */}
+                  <div className="flex -space-x-1.5">
+                    {Array.from({ length: Math.min(total || 1, 4) }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex size-6 items-center justify-center rounded-full border-2 border-[#0a0a0f] text-[9px] font-bold"
+                        style={{
+                          background: [
+                            "rgba(57,255,20,0.15)",
+                            "rgba(34,211,238,0.15)",
+                            "rgba(192,132,252,0.15)",
+                            "rgba(255,210,85,0.15)",
+                          ][i],
+                          color: ["#39FF14", "#22d3ee", "#c084fc", "#ffd055"][i],
+                          zIndex: 4 - i,
+                        }}
+                      >
+                        {["A", "B", "C", "D"][i]}
+                      </div>
+                    ))}
+                    {total > 4 && (
+                      <div className="flex size-6 items-center justify-center rounded-full border-2 border-[#0a0a0f] bg-white/[0.06] text-[8px] font-bold text-zinc-400" style={{ zIndex: 0 }}>
+                        +{total - 4}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-[12px] font-semibold text-zinc-300">
+                    {total > 0 ? `${formatCompact(total)}명 참여 중` : "첫 참여자를 기다리는 중"}
+                  </span>
+                </div>
+                {(debate.commentCount ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#39FF14]/80">
+                    <MessageSquareText className="size-3" />
+                    {debate.commentCount}
+                  </span>
+                )}
+              </div>
+              {/* 활동 바 */}
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#39FF14]/60 to-[#22d3ee]/60"
+                    style={{ width: `${Math.min(100, Math.max(8, (debate.commentCount ?? 0) * 10))}%`, transition: "width 0.5s" }}
+                  />
+                </div>
+                <span className="text-[10px] text-zinc-600">
+                  {(debate.commentCount ?? 0) >= 10 ? "활발" : (debate.commentCount ?? 0) > 0 ? "진행 중" : "대기 중"}
+                </span>
+              </div>
+            </div>
+
+            {/* 메타 정보 */}
+            <div className="flex flex-wrap items-center gap-2 text-[11px]">
               {debate.createdAt && (
                 <span className="inline-flex items-center gap-1 text-zinc-600" suppressHydrationWarning>
                   <Clock className="size-3" />
@@ -312,12 +357,9 @@ function DebateCard({
               />
             </div>
 
-            {/* spacer */}
-            <div className="mt-auto" />
-
             {/* 입장하기 버튼 + 북마크/공유 */}
             <div
-              className="flex items-center gap-1.5"
+              className="mt-auto flex items-center gap-1.5 pt-2"
               onClick={(e) => e.stopPropagation()}
             >
               <Button
@@ -367,8 +409,14 @@ function DebateCard({
             </div>
           </>
         ) : (
-          /* ━━━ 찬반 토론: 게이지 + 투표 버튼 ━━━ */
+          /* ━━━ 찬반 토론: 설명 + 게이지 + 투표 버튼 ━━━ */
           <>
+            {/* 본문 미리보기 */}
+            {debate.description && (
+              <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-zinc-400">
+                {debate.description}
+              </p>
+            )}
             {/* 찬반 퍼센티지 — Polymarket 스타일 큰 숫자 */}
             <div className="mb-3 flex items-end justify-between">
               <div className="space-y-0.5">
@@ -1180,32 +1228,35 @@ export function DebateList({ initialDebates, initialTag }: { initialDebates: Deb
           </div>
         </div>
 
-        {/* 검색 입력 */}
-        <div className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 backdrop-blur transition-all ${
-          searchQuery
-            ? "border-cyan-400/50 bg-white/[0.06] shadow-[0_0_20px_rgba(34,211,238,0.1)] search-glow-active"
-            : "border-white/[0.08] bg-white/[0.04] focus-within:border-cyan-400/40 focus-within:bg-white/[0.06] focus-within:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
-        }`}>
-          {searchLoading ? (
-            <Loader2 className="size-4 shrink-0 animate-spin text-cyan-400" />
-          ) : (
-            <ScanSearch className="size-4 shrink-0 text-zinc-400" />
-          )}
-          <input
-            className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
-            placeholder={searchLoading ? "서버에서 검색 중…" : "토론 검색: 제목, 내용, 태그…"}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="토론 검색"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-300"
-            >
-              <X className="size-4" />
-            </button>
-          )}
+        {/* 새 토론 + 검색 입력 */}
+        <div className="flex items-center gap-2">
+          <NewThreadModal />
+          <div className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 backdrop-blur transition-all ${
+            searchQuery
+              ? "border-cyan-400/50 bg-white/[0.06] shadow-[0_0_20px_rgba(34,211,238,0.1)] search-glow-active"
+              : "border-white/[0.08] bg-white/[0.04] focus-within:border-cyan-400/40 focus-within:bg-white/[0.06] focus-within:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
+          }`}>
+            {searchLoading ? (
+              <Loader2 className="size-4 shrink-0 animate-spin text-cyan-400" />
+            ) : (
+              <ScanSearch className="size-4 shrink-0 text-zinc-400" />
+            )}
+            <input
+              className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
+              placeholder={searchLoading ? "서버에서 검색 중…" : "토론 검색: 제목, 내용, 태그…"}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="토론 검색"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-300"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 검색 결과 카운트 */}

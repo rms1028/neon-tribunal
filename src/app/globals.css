@@ -125,6 +125,17 @@
   }
 }
 
+/* ── 새 토론 열기 버튼 글로우 ── */
+
+@keyframes new-thread-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,228,165,0.4), 0 0 20px rgba(34,211,238,0.15); }
+  50% { box-shadow: 0 0 14px rgba(0,228,165,0.6), 0 0 30px rgba(34,211,238,0.25); }
+}
+
+.new-thread-btn {
+  animation: new-thread-glow 2.5s ease-in-out infinite;
+}
+
 /* ── 투표 게이지 바 애니메이션 ── */
 
 @keyframes neon-flicker {

@@ -170,13 +170,12 @@ export function ProConBattle({
 
           {/* Message body */}
           <div
-            className="group relative"
+            className="group relative max-w-[85%] md:max-w-[65%]"
             style={{
               padding: "10px 16px",
               borderRadius: 12,
               background: isPro ? "rgba(0,228,165,0.08)" : "rgba(255,77,141,0.08)",
               width: "fit-content",
-              maxWidth: "65%",
             }}
           >
             {/* Hover actions */}
@@ -435,9 +434,9 @@ export function ProConBattle({
       {/* ═══ CHAT FEED ═══ */}
       <div
         ref={feedRef}
+        className="p-4 md:px-6"
         style={{
           flex: 1, overflowY: "auto",
-          padding: "20px 24px",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -523,7 +522,7 @@ export function ProConBattle({
             }}
           />
           <div style={{
-            position: "fixed", top: 0, right: 0, width: 340, height: "100vh",
+            position: "fixed", top: 0, right: 0, width: "min(340px, 90vw)", height: "100vh",
             background: "rgba(14,14,20,0.98)", backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             borderLeft: "1px solid rgba(255,255,255,0.04)",

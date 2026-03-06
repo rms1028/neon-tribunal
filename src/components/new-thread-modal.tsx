@@ -458,7 +458,8 @@ export function NewThreadModal() {
 
   return (
     <>
-      <Button
+      <button
+        type="button"
         onClick={() => {
           if (!user) {
             showToast("로그인이 필요한 기능입니다.", "info")
@@ -466,11 +467,13 @@ export function NewThreadModal() {
           }
           setOpen(true)
         }}
-        className="bg-white text-black hover:bg-white/90"
+        className="new-thread-btn group relative inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.98]"
       >
-        <Sparkles className="size-4" />
-        새 토론 열기
-      </Button>
+        <span className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-400" />
+        <span className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ boxShadow: "0 0 20px rgba(0,228,165,0.5), 0 0 40px rgba(34,211,238,0.3)" }} />
+        <Sparkles className="relative size-4" />
+        <span className="relative">새 토론 열기</span>
+      </button>
 
       {modal}
     </>
