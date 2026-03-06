@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Orbitron } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 
@@ -12,6 +12,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+})
+
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
 })
 
 export const viewport: Viewport = {
@@ -67,7 +73,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased pb-16 md:pb-0`}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased pb-16 md:pb-0`}
       >
         <Providers>{children}</Providers>
         <footer className="relative border-t border-white/[0.06] bg-black/60 px-4 py-6 text-center text-[11px] text-zinc-600 md:pb-6">

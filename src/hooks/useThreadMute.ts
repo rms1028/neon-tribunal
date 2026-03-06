@@ -9,31 +9,32 @@ export function useThreadMute(threadId: string) {
   const { user } = useAuth()
   const [muted, setMuted] = useState(false)
 
+  const uid = user?.id
   const { loading, data } = useSupabaseFetch<{ id: string } | null>(
     () => {
-      if (!user) return Promise.resolve({ data: null, error: null })
+      if (!uid) return Promise.resolve({ data: null, error: null })
       return supabase
         .from("thread_mutes")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("user_id", uid)
         .eq("thread_id", threadId)
         .maybeSingle() as any
     },
-    [user?.id, threadId],
-    { enabled: !!user }
+    [uid, threadId],
+    { enabled: !!uid }
   )
 
   useEffect(() => {
     if (data !== undefined) {
       setMuted(!!data)
     }
-    if (!user) {
+    if (!uid) {
       setMuted(false)
     }
-  }, [data, user])
+  }, [data, uid])
 
   const toggleMute = useCallback(async () => {
-    if (!user) return
+    if (!uid) return
     const prev = muted
     setMuted(!prev)
 
@@ -42,17 +43,17 @@ export function useThreadMute(threadId: string) {
       const { error } = await supabase
         .from("thread_mutes")
         .delete()
-        .eq("user_id", user.id)
+        .eq("user_id", uid)
         .eq("thread_id", threadId)
       if (error) setMuted(prev)
     } else {
       // mute
       const { error } = await supabase
         .from("thread_mutes")
-        .insert({ user_id: user.id, thread_id: threadId })
+        .insert({ user_id: uid, thread_id: threadId })
       if (error) setMuted(prev)
     }
-  }, [user, muted, threadId])
+  }, [uid, muted, threadId])
 
   return { muted, loading, toggleMute }
 }

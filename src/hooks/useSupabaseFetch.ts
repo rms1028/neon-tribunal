@@ -23,18 +23,24 @@ export function useSupabaseFetch<T>(
     setLoading(true)
     setError(null)
 
-    const { data: result, error: err } = await queryFn()
-    if (!mountedRef.current) return
+    try {
+      const { data: result, error: err } = await queryFn()
+      if (!mountedRef.current) return
 
-    if (err) {
-      if (!silentCodes.includes(err.code)) {
-        setError(err)
+      if (err) {
+        if (!silentCodes.includes(err?.code)) {
+          setError(err)
+        }
+        setLoading(false)
+        return
       }
+      setData(result)
       setLoading(false)
-      return
+    } catch (e) {
+      if (!mountedRef.current) return
+      console.warn("[useSupabaseFetch] query threw:", e)
+      setLoading(false)
     }
-    setData(result)
-    setLoading(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 

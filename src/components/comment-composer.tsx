@@ -11,8 +11,6 @@ import { useToast } from "@/components/toast-provider"
 import { useProfile } from "@/components/profile-provider"
 import { containsProfanity } from "@/lib/profanity"
 
-type Side = "pro" | "con"
-
 type MentionUser = {
   id: string
   displayName: string
@@ -24,25 +22,26 @@ export function CommentComposer({
   parentId,
   onSubmitted,
   template,
+  variant,
 }: {
   threadId: string
-  fixedSide?: Side
+  fixedSide?: "pro" | "con"
   parentId?: string
   onSubmitted?: () => void
   template?: string
+  variant?: "default" | "fixed-bar"
 }) {
   const router = useRouter()
   const { user, loading } = useAuth()
   const { showToast } = useToast()
   const { awardXp, trackActivity, isBanned, profile } = useProfile()
 
-  const [side, setSide] = useState<Side | null>(fixedSide ?? null)
   const [content, setContent] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [pollEnabled, setPollEnabled] = useState(false)
   const [pollQuestion, setPollQuestion] = useState("")
 
-  // 멘션 자동완성
+  // Mention autocomplete
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [mentionResults, setMentionResults] = useState<MentionUser[]>([])
   const [mentionIndex, setMentionIndex] = useState(0)
@@ -53,7 +52,7 @@ export function CommentComposer({
   const COOLDOWN_MS = 10_000
   const draftKey = `neon_comment_draft_${threadId}`
 
-  // 초안 복구
+  // Draft recovery
   useEffect(() => {
     try {
       const saved = localStorage.getItem(draftKey)
@@ -63,11 +62,11 @@ export function CommentComposer({
 
   const canWrite = Boolean(user) && !loading
   const disabled = submitting || !canWrite
+  const isFixedBar = variant === "fixed-bar"
 
-  // 멘션 검색
+  // Mention search
   const searchMentionUsers = useCallback(async (query: string) => {
     if (query.length === 0) {
-      // @ 만 입력하면 이 스레드의 최근 댓글 유저 표시
       const { data } = await supabase
         .from("comments")
         .select("user_id")
@@ -114,12 +113,10 @@ export function CommentComposer({
     setMentionIndex(0)
   }, [threadId, user?.id])
 
-  // textarea onChange에서 멘션 감지
   const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     setContent(value)
 
-    // 초안 저장 (디바운스)
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
     draftTimerRef.current = setTimeout(() => {
       try {
@@ -131,12 +128,10 @@ export function CommentComposer({
     const cursorPos = e.target.selectionStart
     const textBefore = value.slice(0, cursorPos)
 
-    // 커서 앞에서 @검색어 감지
     const mentionMatch = textBefore.match(/@(\S*)$/)
     if (mentionMatch) {
       const query = mentionMatch[1]
       setMentionQuery(query)
-
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
         searchMentionUsers(query)
@@ -147,7 +142,6 @@ export function CommentComposer({
     }
   }, [draftKey, searchMentionUsers])
 
-  // 멘션 선택
   function selectMention(mentionUser: MentionUser) {
     const textarea = textareaRef.current
     if (!textarea) return
@@ -156,7 +150,6 @@ export function CommentComposer({
     const textBefore = content.slice(0, cursorPos)
     const textAfter = content.slice(cursorPos)
 
-    // @검색어 를 @[이름](uuid) 로 치환
     const mentionText = `@[${mentionUser.displayName}](${mentionUser.id}) `
     const newBefore = textBefore.replace(/@\S*$/, mentionText)
 
@@ -164,7 +157,6 @@ export function CommentComposer({
     setMentionQuery(null)
     setMentionResults([])
 
-    // 커서 위치 복원
     requestAnimationFrame(() => {
       textarea.focus()
       const newPos = newBefore.length
@@ -172,26 +164,37 @@ export function CommentComposer({
     })
   }
 
-  // 키보드 네비게이션
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (mentionQuery === null || mentionResults.length === 0) return
+    // Mention autocomplete keys
+    if (mentionQuery !== null && mentionResults.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault()
+        setMentionIndex((i) => (i + 1) % mentionResults.length)
+        return
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault()
+        setMentionIndex((i) => (i - 1 + mentionResults.length) % mentionResults.length)
+        return
+      } else if (e.key === "Enter") {
+        e.preventDefault()
+        selectMention(mentionResults[mentionIndex])
+        return
+      } else if (e.key === "Escape") {
+        setMentionQuery(null)
+        setMentionResults([])
+        return
+      }
+    }
 
-    if (e.key === "ArrowDown") {
+    // Enter to submit (Shift+Enter for newline) — fixed-bar variant
+    if (isFixedBar && e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      setMentionIndex((i) => (i + 1) % mentionResults.length)
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-      setMentionIndex((i) => (i - 1 + mentionResults.length) % mentionResults.length)
-    } else if (e.key === "Enter" && mentionResults.length > 0) {
-      e.preventDefault()
-      selectMention(mentionResults[mentionIndex])
-    } else if (e.key === "Escape") {
-      setMentionQuery(null)
-      setMentionResults([])
+      if (content.trim().length > 0 && !disabled) {
+        handleSubmit(e as unknown as React.FormEvent)
+      }
     }
   }
 
-  // 언마운트 시 디바운스 정리
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -203,18 +206,13 @@ export function CommentComposer({
     e.preventDefault()
 
     if (!user) {
-      showToast("VIP 로그인 유저만 댓글을 등록할 수 있어요.", "info")
+      showToast("로그인 후 의견을 등록할 수 있어요.", "info")
       return
     }
 
     if (isBanned) {
       const until = profile?.bannedUntil ? new Date(profile.bannedUntil).toLocaleDateString("ko-KR") : ""
       showToast(`계정이 정지되었습니다. 해제: ${until}`, "error")
-      return
-    }
-
-    if (!side && template !== "free") {
-      showToast("입장을 선택해주세요. (찬성/반대)", "info")
       return
     }
 
@@ -229,7 +227,7 @@ export function CommentComposer({
     const elapsed = Date.now() - lastSubmitRef.current
     if (elapsed < COOLDOWN_MS) {
       const remain = Math.ceil((COOLDOWN_MS - elapsed) / 1000)
-      showToast(`댓글 도배 방지: ${remain}초 후에 다시 작성할 수 있습니다.`, "info")
+      showToast(`도배 방지: ${remain}초 후에 다시 작성할 수 있습니다.`, "info")
       return
     }
 
@@ -240,7 +238,7 @@ export function CommentComposer({
         thread_id: threadId,
         user_id: user.id,
         content: text,
-        side: template === "free" ? null : side,
+        side: fixedSide ?? null,
         parent_id: parentId ?? null,
       })
       .select("id")
@@ -248,11 +246,10 @@ export function CommentComposer({
     setSubmitting(false)
 
     if (error) {
-      showToast("댓글 등록에 실패했습니다. 다시 시도해주세요.", "error")
+      showToast("의견 등록에 실패했습니다. 다시 시도해주세요.", "error")
       return
     }
 
-    // 투표 첨부가 있으면 comment_polls에 insert
     if (pollEnabled && pollQuestion.trim() && insertedComment?.id) {
       await supabase.from("comment_polls").insert({
         comment_id: insertedComment.id,
@@ -261,97 +258,100 @@ export function CommentComposer({
     }
 
     lastSubmitRef.current = Date.now()
-    if (!fixedSide) setSide(null)
     setContent("")
     try { localStorage.removeItem(draftKey) } catch { /* ignore */ }
     setPollEnabled(false)
     setPollQuestion("")
     router.refresh()
     awardXp("comment")
-    trackActivity("comment") // 데일리 퀘스트 추적
+    trackActivity("comment")
     onSubmitted?.()
   }
 
-  const isFree = template === "free"
+  /* ── fixed-bar variant: single-line input ── */
+  if (isFixedBar) {
+    return (
+      <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
+        <div className="relative flex flex-1 items-center rounded-xl border border-white/[0.08] bg-zinc-900/80 backdrop-blur transition-shadow focus-within:border-emerald-400/30 focus-within:shadow-[0_0_12px_rgba(52,211,153,0.08)]">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleContentChange}
+            onKeyDown={handleKeyDown}
+            placeholder={canWrite ? "의견을 입력하세요..." : "로그인 후 이용 가능"}
+            rows={1}
+            maxLength={500}
+            disabled={!canWrite || submitting}
+            className="w-full resize-none bg-transparent px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ maxHeight: "80px", overflow: "auto" }}
+            onInput={(e) => {
+              const el = e.currentTarget
+              el.style.height = "auto"
+              el.style.height = Math.min(el.scrollHeight, 80) + "px"
+            }}
+          />
 
-  return (
-    <form onSubmit={handleSubmit} className={isFree ? "" : "space-y-3"}>
-      {!fixedSide && !isFree && (
-        /* 입장 선택 */
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSide("pro")}
-            disabled={!canWrite || submitting}
-            aria-pressed={side === "pro"}
-            className={[
-              "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition",
-              "disabled:cursor-not-allowed disabled:opacity-60",
-              side === "pro"
-                ? "border-cyan-400/50 bg-cyan-400/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.18)]"
-                : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10",
-            ].join(" ")}
-          >
-            <span className="inline-flex size-2 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.55)]" />
-            찬성
-          </button>
-          <button
-            type="button"
-            onClick={() => setSide("con")}
-            disabled={!canWrite || submitting}
-            aria-pressed={side === "con"}
-            className={[
-              "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition",
-              "disabled:cursor-not-allowed disabled:opacity-60",
-              side === "con"
-                ? "border-fuchsia-400/50 bg-fuchsia-400/15 text-fuchsia-100 shadow-[0_0_18px_rgba(236,72,153,0.18)]"
-                : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10",
-            ].join(" ")}
-          >
-            <span className="inline-flex size-2 rounded-full bg-fuchsia-300 shadow-[0_0_10px_rgba(236,72,153,0.55)]" />
-            반대
-          </button>
+          {/* Mention dropdown */}
+          {mentionQuery !== null && mentionResults.length > 0 && (
+            <div className="absolute bottom-full left-2 right-2 z-50 mb-1 rounded-xl border border-zinc-700 bg-zinc-950/95 p-1 shadow-xl backdrop-blur">
+              {mentionResults.map((mu, idx) => (
+                <button
+                  key={mu.id}
+                  type="button"
+                  onClick={() => selectMention(mu)}
+                  className={[
+                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition",
+                    idx === mentionIndex
+                      ? "bg-emerald-400/15 text-emerald-100"
+                      : "text-zinc-300 hover:bg-white/5",
+                  ].join(" ")}
+                >
+                  <span className="grid size-6 place-items-center rounded-full bg-gradient-to-br from-cyan-300 to-emerald-300 text-[9px] font-semibold text-black">
+                    {mu.displayName.slice(0, 2)}
+                  </span>
+                  {mu.displayName}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
 
-      <div className={`relative border backdrop-blur ${
-        isFree
-          ? "rounded-xl border-white/[0.08] bg-zinc-900/80"
-          : "rounded-2xl border-white/10 bg-black/40"
-      }`}>
+        <Button
+          type="submit"
+          disabled={disabled || content.trim().length === 0}
+          className="h-9 shrink-0 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 px-3 text-xs font-semibold text-black hover:from-emerald-300 hover:to-teal-300 disabled:opacity-60"
+        >
+          <Send className="size-3.5" />
+        </Button>
+      </form>
+    )
+  }
+
+  /* ── default variant ── */
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="relative rounded-xl border border-white/[0.08] bg-zinc-900/80 backdrop-blur">
         <textarea
           ref={textareaRef}
           value={content}
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
-          placeholder={
-            canWrite
-              ? isFree
-                ? "메시지를 입력하세요… (@로 멘션)"
-                : side
-                  ? `${side === "pro" ? "찬성" : "반대"} 댓글을 입력하세요… (@로 멘션)`
-                  : "먼저 입장을 선택해주세요. (찬성/반대)"
-              : "VIP 로그인 후 댓글을 등록할 수 있어요."
-          }
-          rows={isFree ? 1 : 3}
+          placeholder={canWrite ? "의견을 입력하세요..." : "로그인 후 의견을 등록할 수 있어요."}
+          rows={4}
           maxLength={500}
           disabled={!canWrite || submitting}
-          className={`w-full resize-none bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
-            isFree ? "px-4 py-2.5" : "px-4 py-3"
-          }`}
-          style={isFree ? { maxHeight: "120px", overflow: "auto" } : undefined}
-          onInput={isFree ? (e) => {
+          className="w-full resize-none bg-transparent px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          style={{ minHeight: "100px", maxHeight: "200px", overflow: "auto" }}
+          onInput={(e) => {
             const el = e.currentTarget
             el.style.height = "auto"
             el.style.height = Math.min(el.scrollHeight, 120) + "px"
-          } : undefined}
+          }}
         />
 
-        {/* 멘션 드롭다운 */}
+        {/* Mention dropdown */}
         {mentionQuery !== null && mentionResults.length > 0 && (
-          <div className={`absolute bottom-full left-2 right-2 z-50 mb-1 rounded-xl border bg-zinc-950/95 p-1 shadow-xl backdrop-blur ${
-            isFree ? "border-emerald-400/30" : "border-cyan-400/30"
-          }`}>
+          <div className="absolute bottom-full left-2 right-2 z-50 mb-1 rounded-xl border border-emerald-400/30 bg-zinc-950/95 p-1 shadow-xl backdrop-blur">
             {mentionResults.map((mu, idx) => (
               <button
                 key={mu.id}
@@ -360,9 +360,7 @@ export function CommentComposer({
                 className={[
                   "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition",
                   idx === mentionIndex
-                    ? isFree
-                      ? "bg-emerald-400/15 text-emerald-100"
-                      : "bg-cyan-400/15 text-cyan-100"
+                    ? "bg-emerald-400/15 text-emerald-100"
                     : "text-zinc-300 hover:bg-white/5",
                 ].join(" ")}
               >
@@ -375,7 +373,7 @@ export function CommentComposer({
           </div>
         )}
 
-        {/* 투표 첨부 */}
+        {/* Poll attachment */}
         {pollEnabled && (
           <div className="border-t border-white/10 px-4 py-2">
             <div className="flex items-center gap-2">
@@ -392,11 +390,9 @@ export function CommentComposer({
           </div>
         )}
 
-        <div className={`flex items-center justify-between border-t border-white/10 ${
-          isFree ? "px-3 py-1.5" : "px-4 py-2"
-        }`}>
+        <div className="flex items-center justify-between border-t border-white/10 px-3 py-1.5">
           <div className="flex items-center gap-3">
-            <span className={`text-zinc-600 ${isFree ? "text-[10px]" : "text-[11px] text-zinc-500"}`}>{content.length}/500</span>
+            <span className="text-[10px] text-zinc-600">{content.length}/500</span>
             <button
               type="button"
               onClick={() => setPollEnabled((v) => !v)}
@@ -411,20 +407,16 @@ export function CommentComposer({
               투표
             </button>
             <span className="hidden text-[10px] text-zinc-600 sm:inline">
-              **굵게** *기울임* `코드` ~~취소선~~ @멘션
+              **굵게** *기울임* `코드` @멘션
             </span>
           </div>
           <Button
             type="submit"
-            disabled={disabled || (!isFree && !side) || content.trim().length === 0}
-            className={`text-xs font-semibold text-black disabled:opacity-60 ${
-              isFree
-                ? "h-7 rounded-lg bg-gradient-to-r from-emerald-400 to-teal-400 px-3 hover:from-emerald-300 hover:to-teal-300"
-                : "h-8 bg-gradient-to-r from-cyan-300 via-sky-200 to-fuchsia-300 hover:from-cyan-200 hover:via-sky-100 hover:to-fuchsia-200"
-            }`}
+            disabled={disabled || content.trim().length === 0}
+            className="h-7 rounded-lg bg-gradient-to-r from-emerald-400 to-teal-400 px-3 text-xs font-semibold text-black hover:from-emerald-300 hover:to-teal-300 disabled:opacity-60"
           >
             <Send className="size-3" />
-            {submitting ? "…" : isFree ? "" : "등록"}
+            {submitting ? "…" : ""}
           </Button>
         </div>
       </div>

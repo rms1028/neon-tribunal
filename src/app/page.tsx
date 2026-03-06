@@ -1,23 +1,17 @@
 import Link from "next/link"
 import {
-  BarChart3,
   Bot,
   Briefcase,
-  CalendarDays,
-  Crown,
   Flame,
   Globe,
   GraduationCap,
   Landmark,
   Leaf,
-  MessageSquareText,
   Monitor,
   MoreHorizontal,
   Palette,
   Sparkles,
-  Swords,
   TrendingUp,
-  Trophy,
   Users,
   Zap,
 } from "lucide-react"
@@ -31,12 +25,8 @@ import { NewThreadModal } from "@/components/new-thread-modal"
 import { DebateList } from "@/components/debate-list"
 import type { Debate } from "@/components/debate-list"
 import { HeaderAuth } from "@/components/header-auth"
-import { MissionCard } from "@/components/mission-card"
-import { LeaderBoard } from "@/components/leaderboard"
-import { SeasonBanner } from "@/components/season-banner"
 import { HotDebatesCarousel } from "@/components/hot-debates-carousel"
-import { LiveSessionsSidebar } from "@/components/live-sessions-sidebar"
-import type { LiveSession } from "@/components/live-sessions-sidebar"
+import { SidebarBookmarks } from "@/components/sidebar-bookmarks"
 
 export const revalidate = 30
 
@@ -210,30 +200,6 @@ async function fetchTopBattles(): Promise<Debate[]> {
     .slice(0, 5)
 }
 
-/* 활성 라이브 세션 조회 */
-async function fetchLiveSessions(): Promise<LiveSession[]> {
-  const { data, error } = await supabase
-    .from("live_sessions")
-    .select("id, thread_id, duration_minutes, started_at, is_active, threads(title, tag)")
-    .eq("is_active", true)
-    .order("started_at", { ascending: false })
-    .limit(18)
-
-  if (error || !data) return []
-
-  return data.map((s: Record<string, unknown>) => {
-    const thread = s.threads as Record<string, unknown> | null
-    return {
-      id: String(s.id),
-      thread_id: String(s.thread_id),
-      thread_title: thread ? String(thread.title ?? "") : "",
-      thread_tag: thread ? (thread.tag as string | null) : null,
-      duration_minutes: Number(s.duration_minutes),
-      created_at: String(s.started_at),
-      is_active: true,
-    }
-  })
-}
 
 function formatCompact(n: number) {
   return new Intl.NumberFormat("ko-KR", {
@@ -278,10 +244,9 @@ export default async function Home({
   const params = await searchParams
   const activeTag = params.tag ?? null
 
-  const [debates, topBattles, liveSessions] = await Promise.all([
+  const [debates, topBattles] = await Promise.all([
     fetchDebates(activeTag ?? undefined),
     fetchTopBattles(),
-    fetchLiveSessions(),
   ])
 
   const totalVotes = debates.reduce(
@@ -340,11 +305,11 @@ export default async function Home({
           </div>
         </div>
 
-        {/* ═══ 3컬럼 대시보드 레이아웃 ═══ */}
-        <main className="grid gap-5 lg:grid-cols-[220px_1fr_300px] xl:grid-cols-[240px_1fr_320px]">
+        {/* ═══ 2컬럼 대시보드 레이아웃 ═══ */}
+        <main className="grid gap-5 md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr]">
 
-          {/* ── 좌측: 카테고리 + 라이브 세션 ── */}
-          <aside className="hidden lg:block">
+          {/* ── 좌측: 카테고리 + 북마크 ── */}
+          <aside className="hidden md:block">
             <div className="sticky top-24 space-y-4">
               {/* 카테고리 */}
               <div className="rounded-xl border border-white/[0.08] bg-black/30 p-3 backdrop-blur">
@@ -386,80 +351,19 @@ export default async function Home({
                 </nav>
               </div>
 
-              {/* 라이브 세션 */}
-              <LiveSessionsSidebar initialSessions={liveSessions} />
-
-              {/* 빠른 링크 */}
-              <div className="space-y-1">
-                <Link
-                  href="/arena"
-                  className="flex items-center gap-2 rounded-lg border border-red-400/20 bg-red-400/5 px-2.5 py-2 text-[11px] font-medium text-red-300 backdrop-blur transition hover:bg-red-400/10 hover:text-red-200"
-                >
-                  <Flame className="size-3.5 text-red-400" />
-                  열기장 모드
-                </Link>
-                <Link
-                  href="/stats"
-                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-2 text-[11px] font-medium text-zinc-400 backdrop-blur transition hover:bg-white/5 hover:text-zinc-200"
-                >
-                  <BarChart3 className="size-3.5 text-cyan-300" />
-                  통계 대시보드
-                </Link>
-                <Link
-                  href="/rankings"
-                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-2 text-[11px] font-medium text-zinc-400 backdrop-blur transition hover:bg-white/5 hover:text-zinc-200"
-                >
-                  <Trophy className="size-3.5 text-amber-300" />
-                  카테고리 랭킹
-                </Link>
-                <Link
-                  href="/tournaments"
-                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-2 text-[11px] font-medium text-zinc-400 backdrop-blur transition hover:bg-white/5 hover:text-zinc-200"
-                >
-                  <Swords className="size-3.5 text-cyan-300" />
-                  토론 토너먼트
-                </Link>
-                <Link
-                  href="/seasons"
-                  className="flex items-center gap-2 rounded-lg border border-yellow-400/20 bg-yellow-400/5 px-2.5 py-2 text-[11px] font-medium text-yellow-300 backdrop-blur transition hover:bg-yellow-400/10 hover:text-yellow-200"
-                >
-                  <Crown className="size-3.5 text-yellow-400" />
-                  시즌 랭킹
-                </Link>
-                <Link
-                  href="/weekly-report"
-                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-2 text-[11px] font-medium text-zinc-400 backdrop-blur transition hover:bg-white/5 hover:text-zinc-200"
-                >
-                  <CalendarDays className="size-3.5 text-emerald-300" />
-                  주간 리포트
-                </Link>
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-2.5 py-2 text-[11px] font-medium text-zinc-400 backdrop-blur transition hover:bg-white/5 hover:text-zinc-200"
-                >
-                  <MessageSquareText className="size-3.5 text-fuchsia-300" />
-                  내 프로필
-                </Link>
-              </div>
+              <SidebarBookmarks />
             </div>
           </aside>
 
-          {/* ── 중앙: 캐러셀 + 토론 그리드 ── */}
-          <div className="min-w-0 space-y-4">
-            <div className="mb-4">
-              <HotDebatesCarousel hotDebates={topBattles} />
-            </div>
+          {/* ── 메인: 캐러셀 + 토론 그리드 ── */}
+          <div className="min-w-0 space-y-5">
+            {/* MAIN AGORA 캐러셀 */}
+            <HotDebatesCarousel hotDebates={topBattles} />
+
+            {/* 토론 목록 */}
             <DebateList initialDebates={debates} initialTag={activeTag} />
           </div>
 
-          {/* ── 우측: 미션 + 리더보드 ── */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-3">
-              <SeasonBanner />
-              <MissionCard />
-              <LeaderBoard />
-            </div>
-          </aside>
         </main>
       </div>
     </div>

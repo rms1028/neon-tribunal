@@ -732,10 +732,12 @@ export function CyberJudgePanel({
             <div className="text-sm font-semibold text-zinc-500">
               AI 사이버 판사
             </div>
-            <div className="mt-0.5 text-[11px] text-zinc-600">
-              조건 부족: 양측 각각 {MIN_PER_SIDE}개 이상의 의견이 필요합니다
+            <div className="mt-0.5 text-[10px] text-zinc-600">
+              양쪽 각 {MIN_PER_SIDE}개 이상 필요
             </div>
           </div>
+        </div>
+        <div className="mt-2 flex justify-end">
           <span className="shrink-0 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[11px] text-zinc-600">
             마감 후 자동 판결
           </span>

@@ -5,35 +5,26 @@ import { createPortal } from "react-dom"
 import Link from "next/link"
 import {
   ArrowLeft,
-  Bookmark,
   ChevronDown,
   ChevronUp,
   Flame,
   Lock,
-  MessageSquareText,
   Pencil,
-  Scale,
-  Shield,
-  Swords,
+  Settings,
   ThumbsDown,
   ThumbsUp,
   Trash2,
   X,
-  Zap,
 } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/components/auth-provider"
 import { useProfile } from "@/components/profile-provider"
 import { useConfirm } from "@/components/confirm-dialog"
-import { getTier, TIERS, xpProgress } from "@/lib/xp"
-import { getLevel } from "@/lib/gamification"
-import { FEATURED_BADGES } from "@/lib/gamification"
-import { ACHIEVEMENTS } from "@/lib/achievements"
 import { Button } from "@/components/ui/button"
 import { getDisplayName } from "@/lib/utils"
-import { UserTitleBadge } from "@/components/user-title-badge"
-import { TitleSelectorModal } from "@/components/title-selector-modal"
+import { xpProgress } from "@/lib/xp"
+import { getLevel } from "@/lib/gamification"
 
 /* ─── 타입 ──────────────────────────────────────────── */
 
@@ -59,33 +50,17 @@ type CommentHistoryItem = {
   reactions: { like: number; dislike: number; fire: number }
 }
 
-type VoteHistoryItem = {
-  thread_id: string
-  threadTitle: string
-  vote_type: "pro" | "con"
-}
-
-type BookmarkItem = {
-  thread_id: string
-  title: string
-  pro_count: number
-  con_count: number
-}
-
 type ActivityData = {
   threads: ThreadItem[]
   commentCount: number
   totalLikes: number
-  totalFires: number
+  commentHistory: CommentHistoryItem[]
   proVoteCount: number
   conVoteCount: number
-  verdictCount: number
-  commentHistory: CommentHistoryItem[]
-  voteHistory: VoteHistoryItem[]
-  bookmarks: BookmarkItem[]
+  joinDate: string | null
 }
 
-/* ─── 날짜 포맷 (hydration 안전) ────────────────────── */
+/* ─── 날짜 포맷 ────────────────────────────────────── */
 
 function formatDate(iso: string | null): string {
   if (!iso) return ""
@@ -94,961 +69,181 @@ function formatDate(iso: string | null): string {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`
 }
 
+function timeAgo(iso: string | null): string {
+  if (!iso) return ""
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${Math.max(1, mins)}분 전`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}시간 전`
+  const days = Math.floor(hrs / 24)
+  return `${days}일 전`
+}
+
+/* ─── 성향 라벨 ────────────────────────────────────── */
+
+function getStanceLabel(proPct: number): string {
+  if (proPct >= 80 || proPct <= 20) return "불도저 같은 확신력"
+  if (proPct >= 40 && proPct <= 60) return "냉철한 균형의 수호자"
+  return "날카로운 논리 사냥꾼"
+}
+
 /* ─── 스켈레톤 ─────────────────────────────────────── */
 
 function Bone({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-lg bg-white/[0.07] ${className ?? ""}`}
-    />
-  )
+  return <div className={`animate-pulse rounded-lg bg-white/[0.07] ${className ?? ""}`} />
 }
 
 function ProfileSkeleton() {
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      {/* 컴팩트 헤더 */}
-      <div className="rounded-2xl bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/10 to-emerald-400/10 p-px">
-        <div className="flex items-center gap-4 rounded-2xl bg-black/50 px-5 py-4 backdrop-blur">
-          <Bone className="size-12 shrink-0 rounded-xl" />
-          <div className="flex-1 space-y-2">
-            <Bone className="h-4 w-40" />
-            <Bone className="h-2 w-full max-w-xs" />
-          </div>
-          <Bone className="h-7 w-16 rounded-lg" />
-          <Bone className="h-7 w-16 rounded-lg" />
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 24, padding: "24px 40px" }}>
+      <div className="space-y-6">
+        <Bone className="h-40 rounded-[20px]" />
+        <div className="grid grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => <Bone key={i} className="h-24 rounded-[14px]" />)}
         </div>
+        <Bone className="h-10 w-full" />
+        {[0, 1, 2].map((i) => <Bone key={i} className="h-20 rounded-[14px]" />)}
       </div>
-
-      {/* 2-col 그리드 */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-3">
-          <Bone className="h-3 w-24" />
-          <div className="grid grid-cols-4 gap-2">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Bone key={i} className="h-16 rounded-xl" />
-            ))}
-          </div>
-        </div>
-        <div className="space-y-3">
-          <Bone className="h-16 rounded-xl" />
-          <div className="flex gap-2">
-            {[0, 1, 2, 3].map((i) => (
-              <Bone key={i} className="h-20 flex-1 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 업적 가로 스크롤 */}
-      <div className="flex gap-2 overflow-hidden">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Bone key={i} className="h-16 w-20 shrink-0 rounded-xl" />
-        ))}
-      </div>
-
-      {/* 3-col 하단 */}
-      <div className="grid flex-1 gap-4 lg:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="space-y-2">
-            <Bone className="h-3 w-24" />
-            {[0, 1, 2].map((j) => (
-              <Bone key={j} className="h-12 rounded-xl" />
-            ))}
-          </div>
-        ))}
+      <div className="space-y-3">
+        <Bone className="h-44 rounded-[16px]" />
+        <Bone className="h-48 rounded-[16px]" />
+        <Bone className="h-28 rounded-[16px]" />
+        <Bone className="h-28 rounded-[16px]" />
       </div>
     </div>
   )
 }
 
-/* ─── 배지 컬렉션 섹션 (컴팩트 가로 1줄) ────────────── */
+/* ─── 탭 타입 ──────────────────────────────────────── */
 
-function BadgeCollectionSection({ xp }: { xp: number }) {
-  const currentTier = getTier(xp)
-  const currentTierIdx = TIERS.findIndex(
-    (t) => t.badgeName === currentTier.badgeName
-  )
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-        <Shield className="size-3.5 text-fuchsia-300" />
-        배지 컬렉션
-      </div>
-
-      <div className="flex gap-2">
-        {TIERS.map((tier, idx) => {
-          const unlocked = idx <= currentTierIdx
-          const isCurrent = idx === currentTierIdx
-
-          return (
-            <div
-              key={tier.badgeName}
-              className={`relative flex-1 rounded-xl border p-2.5 text-center transition-all ${
-                unlocked
-                  ? `border-white/15 bg-gradient-to-b ${tier.cardGradient}`
-                  : "border-white/[0.06] bg-white/[0.02]"
-              } ${isCurrent ? "ring-1 ring-white/20" : ""}`}
-              style={
-                unlocked
-                  ? {
-                      boxShadow: `0 0 12px ${tier.glowShadow.split(",")[0]?.split("rgba")[1] ? `rgba${tier.glowShadow.split("rgba")[1]?.split(")")[0]})` : "transparent"}`,
-                    }
-                  : undefined
-              }
-            >
-              {!unlocked && (
-                <div className="absolute inset-0 z-10 grid place-items-center rounded-xl bg-black/60 backdrop-blur-[2px]">
-                  <Lock className="size-3.5 text-zinc-600" />
-                </div>
-              )}
-
-              <div
-                className={`mx-auto grid size-8 place-items-center rounded-lg text-sm font-bold ${
-                  unlocked
-                    ? `bg-gradient-to-br ${tier.avatarGradient} text-black`
-                    : "bg-zinc-800 text-zinc-600"
-                }`}
-              >
-                {idx === 0
-                  ? "🌱"
-                  : idx === 1
-                    ? "⚔️"
-                    : idx === 2
-                      ? "💎"
-                      : "👑"}
-              </div>
-
-              <div
-                className={`mt-1 text-[10px] font-semibold ${
-                  unlocked ? tier.textClass : "text-zinc-600"
-                }`}
-              >
-                {tier.badgeName}
-              </div>
-
-              {isCurrent && (
-                <div className="mt-0.5 text-[8px] font-bold tracking-widest text-emerald-400">
-                  CURRENT
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* 다음 배지까지 진행바 */}
-      {currentTierIdx < TIERS.length - 1 && (
-        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
-          <div className="flex items-center justify-between text-[10px] text-zinc-500">
-            <span>
-              다음:{" "}
-              <span className={TIERS[currentTierIdx + 1].textClass}>
-                {TIERS[currentTierIdx + 1].badgeName}
-              </span>
-            </span>
-            <span>
-              {xp} / {TIERS[currentTierIdx + 1].minXp} XP
-            </span>
-          </div>
-          <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className={`h-full rounded-full bg-gradient-to-r ${TIERS[currentTierIdx + 1].avatarGradient} transition-all duration-700`}
-              style={{
-                width: `${Math.min(
-                  100,
-                  ((xp - TIERS[currentTierIdx].minXp) /
-                    (TIERS[currentTierIdx + 1].minXp -
-                      TIERS[currentTierIdx].minXp)) *
-                    100
-                )}%`,
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ─── 특별 뱃지 섹션 ─────────────── */
-
-function FeaturedBadgeSection() {
-  const { achievements } = useProfile()
-
-  const earned = FEATURED_BADGES.filter((b) => achievements.includes(b.key))
-  if (earned.length === 0 && !FEATURED_BADGES.some(() => true)) return null
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-        <Shield className="size-3.5 text-cyan-300" />
-        특별 뱃지
-      </div>
-      <div className="flex gap-3">
-        {FEATURED_BADGES.map((fb) => {
-          const unlocked = achievements.includes(fb.key)
-          return (
-            <div
-              key={fb.key}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-3 transition-all ${
-                unlocked
-                  ? `${fb.borderClass} ${fb.bgClass} featured-badge-glow`
-                  : "border-white/[0.06] bg-white/[0.02] opacity-40"
-              }`}
-              style={unlocked ? { boxShadow: `0 0 20px ${fb.neonColor}` } : undefined}
-            >
-              <span className="text-xl">{fb.icon}</span>
-              <div>
-                <div className={`text-xs font-bold ${unlocked ? fb.textClass : "text-zinc-500"}`}>
-                  {fb.name}
-                </div>
-                <div className="text-[10px] text-zinc-500">
-                  {fb.key === "logic_king" ? "AI 코칭 90점+ 3회" : "좋아요 50개+"}
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/* ─── 업적 그리드 섹션 (가로 스크롤 1줄) ─────────────── */
-
-const ACHIEVEMENT_ICONS: Record<string, string> = {
-  ThumbsUp: "👍",
-  MessageSquare: "💬",
-  Sparkles: "✨",
-  Crown: "👑",
-  Zap: "⚡",
-  Star: "⭐",
-  Flame: "🔥",
-  Trophy: "🏆",
-}
-
-function AchievementGrid() {
-  const { achievements } = useProfile()
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-        <Shield className="size-3.5 text-amber-300" />
-        업적
-        <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
-          {achievements.length} / {ACHIEVEMENTS.length}
-        </span>
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {ACHIEVEMENTS.map((ach) => {
-          const unlocked = achievements.includes(ach.key)
-          return (
-            <div
-              key={ach.key}
-              className={[
-                "relative w-[5.5rem] shrink-0 rounded-xl border p-2.5 text-center transition-all",
-                unlocked
-                  ? "border-white/15 bg-white/[0.04]"
-                  : "border-white/[0.06] bg-white/[0.02] opacity-40",
-                unlocked ? "achievement-unlock badge-slot-active" : "",
-              ].join(" ")}
-              style={
-                unlocked
-                  ? { boxShadow: `0 0 12px ${ach.glowColor}` }
-                  : undefined
-              }
-            >
-              <div className="mx-auto text-lg">
-                {ACHIEVEMENT_ICONS[ach.icon] ?? "🏅"}
-              </div>
-              <div
-                className={`mt-1 text-[9px] font-semibold leading-tight ${
-                  unlocked ? ach.color : "text-zinc-600"
-                }`}
-              >
-                {ach.name}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/* ─── 댓글 히스토리 섹션 (컴팩트) ────────────────────── */
-
-function CommentHistorySection({
-  comments,
-  total,
-}: {
-  comments: CommentHistoryItem[]
-  total: number
-}) {
-  const [showAll, setShowAll] = useState(false)
-  const visible = showAll ? comments : comments.slice(0, 3)
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-        <MessageSquareText className="size-3.5 text-emerald-300" />
-        내가 쓴 댓글
-        <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
-          {total}개
-        </span>
-      </div>
-
-      {comments.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
-          <div className="text-xs text-zinc-400">아직 작성한 댓글이 없어요.</div>
-        </div>
-      ) : (
-        <>
-          {visible.map((c) => (
-            <Link
-              key={c.id}
-              href={`/thread/${c.thread_id}`}
-              className="group block rounded-lg border-l-2 border-[#39FF14]/20 bg-white/[0.02] py-2 pl-3 pr-2.5 transition-all hover:border-[#39FF14]/40 hover:bg-white/[0.04]"
-            >
-              <div className="truncate text-[10px] text-zinc-600 group-hover:text-zinc-400">
-                {c.threadTitle}
-              </div>
-              <div className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-zinc-200">
-                &ldquo;{c.content}&rdquo;
-              </div>
-              <div className="mt-1.5 flex items-center gap-2 text-[10px] text-zinc-500">
-                <span
-                  className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
-                    c.side === "pro"
-                      ? "bg-[#00FFD1]/10 text-[#00FFD1]/70"
-                      : c.side === "con"
-                        ? "bg-[#FF00FF]/10 text-[#FF00FF]/70"
-                        : "bg-white/5 text-zinc-500"
-                  }`}
-                >
-                  {c.side === "pro"
-                    ? "찬성"
-                    : c.side === "con"
-                      ? "반대"
-                      : "자유"}
-                </span>
-                {c.reactions.like > 0 && (
-                  <span className="inline-flex items-center gap-0.5">
-                    <ThumbsUp className="size-2.5 text-emerald-400/50" />
-                    {c.reactions.like}
-                  </span>
-                )}
-                {c.reactions.fire > 0 && (
-                  <span className="inline-flex items-center gap-0.5">
-                    <Flame className="size-2.5 text-orange-400/50" />
-                    {c.reactions.fire}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
-
-          {comments.length > 3 && (
-            <button
-              onClick={() => setShowAll((p) => !p)}
-              className="flex w-full items-center justify-center gap-1 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
-            >
-              {showAll ? (
-                <>
-                  접기 <ChevronUp className="size-3" />
-                </>
-              ) : (
-                <>
-                  전체 {comments.length}개 보기{" "}
-                  <ChevronDown className="size-3" />
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-/* ─── 투표 기록 섹션 (컴팩트) ────────────────────────── */
-
-function VoteHistorySection({ votes }: { votes: VoteHistoryItem[] }) {
-  const [showAll, setShowAll] = useState(false)
-  const visible = showAll ? votes : votes.slice(0, 3)
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-        <Scale className="size-3.5 text-amber-300" />
-        투표 기록
-        <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
-          {votes.length}건
-        </span>
-      </div>
-
-      {votes.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
-          <div className="text-xs text-zinc-400">아직 투표 기록이 없어요.</div>
-        </div>
-      ) : (
-        <>
-          {visible.map((v, i) => (
-            <Link
-              key={`${v.thread_id}-${i}`}
-              href={`/thread/${v.thread_id}`}
-              className="group flex items-center gap-2 rounded-lg bg-white/[0.02] px-3 py-2 transition-all hover:bg-white/[0.05]"
-            >
-              <span
-                className={`inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${
-                  v.vote_type === "pro"
-                    ? "border-[#00FFD1]/25 bg-[#00FFD1]/10 text-[#00FFD1]"
-                    : "border-[#FF00FF]/25 bg-[#FF00FF]/10 text-[#FF00FF]"
-                }`}
-              >
-                {v.vote_type === "pro" ? (
-                  <>
-                    <ThumbsUp className="size-2" /> 찬성
-                  </>
-                ) : (
-                  <>
-                    <ThumbsDown className="size-2" /> 반대
-                  </>
-                )}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-xs text-zinc-300 group-hover:text-zinc-100">
-                {v.threadTitle}
-              </span>
-            </Link>
-          ))}
-
-          {votes.length > 3 && (
-            <button
-              onClick={() => setShowAll((p) => !p)}
-              className="flex w-full items-center justify-center gap-1 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
-            >
-              {showAll ? (
-                <>
-                  접기 <ChevronUp className="size-3" />
-                </>
-              ) : (
-                <>
-                  전체 {votes.length}건 보기{" "}
-                  <ChevronDown className="size-3" />
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-/* ─── 북마크 섹션 (컴팩트) ────────────────────────────── */
-
-function BookmarkSection({ bookmarks }: { bookmarks: BookmarkItem[] }) {
-  const [showAll, setShowAll] = useState(false)
-  const visible = showAll ? bookmarks : bookmarks.slice(0, 3)
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-        <Bookmark className="size-3.5 text-amber-300" />
-        내 북마크
-        <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
-          {bookmarks.length}개
-        </span>
-      </div>
-
-      {bookmarks.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
-          <div className="text-xs text-zinc-400">북마크한 토론이 없어요.</div>
-        </div>
-      ) : (
-        <>
-          {visible.map((b) => {
-            const total = b.pro_count + b.con_count
-            const proPct = total > 0 ? Math.round((b.pro_count / total) * 100) : 50
-
-            return (
-              <Link
-                key={b.thread_id}
-                href={`/thread/${b.thread_id}`}
-                className="group block rounded-lg bg-white/[0.02] px-3 py-2 transition-all hover:bg-white/[0.05]"
-              >
-                <div className="flex items-center gap-2">
-                  <Bookmark className="size-3 shrink-0 fill-amber-400 text-amber-400" />
-                  <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-100 group-hover:text-amber-100">
-                    {b.title}
-                  </span>
-                </div>
-                {total > 0 && (
-                  <div className="mt-1.5 ml-5 flex h-1 overflow-hidden rounded-full bg-white/[0.06]">
-                    <div
-                      className="rounded-l-full bg-cyan-400/60"
-                      style={{ width: `${proPct}%` }}
-                    />
-                    <div
-                      className="rounded-r-full bg-fuchsia-400/60"
-                      style={{ width: `${100 - proPct}%` }}
-                    />
-                  </div>
-                )}
-              </Link>
-            )
-          })}
-
-          {bookmarks.length > 3 && (
-            <button
-              onClick={() => setShowAll((p) => !p)}
-              className="flex w-full items-center justify-center gap-1 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
-            >
-              {showAll ? (
-                <>
-                  접기 <ChevronUp className="size-3" />
-                </>
-              ) : (
-                <>
-                  전체 {bookmarks.length}개 보기{" "}
-                  <ChevronDown className="size-3" />
-                </>
-              )}
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
-
-/* ─── 찬반 성향 게이지 ─────────────────────────────── */
-
-function getStanceTitle(proPct: number): { emoji: string; label: string } {
-  if (proPct >= 80) return { emoji: "🔥", label: "불도저 같은 확신러" }
-  if (proPct <= 20) return { emoji: "🔥", label: "불도저 같은 확신러" }
-  if (proPct >= 40 && proPct <= 60) return { emoji: "⚖️", label: "냉철한 균형의 수호자" }
-  return { emoji: "⚔️", label: "날카로운 논리 사냥꾼" }
-}
-
-function TendencyGauge({
-  proCount,
-  conCount,
-}: {
-  proCount: number
-  conCount: number
-}) {
-  const total = proCount + conCount
-  if (total === 0) return null
-
-  const proPct = Math.round((proCount / total) * 100)
-  const conPct = 100 - proPct
-  const title = getStanceTitle(proPct)
-
-  return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-      <div className="mb-1.5 text-[10px] tracking-widest text-zinc-600">
-        STANCE TENDENCY
-      </div>
-      {/* 동적 칭호 */}
-      <div className="mb-2 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-gradient-to-r from-[#00FFD1]/[0.06] via-transparent to-[#FF00FF]/[0.06] px-3 py-1 text-[11px] font-medium text-zinc-300">
-          <span>{title.emoji}</span>
-          <span className="bg-gradient-to-r from-[#00FFD1]/80 via-zinc-300 to-[#FF00FF]/80 bg-clip-text text-transparent">
-            {title.label}
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="inline-flex items-center gap-1 text-[#00FFD1]">
-          <ThumbsUp className="size-3" /> 찬성 {proPct}%
-        </span>
-        <span className="inline-flex items-center gap-1 text-[#FF00FF]">
-          반대 {conPct}% <ThumbsDown className="size-3" />
-        </span>
-      </div>
-      <div className="mt-1.5 flex h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
-        <div
-          className="rounded-l-full bg-[#00FFD1] transition-all duration-700"
-          style={{ width: `${proPct}%` }}
-        />
-        <div
-          className="rounded-r-full bg-[#FF00FF] transition-all duration-700"
-          style={{ width: `${conPct}%` }}
-        />
-      </div>
-      <div className="mt-1.5 text-center text-[10px] text-zinc-600">
-        총 {total}표 참여
-      </div>
-    </div>
-  )
-}
+type TabKey = "debates" | "comments"
 
 /* ─── 메인 페이지 ───────────────────────────────────── */
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth()
-  const { profile, setCustomTitle } = useProfile()
+  const { profile } = useProfile()
   const { confirm } = useConfirm()
   const [activity, setActivity] = useState<ActivityData | null>(null)
-  const [titleModalOpen, setTitleModalOpen] = useState(false)
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabKey>("debates")
   const [deleting, setDeleting] = useState(false)
   const [editThread, setEditThread] = useState<ThreadItem | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState("")
   const [editTag, setEditTag] = useState("")
   const [saving, setSaving] = useState(false)
-  const [showAllThreads, setShowAllThreads] = useState(false)
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
-    if (authLoading || !user) {
-      setActivity(null)
-      return
-    }
-
+    if (authLoading || !user) { setActivity(null); return }
     let cancelled = false
     setActivity(null)
 
     ;(async () => {
-      /* ── Group 1: 병렬 쿼리 ── */
-      // 1차: created_by = 내 ID로 검색
-      let threadsRes = await supabase
-        .from("threads")
-        .select("*")
-        .eq("created_by", user.id)
-        .order("created_at", { ascending: false })
-
-      // (orphan thread 조회 제거 — 보안 취약점 수정)
-
-      if (threadsRes.error) {
-        console.error("[Profile] 토론 조회 실패:", threadsRes.error.message, threadsRes.error.code)
-      }
-
-      const [commentFullRes, votesRes, commentCountRes] =
-        await Promise.all([
-          // 내가 쓴 댓글 (최근 20개)
-          supabase
-            .from("comments")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(40),
-          // 내 투표 기록
-          supabase
-            .from("thread_votes")
-            .select("thread_id, vote_type")
-            .eq("user_id", user.id),
-          // 전체 댓글 수 (placeholder — 클라이언트에서 필터 후 재계산)
-          supabase
-            .from("comments")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id),
-        ])
-
+      const [threadsRes, commentFullRes, votesRes, profileRes] = await Promise.all([
+        supabase.from("threads").select("*").eq("created_by", user.id).order("created_at", { ascending: false }),
+        supabase.from("comments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(40),
+        supabase.from("thread_votes").select("thread_id, vote_type").eq("user_id", user.id),
+        supabase.from("profiles").select("created_at").eq("id", user.id).single(),
+      ])
       if (cancelled) return
 
       const threads = (threadsRes.data ?? []).map((r: Record<string, unknown>) => ({
-        id: String(r.id ?? ""),
-        title: String(r.title ?? ""),
-        content: String(r.content ?? ""),
-        tag: String(r.tag ?? ""),
-        created_at: typeof r.created_at === "string" ? r.created_at : null,
-        pro_count: Number(r.pro_count) || 0,
-        con_count: Number(r.con_count) || 0,
-        template: typeof r.template === "string" ? r.template : "free",
-        is_closed: r.is_closed === true,
+        id: String(r.id ?? ""), title: String(r.title ?? ""), content: String(r.content ?? ""),
+        tag: String(r.tag ?? ""), created_at: typeof r.created_at === "string" ? r.created_at : null,
+        pro_count: Number(r.pro_count) || 0, con_count: Number(r.con_count) || 0,
+        template: typeof r.template === "string" ? r.template : "free", is_closed: r.is_closed === true,
       })) as ThreadItem[]
-      // 삭제된 댓글 필터링
+
       const myCommentsFull = (commentFullRes.data ?? [])
         .filter((r: Record<string, unknown>) => r.is_deleted !== true)
-        .slice(0, 20) as Array<{
-        id: string
-        thread_id: string
-        content: string
-        side: "pro" | "con" | null
-        created_at: string | null
-      }>
-      const myVotes = (votesRes.data ?? []) as Array<{
-        thread_id: string
-        vote_type: "pro" | "con"
-      }>
-      // 삭제되지 않은 댓글만 카운트
-      const allCommentsRaw = commentFullRes.data ?? []
-      const commentCount = allCommentsRaw.filter((r: Record<string, unknown>) => r.is_deleted !== true).length
+        .slice(0, 20) as Array<{ id: string; thread_id: string; content: string; side: "pro" | "con" | null; created_at: string | null }>
 
-      /* ── Group 2: 의존 쿼리 ── */
+      const commentCount = (commentFullRes.data ?? []).filter((r: Record<string, unknown>) => r.is_deleted !== true).length
 
-      // 댓글+투표에 관련된 thread ID 수집
+      const myVotes = (votesRes.data ?? []) as Array<{ thread_id: string; vote_type: "pro" | "con" }>
+      const proVoteCount = myVotes.filter((v) => v.vote_type === "pro").length
+      const conVoteCount = myVotes.filter((v) => v.vote_type === "con").length
+
       const relatedThreadIds = new Set<string>()
       myCommentsFull.forEach((c) => relatedThreadIds.add(c.thread_id))
-      myVotes.forEach((v) => relatedThreadIds.add(v.thread_id))
-
-      // thread title 일괄 조회
       const titleMap = new Map<string, string>()
       if (relatedThreadIds.size > 0) {
-        const { data: titleRows } = await supabase
-          .from("threads")
-          .select("id, title")
-          .in("id", Array.from(relatedThreadIds))
-        ;(titleRows ?? []).forEach((r: { id: string; title: string }) => {
-          titleMap.set(r.id, r.title)
+        const { data: titleRows } = await supabase.from("threads").select("id, title").in("id", Array.from(relatedThreadIds))
+        ;(titleRows ?? []).forEach((r: { id: string; title: string }) => { titleMap.set(r.id, r.title) })
+      }
+
+      const myCommentIds = myCommentsFull.map((c) => c.id)
+      const reactionMap = new Map<string, { like: number; dislike: number; fire: number }>()
+      myCommentIds.forEach((id) => reactionMap.set(id, { like: 0, dislike: 0, fire: 0 }))
+      if (myCommentIds.length > 0) {
+        const { data: reactionRows } = await supabase.from("comment_reactions").select("comment_id, reaction").in("comment_id", myCommentIds)
+        ;(reactionRows ?? []).forEach((r: { comment_id: string; reaction: string }) => {
+          const entry = reactionMap.get(r.comment_id)
+          if (entry && (r.reaction === "like" || r.reaction === "dislike" || r.reaction === "fire")) entry[r.reaction]++
         })
       }
 
-      // 내 댓글 ID 목록
-      const myCommentIds = myCommentsFull.map((c) => c.id)
-
-      // 전체 댓글 ID (좋아요/불꽃 집계용)
-      const { data: allMyCommentRows } = await supabase
-        .from("comments")
-        .select("id")
-        .eq("user_id", user.id)
-      const allMyCommentIds = (allMyCommentRows ?? []).map(
-        (c: { id: string }) => c.id
-      )
-
-      // 리액션 카운트 (최근 20개 댓글)
-      const reactionMap = new Map<
-        string,
-        { like: number; dislike: number; fire: number }
-      >()
-      myCommentIds.forEach((id) =>
-        reactionMap.set(id, { like: 0, dislike: 0, fire: 0 })
-      )
-
-      if (myCommentIds.length > 0) {
-        const { data: reactionRows } = await supabase
-          .from("comment_reactions")
-          .select("comment_id, reaction")
-          .in("comment_id", myCommentIds)
-        ;(reactionRows ?? []).forEach(
-          (r: { comment_id: string; reaction: string }) => {
-            const entry = reactionMap.get(r.comment_id)
-            if (entry && (r.reaction === "like" || r.reaction === "dislike" || r.reaction === "fire")) {
-              entry[r.reaction]++
-            }
-          }
-        )
-      }
-
-      // totalLikes, totalFires (전체 댓글 대상)
+      const { data: allMyCommentRows } = await supabase.from("comments").select("id").eq("user_id", user.id)
+      const allMyCommentIds = (allMyCommentRows ?? []).map((c: { id: string }) => c.id)
       let totalLikes = 0
-      let totalFires = 0
       if (allMyCommentIds.length > 0) {
-        const [likesRes, firesRes] = await Promise.all([
-          supabase
-            .from("comment_reactions")
-            .select("id", { count: "exact", head: true })
-            .eq("reaction", "like")
-            .in("comment_id", allMyCommentIds),
-          supabase
-            .from("comment_reactions")
-            .select("id", { count: "exact", head: true })
-            .eq("reaction", "fire")
-            .in("comment_id", allMyCommentIds),
-        ])
-        totalLikes = likesRes.count ?? 0
-        totalFires = firesRes.count ?? 0
+        const { count } = await supabase.from("comment_reactions").select("id", { count: "exact", head: true }).eq("reaction", "like").in("comment_id", allMyCommentIds)
+        totalLikes = count ?? 0
       }
 
-      // verdictCount: 내가 참여한 스레드(생성/댓글/투표) 중 ai_verdict 있는 수
-      const participatedThreadIds = new Set<string>()
-      threads.forEach((t) => participatedThreadIds.add(t.id))
-      myCommentsFull.forEach((c) => participatedThreadIds.add(c.thread_id))
-      myVotes.forEach((v) => participatedThreadIds.add(v.thread_id))
-
-      let verdictCount = 0
-      if (participatedThreadIds.size > 0) {
-        const { count } = await supabase
-          .from("threads")
-          .select("id", { count: "exact", head: true })
-          .in("id", Array.from(participatedThreadIds))
-          .not("ai_verdict", "is", null)
-        verdictCount = count ?? 0
-      }
-
-      // 북마크 목록
-      let bookmarks: BookmarkItem[] = []
-      const { data: bmRows, error: bmErr } = await supabase
-        .from("bookmarks")
-        .select("thread_id")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-      if (!bmErr && bmRows && bmRows.length > 0) {
-        const bmThreadIds = bmRows.map((r: { thread_id: string }) => r.thread_id)
-        const { data: bmThreads } = await supabase
-          .from("threads")
-          .select("id, title, pro_count, con_count")
-          .in("id", bmThreadIds)
-        if (bmThreads) {
-          const bmMap = new Map(
-            (bmThreads as Array<{ id: string; title: string; pro_count: number; con_count: number }>)
-              .map((t) => [t.id, t])
-          )
-          // 북마크 순서 유지
-          bookmarks = bmThreadIds
-            .map((tid: string) => {
-              const t = bmMap.get(tid)
-              return t
-                ? { thread_id: t.id, title: t.title, pro_count: t.pro_count ?? 0, con_count: t.con_count ?? 0 }
-                : null
-            })
-            .filter((b): b is BookmarkItem => b !== null)
-        }
-      }
-
-      // 투표 통계
-      const proVoteCount = myVotes.filter(
-        (v) => v.vote_type === "pro"
-      ).length
-      const conVoteCount = myVotes.filter(
-        (v) => v.vote_type === "con"
-      ).length
-
-      // 댓글 히스토리 조립
       const commentHistory: CommentHistoryItem[] = myCommentsFull.map((c) => ({
-        id: c.id,
-        thread_id: c.thread_id,
-        threadTitle: titleMap.get(c.thread_id) ?? "삭제된 토론",
-        content: c.content,
-        side: c.side,
-        created_at: c.created_at,
+        id: c.id, thread_id: c.thread_id, threadTitle: titleMap.get(c.thread_id) ?? "삭제된 토론",
+        content: c.content, side: c.side, created_at: c.created_at,
         reactions: reactionMap.get(c.id) ?? { like: 0, dislike: 0, fire: 0 },
       }))
 
-      // 투표 기록 조립
-      const voteHistory: VoteHistoryItem[] = myVotes.map((v) => ({
-        thread_id: v.thread_id,
-        threadTitle: titleMap.get(v.thread_id) ?? "삭제된 토론",
-        vote_type: v.vote_type,
-      }))
+      const joinDate = typeof profileRes.data?.created_at === "string"
+        ? profileRes.data.created_at
+        : (user as { created_at?: string }).created_at ?? null
 
       if (cancelled) return
-      setActivity({
-        threads,
-        commentCount,
-        totalLikes,
-        totalFires,
-        proVoteCount,
-        conVoteCount,
-        verdictCount,
-        commentHistory,
-        voteHistory,
-        bookmarks,
-      })
+      setActivity({ threads, commentCount, totalLikes, commentHistory, proVoteCount, conVoteCount, joinDate })
     })()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [user?.id, authLoading])
 
   /* ── 토론 삭제 ── */
   async function handleDeleteThread(threadId: string) {
     if (!user || deleting) return
-    const ok = await confirm({
-      title: "토론 삭제",
-      message: "정말 이 토론을 삭제하시겠습니까? 삭제하면 되돌릴 수 없습니다.",
-      confirmText: "삭제",
-      variant: "danger",
-    })
-    if (!ok) {
-      setConfirmDeleteId(null)
-      return
-    }
+    const ok = await confirm({ title: "토론 삭제", message: "정말 이 토론을 삭제하시겠습니까?", confirmText: "삭제", variant: "danger" })
+    if (!ok) return
     setDeleting(true)
-    const { error, data } = await supabase
-      .from("threads")
-      .delete()
-      .eq("id", threadId)
-      .eq("created_by", user.id)
-      .select("id")
+    const { error, data } = await supabase.from("threads").delete().eq("id", threadId).eq("created_by", user.id).select("id")
     setDeleting(false)
-    setConfirmDeleteId(null)
-    if (error) {
-      console.error("[Profile] 토론 삭제 실패:", error.message, error.code)
-      alert("토론 삭제에 실패했습니다: " + (error.message || error.code))
-      return
-    }
-    if (!data || data.length === 0) {
-      alert("삭제 권한이 없거나 이미 삭제된 토론입니다. Supabase SQL Editor에서 fix-threads-rls.sql을 실행해주세요.")
-      return
-    }
-    setActivity((prev) =>
-      prev ? { ...prev, threads: prev.threads.filter((t) => t.id !== threadId) } : prev
-    )
+    if (error) { alert("삭제 실패: " + error.message); return }
+    if (!data || data.length === 0) { alert("삭제 권한이 없습니다."); return }
+    setActivity((prev) => prev ? { ...prev, threads: prev.threads.filter((t) => t.id !== threadId) } : prev)
   }
 
-  /* ── 토론 수정 모달 열기 ── */
-  function openEditModal(t: ThreadItem) {
-    setEditThread(t)
-    setEditTitle(t.title)
-    setEditContent(t.content)
-    setEditTag(t.tag)
-  }
-
-  function closeEditModal() {
-    setEditThread(null)
-    setEditTitle("")
-    setEditContent("")
-    setEditTag("")
-  }
+  /* ── 토론 수정 ── */
+  function openEditModal(t: ThreadItem) { setEditThread(t); setEditTitle(t.title); setEditContent(t.content); setEditTag(t.tag) }
+  function closeEditModal() { setEditThread(null); setEditTitle(""); setEditContent(""); setEditTag("") }
 
   async function handleSaveThread() {
     if (!user || !editThread || saving) return
     const trimTitle = editTitle.trim()
     if (!trimTitle) return
     setSaving(true)
-    const { error, data } = await supabase
-      .from("threads")
-      .update({
-        title: trimTitle,
-        content: editContent.trim(),
-        tag: editTag || null,
-      })
-      .eq("id", editThread.id)
-      .eq("created_by", user.id)
-      .select("id")
+    const { error, data } = await supabase.from("threads").update({ title: trimTitle, content: editContent.trim(), tag: editTag || null }).eq("id", editThread.id).eq("created_by", user.id).select("id")
     setSaving(false)
-    if (error) {
-      console.error("[Profile] 토론 수정 실패:", error.message, error.code)
-      alert("토론 수정에 실패했습니다: " + (error.message || error.code))
-      return
-    }
-    if (!data || data.length === 0) {
-      alert("수정 권한이 없습니다. Supabase SQL Editor에서 fix-threads-rls.sql을 실행해주세요.")
-      return
-    }
-    setActivity((prev) =>
-      prev
-        ? {
-            ...prev,
-            threads: prev.threads.map((t) =>
-              t.id === editThread.id
-                ? { ...t, title: trimTitle, content: editContent.trim(), tag: editTag }
-                : t
-            ),
-          }
-        : prev
-    )
+    if (error) { alert("수정 실패: " + error.message); return }
+    if (!data || data.length === 0) { alert("수정 권한이 없습니다."); return }
+    setActivity((prev) => prev ? { ...prev, threads: prev.threads.map((t) => t.id === editThread.id ? { ...t, title: trimTitle, content: editContent.trim(), tag: editTag } : t) } : prev)
     closeEditModal()
   }
 
-  /* ── 로딩 중 ── */
+  /* ── 로딩 ── */
   if (authLoading || (user && !activity)) {
     return (
-      <div className="flex min-h-screen flex-col bg-black text-zinc-100">
-        <div className="pointer-events-none fixed inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(900px_circle_at_20%_10%,rgba(34,211,238,0.10),transparent_55%),radial-gradient(700px_circle_at_80%_20%,rgba(236,72,153,0.08),transparent_55%)]" />
-        </div>
-        <div className="relative w-full flex-1 px-6 py-8 sm:px-10 lg:px-12">
-          <Bone className="mb-6 h-4 w-24" />
-          <ProfileSkeleton />
-        </div>
+      <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#eee" }}>
+        <div style={{ padding: "32px" }}><ProfileSkeleton /></div>
       </div>
     )
   }
@@ -1056,509 +251,350 @@ export default function ProfilePage() {
   /* ── 미로그인 ── */
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-zinc-100">
-        <div className="relative mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200"
-          >
-            <ArrowLeft className="size-4" />
-            홈으로
-          </Link>
-          <div className="mt-12 rounded-2xl border border-white/10 bg-black/40 p-12 text-center backdrop-blur">
-            <div className="mx-auto grid size-16 place-items-center rounded-2xl border border-fuchsia-400/20 bg-fuchsia-400/5 text-fuchsia-300">
-              <Swords className="size-7" />
-            </div>
-            <div className="mt-5 text-xl font-semibold text-zinc-100">
-              전투원 인증이 필요해
-            </div>
-            <div className="mt-2 text-sm text-zinc-400">
-              마이페이지는 로그인한 유저만 접근할 수 있어요.
-            </div>
-            <div className="mt-8">
-              <Link href="/">
-                <Button className="bg-white text-black hover:bg-white/90">
-                  홈으로 돌아가기
-                </Button>
-              </Link>
-            </div>
-          </div>
+      <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#eee", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>로그인이 필요합니다</h2>
+          <p style={{ fontSize: 14, color: "#555", marginBottom: 24 }}>마이페이지는 로그인 후 이용할 수 있어요.</p>
+          <Link href="/"><Button className="bg-white text-black hover:bg-zinc-200">홈으로</Button></Link>
         </div>
       </div>
     )
   }
 
-  /* ── 본문 ── */
   if (!activity) return null
 
   const xp = profile?.xp ?? 0
-  const tier = getTier(xp)
-  const badge = tier.badgeName
-  const { pct, current, total, next } = xpProgress(xp)
+  const level = getLevel(xp)
+  const { pct: xpPct } = xpProgress(xp)
   const displayName = profile?.displayName || getDisplayName(user.id)
-  const avatarInitials = displayName.slice(0, 2).toUpperCase()
+  const avatarInitial = displayName.slice(0, 1)
+  const streakDays = profile?.streakDays ?? 0
 
-  const visibleThreads = showAllThreads
-    ? activity.threads
-    : activity.threads.slice(0, 3)
+  const totalVotes = activity.proVoteCount + activity.conVoteCount
+  const proPct = totalVotes > 0 ? Math.round((activity.proVoteCount / totalVotes) * 100) : 50
+  const conPct = 100 - proPct
 
-  // 자유/격돌 전적 분류
-  const freeThreads = activity.threads.filter((t) => t.template === "free")
-  const clashThreads = activity.threads.filter((t) => t.template === "strict")
+  const items = activeTab === "debates" ? activity.threads : activity.commentHistory
+  const visibleItems = showAll ? items : items.slice(0, 10)
 
-  const STATS = [
-    { value: freeThreads.length, label: "자유 토론", icon: MessageSquareText, color: "green" },
-    { value: clashThreads.length, label: "찬반 격돌", icon: Swords, color: "clash" },
-    { value: activity.commentCount, label: "작성 댓글", icon: MessageSquareText, color: "zinc" },
-    { value: activity.proVoteCount, label: "찬성 투표", icon: ThumbsUp, color: "cyan" },
-    { value: activity.conVoteCount, label: "반대 투표", icon: ThumbsDown, color: "magenta" },
-    { value: activity.totalLikes, label: "받은 좋아요", icon: ThumbsUp, color: "amber" },
-    { value: activity.verdictCount, label: "AI 판결", icon: Scale, color: "amber" },
-  ] as const
+  const TABS: { key: TabKey; label: string; count: number }[] = [
+    { key: "debates", label: "내 토론", count: activity.threads.length },
+    { key: "comments", label: "내 댓글", count: activity.commentCount },
+  ]
 
-  const colorMap: Record<string, { border: string; bg: string; text: string; icon: string }> = {
-    green:   { border: "border-[#39FF14]/15", bg: "bg-[#39FF14]/5",  text: "text-[#39FF14]",   icon: "text-[#39FF14]/60" },
-    clash:   { border: "border-[#00FFD1]/15", bg: "bg-[#00FFD1]/5",  text: "text-[#00FFD1]",   icon: "text-[#00FFD1]/60" },
-    cyan:    { border: "border-[#00FFD1]/15", bg: "bg-[#00FFD1]/5",  text: "text-[#00FFD1]",   icon: "text-[#00FFD1]/60" },
-    magenta: { border: "border-[#FF00FF]/15", bg: "bg-[#FF00FF]/5",  text: "text-[#FF00FF]",   icon: "text-[#FF00FF]/60" },
-    zinc:    { border: "border-zinc-400/15",  bg: "bg-zinc-400/5",   text: "text-zinc-100",    icon: "text-zinc-400/60" },
-    amber:   { border: "border-amber-400/15", bg: "bg-amber-400/5",  text: "text-amber-100",   icon: "text-amber-400/60" },
-  }
+  const NEON_BADGES = [
+    { name: "네온 뉴비", icon: "🌟", color: "#55b3ff", tooltip: "가입 시 자동 획득", unlocked: true },
+    { name: "네온 레귤러", icon: "⚡", color: "#00e4a5", tooltip: "토론 5개 참여 시 획득", unlocked: activity.threads.length >= 5 },
+    { name: "네온 코어", icon: "💎", color: "#c084fc", tooltip: "토론 20개 + 댓글 50개 달성 시 획득", unlocked: activity.threads.length >= 20 && activity.commentCount >= 50 },
+    { name: "네온 레전드", icon: "👑", color: "#ffd055", tooltip: "토론 50개 + 좋아요 200개 달성 시 획득", unlocked: activity.threads.length >= 50 && activity.totalLikes >= 200 },
+    { name: "네온 이터널", icon: "🔥", color: "#ff4d8d", tooltip: "100일 연속 활동 시 획득", unlocked: streakDays >= 100 },
+  ]
+  const currentBadgeIdx = [...NEON_BADGES].reverse().findIndex((b) => b.unlocked)
+  const currentBadge = currentBadgeIdx >= 0 ? NEON_BADGES[NEON_BADGES.length - 1 - currentBadgeIdx] : NEON_BADGES[0]
+  const currentBadgeRealIdx = NEON_BADGES.indexOf(currentBadge)
+  const nextBadge = currentBadgeRealIdx < NEON_BADGES.length - 1 ? NEON_BADGES[currentBadgeRealIdx + 1] : null
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-zinc-100">
-      {/* 배경 그라데이션 */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(1100px_circle_at_15%_10%,rgba(34,211,238,0.12),transparent_55%),radial-gradient(800px_circle_at_85%_15%,rgba(236,72,153,0.10),transparent_55%),radial-gradient(800px_circle_at_50%_90%,rgba(52,211,153,0.07),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.04),transparent_30%)] opacity-40" />
-      </div>
+    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#eee", fontFamily: "'Noto Sans KR', sans-serif", position: "relative", overflow: "hidden" }}>
+      {/* Ambient background */}
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 400, background: "radial-gradient(ellipse at 30% 0%, rgba(0,228,165,0.04) 0%, transparent 60%), radial-gradient(ellipse at 70% 0%, rgba(192,132,252,0.03) 0%, transparent 60%)", pointerEvents: "none" }} />
 
-      <div className="relative w-full flex-1 px-6 py-6 sm:px-10 lg:px-12">
-        {/* 네비게이션 */}
-        <nav className="mb-5 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200"
-          >
-            <ArrowLeft className="size-4" />
-            아고라로
+      {/* Header */}
+      <header style={{ padding: "16px 40px", borderBottom: "1px solid rgba(255,255,255,0.03)", background: "rgba(10,10,15,0.8)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link href="/" style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.06)", color: "#666", fontSize: 13, padding: "6px 16px", borderRadius: 8, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <ArrowLeft style={{ width: 14, height: 14 }} /> 홈
           </Link>
-          <span className="text-[11px] tracking-widest text-zinc-600">
-            MERCENARY FILE
-          </span>
-        </nav>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "#888" }}>MY PROFILE</span>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link href="/settings/notifications" style={{ padding: "7px 18px", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "#999", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Settings style={{ width: 12, height: 12 }} /> 설정
+          </Link>
+          <Link href="/settings/profile" style={{ padding: "7px 18px", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "1px solid rgba(0,228,165,0.2)", background: "rgba(0,228,165,0.06)", color: "#00e4a5", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Pencil style={{ width: 12, height: 12 }} /> 프로필 수정
+          </Link>
+        </div>
+      </header>
 
-        <div className="flex flex-1 flex-col gap-4">
-          {/* ━━━━ 컴팩트 프로필 헤더 (한 줄) ━━━━ */}
-          <div
-            className={`rounded-2xl bg-gradient-to-r ${tier.cardGradient} p-px`}
-            style={{ boxShadow: tier.glowShadow }}
-          >
-            <div className="rounded-2xl border border-white/10 bg-black/50 px-5 py-4 backdrop-blur">
-              <div className="flex items-center gap-4">
-                {/* 아바타 (48px) */}
-                <div className="relative shrink-0">
-                  <div
-                    className={`grid size-12 place-items-center rounded-xl bg-gradient-to-br ${tier.avatarGradient} text-base font-bold text-black`}
-                    style={{ boxShadow: tier.avatarShadow }}
-                  >
-                    {avatarInitials}
-                  </div>
-                  <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-black bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+      {/* Content: 2 column */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 24, padding: "24px 40px 60px", position: "relative" }}>
+
+        {/* ─── LEFT: Profile + Activity ─── */}
+        <div>
+          {/* Profile Card */}
+          <div className="profile-fadeUp" style={{ borderRadius: 20, background: "linear-gradient(135deg, rgba(0,228,165,0.03) 0%, rgba(192,132,252,0.02) 100%)", border: "1px solid rgba(0,228,165,0.08)", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, right: 0, width: 120, height: 120, background: "radial-gradient(circle at top right, rgba(192,132,252,0.06), transparent 70%)" }} />
+
+            <div style={{ padding: "32px 32px 0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                {/* Avatar */}
+                <div className="profile-avatar-glow" style={{ width: 72, height: 72, borderRadius: 20, background: "linear-gradient(135deg, rgba(0,228,165,0.15), rgba(0,200,255,0.1))", border: "2px solid rgba(0,228,165,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 900, color: "#00e4a5", position: "relative" }}>
+                  {avatarInitial}
+                  <div style={{ position: "absolute", bottom: -2, right: -2, width: 14, height: 14, borderRadius: "50%", background: "#00e4a5", border: "3px solid #0a0a0f" }} />
                 </div>
 
-                {/* 이름 + 배지 + XP */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-sm font-semibold text-zinc-100">
-                      {displayName}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tier.pillClasses}`}
-                    >
-                      <Swords className="size-2.5" />
-                      {badge}
-                    </span>
-                    <span className="level-number-glow inline-flex items-center rounded-md border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-bold text-cyan-300">
-                      Lv.{getLevel(xp)}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tier.pillClasses}`}
-                    >
-                      <Zap className="size-2.5" />
-                      {xp} XP
-                    </span>
-                    {profile?.customTitle && (
-                      <UserTitleBadge titleKey={profile.customTitle} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                    <span style={{ fontSize: 22, fontWeight: 900, color: "#eee" }}>{displayName}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#c084fc", background: "rgba(192,132,252,0.12)", padding: "3px 10px", borderRadius: 8, border: "1px solid rgba(192,132,252,0.2)", fontFamily: "'JetBrains Mono', monospace" }}>Lv.{level}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, color: currentBadge.color, fontWeight: 600 }}>{currentBadge.icon} {currentBadge.name}</span>
+                    {activity.joinDate && <span style={{ fontSize: 11, color: "#444" }}>· {formatDate(activity.joinDate)} 가입</span>}
+                  </div>
+                </div>
+
+                {/* XP */}
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#ffd055", fontFamily: "'JetBrains Mono', monospace", display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>⚡ {xp} XP</div>
+                  {nextBadge && <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>다음: {nextBadge.name}</div>}
+                </div>
+              </div>
+            </div>
+
+            {/* XP Bar — full width at card bottom */}
+            <div style={{ padding: "18px 0 0" }}>
+              <div style={{ height: 6, background: "rgba(255,255,255,0.04)", borderRadius: "0 0 20px 20px" }}>
+                <div style={{ height: "100%", borderRadius: "0 0 20px 20px", width: `${xpPct}%`, background: "linear-gradient(90deg, #00e4a5, #c084fc)", transition: "width 0.5s", boxShadow: "0 0 10px rgba(0,228,165,0.3)" }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="profile-fadeUp" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 24, animationDelay: "0.1s" }}>
+            {([
+              { label: "토론", value: activity.threads.length, color: "#00e4a5", icon: "⚔️" },
+              { label: "댓글", value: activity.commentCount, color: "#55b3ff", icon: "💬" },
+              { label: "받은 좋아요", value: activity.totalLikes, color: "#ff4d8d", icon: "♥" },
+            ] as const).map((s) => (
+              <div key={s.label} className="profile-stat-card" style={{ padding: "18px 16px", borderRadius: 14, textAlign: "center", background: "rgba(255,255,255,0.015)", border: `1px solid ${s.color}10`, transition: "all 0.15s" }}>
+                <div style={{ fontSize: 12, marginBottom: 6 }}>{s.icon}</div>
+                <div style={{ fontSize: 26, fontWeight: 900, color: s.color, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabs */}
+          <div className="profile-fadeUp" style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.04)", animationDelay: "0.15s" }}>
+            {TABS.map((t) => (
+              <button key={t.key} onClick={() => { setActiveTab(t.key); setShowAll(false) }} style={{ padding: "12px 20px", border: "none", background: "transparent", fontSize: 14, fontWeight: activeTab === t.key ? 700 : 500, color: activeTab === t.key ? "#eee" : "#555", cursor: "pointer", fontFamily: "inherit", borderBottom: activeTab === t.key ? "2px solid #00e4a5" : "2px solid transparent", transition: "all 0.15s" }}>
+                {t.label} <span style={{ color: activeTab === t.key ? "#00e4a5" : "#444", fontSize: 12 }}>{t.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {items.length === 0 && (
+              <div style={{ padding: "48px 0", textAlign: "center", fontSize: 14, color: "#555" }}>
+                {activeTab === "debates" ? "아직 작성한 토론이 없어요." : "아직 작성한 댓글이 없어요."}
+              </div>
+            )}
+
+            {/* 내 토론 */}
+            {activeTab === "debates" && (visibleItems as ThreadItem[]).map((t, i) => {
+              const isClash = t.template === "strict"
+              const accent = isClash ? "#00e4a5" : "#55b3ff"
+              return (
+                <div key={t.id} className="profile-fadeUp profile-list-card" style={{ padding: "16px 20px", borderRadius: 14, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", gap: 14, transition: "all 0.15s", animationDelay: `${i * 0.05}s` }}>
+                  <div style={{ width: 3, height: 36, borderRadius: 2, background: accent, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Link href={`/thread/${t.id}`} style={{ textDecoration: "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: "#ddd", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</span>
+                        <span style={{ fontSize: 9, fontWeight: 800, color: accent, background: `${accent}12`, padding: "2px 8px", borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>{isClash ? "CLASH" : "FREE"}</span>
+                        {t.is_closed && <span style={{ fontSize: 9, color: "#666", background: "rgba(255,255,255,0.04)", padding: "2px 6px", borderRadius: 6, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 2 }}><Lock style={{ width: 10, height: 10 }} /> 마감</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#555", display: "flex", gap: 8 }}>
+                        {isClash && <span>찬성 {t.pro_count} · 반대 {t.con_count}</span>}
+                        {t.tag && <span>#{t.tag}</span>}
+                        <span>{timeAgo(t.created_at)}</span>
+                      </div>
+                    </Link>
+                    {/* 수정/삭제 */}
+                    <div style={{ marginTop: 8, display: "flex", gap: 8, opacity: 0 }} className="profile-card-actions">
+                      <button type="button" onClick={() => openEditModal(t)} style={{ fontSize: 11, color: "#555", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3, fontFamily: "inherit" }}><Pencil style={{ width: 10, height: 10 }} /> 수정</button>
+                      <button type="button" onClick={() => handleDeleteThread(t.id)} disabled={deleting} style={{ fontSize: 11, color: "#555", background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3, fontFamily: "inherit" }}><Trash2 style={{ width: 10, height: 10 }} /> 삭제</button>
+                    </div>
+                  </div>
+                  <Link href={`/thread/${t.id}`} style={{ fontSize: 14, color: "#333", textDecoration: "none" }}>→</Link>
+                </div>
+              )
+            })}
+
+            {/* 내 댓글 */}
+            {activeTab === "comments" && (visibleItems as CommentHistoryItem[]).map((c, i) => (
+              <Link key={c.id} href={`/thread/${c.thread_id}`} style={{ textDecoration: "none" }}>
+                <div className="profile-fadeUp profile-list-card" style={{ padding: "16px 20px", borderRadius: 14, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", transition: "all 0.15s", animationDelay: `${i * 0.05}s` }}>
+                  <div style={{ fontSize: 11, color: "#555", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>{c.threadTitle}</span>
+                    {c.side && (
+                      <span style={{ fontSize: 9, fontWeight: 700, color: c.side === "pro" ? "#00e4a5" : "#ff4d8d", background: c.side === "pro" ? "rgba(0,228,165,0.1)" : "rgba(255,77,141,0.1)", padding: "1px 6px", borderRadius: 6 }}>
+                        {c.side === "pro" ? "찬성" : "반대"}
+                      </span>
                     )}
-                  </div>
-
-                  {/* XP 미니 진행바 */}
-                  <div className="mt-1.5 flex items-center gap-3">
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${tier.avatarGradient} transition-all duration-700`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="shrink-0 text-[10px] text-zinc-500">
-                      {next ? (
-                        <>
-                          {current}/{total}
-                        </>
-                      ) : (
-                        <span className={tier.textClass}>MAX</span>
-                      )}
+                    <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+                      {c.reactions.like > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}><ThumbsUp style={{ width: 10, height: 10 }} /> {c.reactions.like}</span>}
+                      {c.reactions.fire > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}><Flame style={{ width: 10, height: 10 }} /> {c.reactions.fire}</span>}
+                      {timeAgo(c.created_at)}
                     </span>
                   </div>
+                  <p style={{ fontSize: 14, color: "#bbb", lineHeight: 1.6, margin: 0 }}>{c.content}</p>
                 </div>
+              </Link>
+            ))}
 
-                {/* 버튼들 */}
-                <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                  <button
-                    type="button"
-                    onClick={() => setTitleModalOpen(true)}
-                    className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-medium text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-                  >
-                    칭호 변경
-                  </button>
-                  <Link
-                    href="/settings/profile"
-                    className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-medium text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-                  >
-                    <Pencil className="size-2.5" />
-                    프로필 수정
-                  </Link>
-                  <Link
-                    href="/settings/security"
-                    className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-medium text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-                  >
-                    <Shield className="size-2.5" />
-                    보안
-                  </Link>
-                  <Link
-                    href="/bookmarks"
-                    className="inline-flex items-center gap-1 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1.5 text-[10px] font-medium text-cyan-300 transition hover:bg-cyan-400/20"
-                  >
-                    <Bookmark className="size-2.5" />
-                    내 북마크
-                  </Link>
-                </div>
+            {/* 더보기 */}
+            {items.length > 10 && (
+              <button onClick={() => setShowAll((p) => !p)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, width: "100%", padding: "10px", fontSize: 12, color: "#555", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                {showAll ? <>접기 <ChevronUp style={{ width: 14, height: 14 }} /></> : <>전체 {items.length}개 보기 <ChevronDown style={{ width: 14, height: 14 }} /></>}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ─── RIGHT: HUD Panel ─── */}
+        <div style={{ position: "sticky", top: 100, alignSelf: "start" }}>
+          {/* HUD Header + Rank */}
+          <div className="profile-fadeUp" style={{ padding: "18px 20px", borderRadius: 16, background: "linear-gradient(135deg, rgba(0,228,165,0.04), rgba(192,132,252,0.03))", border: "1px solid rgba(0,228,165,0.08)", marginBottom: 12, animationDelay: "0.1s" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#00e4a5", fontFamily: "'Orbitron', 'JetBrains Mono', monospace", letterSpacing: 1 }}>HUD</span>
+                <span className="profile-online-glow" style={{ fontSize: 9, color: "#00e4a5", background: "rgba(0,228,165,0.1)", padding: "2px 6px", borderRadius: 6, fontWeight: 700 }}>● ONLINE</span>
               </div>
-
-              {/* 모바일: 버튼 2줄차 */}
-              <div className="mt-3 flex flex-wrap items-center gap-2 sm:hidden">
-                <button
-                  type="button"
-                  onClick={() => setTitleModalOpen(true)}
-                  className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-medium text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-                >
-                  칭호 변경
-                </button>
-                <Link
-                  href="/settings/profile"
-                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-medium text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-                >
-                  <Pencil className="size-2.5" />
-                  프로필 수정
-                </Link>
-                <Link
-                  href="/settings/security"
-                  className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-medium text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-                >
-                  <Shield className="size-2.5" />
-                  보안
-                </Link>
-                <Link
-                  href="/bookmarks"
-                  className="inline-flex items-center gap-1 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1.5 text-[10px] font-medium text-cyan-300 transition hover:bg-cyan-400/20"
-                >
-                  <Bookmark className="size-2.5" />
-                  내 북마크
-                </Link>
+            </div>
+            <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.03)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 11, color: "#666" }}>CURRENT RANK</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: "#ffd055", fontFamily: "'JetBrains Mono', monospace" }}>⚡ {xp} XP</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 20 }}>{currentBadge.icon}</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: currentBadge.color }}>{currentBadge.name}</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#c084fc", background: "rgba(192,132,252,0.12)", padding: "2px 8px", borderRadius: 6, fontFamily: "'JetBrains Mono', monospace" }}>Lv.{level}</span>
+              </div>
+              <div style={{ fontSize: 10, color: "#555", marginBottom: 6 }}>
+                {nextBadge ? `다음: ${nextBadge.name} — ${nextBadge.tooltip}` : "🎉 최고 등급 달성!"}
+              </div>
+              <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.04)" }}>
+                <div style={{ height: "100%", borderRadius: 2, width: `${xpPct}%`, background: `linear-gradient(90deg, ${currentBadge.color}, ${nextBadge?.color ?? currentBadge.color})`, boxShadow: `0 0 8px ${currentBadge.color}44` }} />
               </div>
             </div>
           </div>
 
-          <TitleSelectorModal
-            isOpen={titleModalOpen}
-            onClose={() => setTitleModalOpen(false)}
-            currentTitle={profile?.customTitle ?? null}
-            onSelect={setCustomTitle}
-          />
-
-          {/* ━━━━ 중앙 2컬럼: Stats + 성향/배지 ━━━━ */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            {/* 좌측: Combat Stats */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-              <div className="mb-3 text-[10px] tracking-widest text-zinc-600">
-                COMBAT STATS
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {STATS.map((s) => {
-                  const c = colorMap[s.color]
-                  const Icon = s.icon
-                  return (
-                    <div
-                      key={s.label}
-                      className={`rounded-xl border ${c.border} ${c.bg} p-3 text-center`}
-                    >
-                      <div className={`text-xl font-bold tabular-nums ${c.text}`}>
-                        {s.value}
-                      </div>
-                      <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-zinc-500">
-                        <Icon className={`size-2.5 ${c.icon}`} />
-                        {s.label}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* 우측: 성향 게이지 + 배지 컬렉션 */}
-            <div className="space-y-3">
-              <TendencyGauge
-                proCount={activity.proVoteCount}
-                conCount={activity.conVoteCount}
-              />
-              <BadgeCollectionSection xp={xp} />
-            </div>
-          </div>
-
-          {/* ━━━━ 특별 뱃지 ━━━━ */}
-          <FeaturedBadgeSection />
-
-          {/* ━━━━ 업적 (가로 스크롤 1줄) ━━━━ */}
-          <AchievementGrid />
-
-          {/* ━━━━ 하단 3컬럼: 토론 / 댓글 / 투표+북마크 ━━━━ */}
-          <div className="grid flex-1 gap-4 lg:grid-cols-3">
-            {/* 좌: 내가 연 토론 */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-100">
-                <Swords className="size-3.5 text-cyan-300" />
-                내가 연 토론
-                <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-zinc-400">
-                  {activity.threads.length}개
-                </span>
-              </div>
-
-              {activity.threads.length === 0 ? (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
-                  <div className="text-xs text-zinc-400">
-                    아직 연 토론이 없어요.
+          {/* Badge Collection */}
+          <div className="profile-fadeUp" style={{ padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", marginBottom: 12, animationDelay: "0.15s" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#888", marginBottom: 14 }}>BADGE COLLECTION</div>
+            {/* 상단 3개 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
+              {NEON_BADGES.slice(0, 3).map((b, idx) => {
+                const isCurrent = idx === currentBadgeRealIdx
+                return (
+                  <div key={b.name} title={b.tooltip} className="profile-badge-card" style={{ padding: "14px 6px", borderRadius: 12, textAlign: "center", background: b.unlocked ? `${b.color}08` : "rgba(255,255,255,0.01)", border: isCurrent ? `1.5px solid ${b.color}44` : "1px solid rgba(255,255,255,0.03)", opacity: b.unlocked ? 1 : 0.4, position: "relative", transition: "all 0.15s", cursor: "default" }}>
+                    {isCurrent && <div style={{ position: "absolute", top: 5, right: 5, fontSize: 7, fontWeight: 800, color: b.color, background: `${b.color}18`, padding: "1px 5px", borderRadius: 4 }}>NOW</div>}
+                    <div style={{ fontSize: 20, marginBottom: 5 }}>{b.unlocked ? b.icon : "🔒"}</div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: b.unlocked ? b.color : "#444", lineHeight: 1.3, wordBreak: "keep-all" }}>{b.name}</div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  {visibleThreads.map((t) => {
-                    const tplBadge =
-                      t.template === "strict"
-                        ? { label: "CLASH", cls: "border-[#00FFD1]/30 bg-[#00FFD1]/10 text-[#00FFD1]" }
-                        : null
-
-                    return (
-                      <div
-                        key={t.id}
-                        className="group rounded-xl bg-white/[0.02] p-2.5 transition-all hover:bg-white/[0.05]"
-                      >
-                        <Link href={`/thread/${t.id}`} className="block">
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-100 group-hover:text-white">
-                              {t.title}
-                            </span>
-                            <div className="flex shrink-0 items-center gap-1">
-                              {tplBadge && (
-                                <span
-                                  className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-bold tracking-wide ${tplBadge.cls}`}
-                                >
-                                  {tplBadge.label}
-                                </span>
-                              )}
-                              {t.is_closed && (
-                                <span className="inline-flex items-center rounded-md border border-red-400/20 bg-red-400/10 px-1 py-0.5 text-[9px] text-red-300">
-                                  <Lock className="size-2.5" />
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="mt-1.5 flex items-center gap-2.5 text-[10px] text-zinc-500">
-                            <span className="inline-flex items-center gap-1">
-                              <span className="size-1.5 rounded-full bg-[#00FFD1]/60" />
-                              찬성 {t.pro_count ?? 0}
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <span className="size-1.5 rounded-full bg-[#FF00FF]/60" />
-                              반대 {t.con_count ?? 0}
-                            </span>
-                            <span className="text-zinc-700">
-                              {formatDate(t.created_at)}
-                            </span>
-                          </div>
-                        </Link>
-
-                        {/* 수정/삭제 아이콘 (호버 시 표시) */}
-                        <div className="mt-1.5 flex items-center gap-1 border-t border-white/[0.03] pt-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(t)}
-                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-zinc-500 transition hover:bg-white/10 hover:text-cyan-300"
-                          >
-                            <Pencil className="size-2.5" />
-                            수정
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteThread(t.id)}
-                            disabled={deleting}
-                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-zinc-500 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-50"
-                          >
-                            <Trash2 className="size-2.5" />
-                            삭제
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-
-                  {activity.threads.length > 3 && (
-                    <button
-                      onClick={() => setShowAllThreads((p) => !p)}
-                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-white/[0.03] py-1.5 text-[10px] text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
-                    >
-                      {showAllThreads ? (
-                        <>
-                          접기 <ChevronUp className="size-3" />
-                        </>
-                      ) : (
-                        <>
-                          전체 {activity.threads.length}개 보기{" "}
-                          <ChevronDown className="size-3" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </>
-              )}
+                )
+              })}
             </div>
-
-            {/* 중앙: 내가 쓴 댓글 */}
-            <CommentHistorySection
-              comments={activity.commentHistory}
-              total={activity.commentCount}
-            />
-
-            {/* 우: 투표 기록 + 북마크 */}
-            <div className="space-y-4">
-              <VoteHistorySection votes={activity.voteHistory} />
-              <BookmarkSection bookmarks={activity.bookmarks} />
+            {/* 하단 2개 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {NEON_BADGES.slice(3).map((b, rawIdx) => {
+                const idx = rawIdx + 3
+                const isCurrent = idx === currentBadgeRealIdx
+                return (
+                  <div key={b.name} title={b.tooltip} className="profile-badge-card" style={{ padding: "14px 6px", borderRadius: 12, textAlign: "center", background: b.unlocked ? `${b.color}08` : "rgba(255,255,255,0.01)", border: isCurrent ? `1.5px solid ${b.color}44` : "1px solid rgba(255,255,255,0.03)", opacity: b.unlocked ? 1 : 0.4, position: "relative", transition: "all 0.15s", cursor: "default" }}>
+                    {isCurrent && <div style={{ position: "absolute", top: 5, right: 5, fontSize: 7, fontWeight: 800, color: b.color, background: `${b.color}18`, padding: "1px 5px", borderRadius: 4 }}>NOW</div>}
+                    <div style={{ fontSize: 20, marginBottom: 5 }}>{b.unlocked ? b.icon : "🔒"}</div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: b.unlocked ? b.color : "#444", lineHeight: 1.3, wordBreak: "keep-all" }}>{b.name}</div>
+                  </div>
+                )
+              })}
             </div>
           </div>
+
+          {/* Streak */}
+          <div className="profile-fadeUp" style={{ padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", marginBottom: 12, animationDelay: "0.2s" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#888", marginBottom: 10 }}>STREAK</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 28 }}>🔥</span>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: "#ffd055", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>{streakDays}일 연속</div>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>목표: 7일 연속</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 4, marginTop: 12 }}>
+              {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                <div key={d} style={{ flex: 1, height: 8, borderRadius: 4, background: d <= streakDays ? "#ffd055" : "rgba(255,255,255,0.06)", border: d <= streakDays ? "none" : "1px solid rgba(255,255,255,0.06)", transition: "all 0.3s" }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 8, color: "#444" }}>
+              {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                <span key={d} style={{ flex: 1, textAlign: "center", color: d <= streakDays ? "#ffd055" : "#333" }}>{d}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Stance Tendency */}
+          {totalVotes > 0 && (
+            <div className="profile-fadeUp" style={{ padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", animationDelay: "0.25s" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#888", marginBottom: 12 }}>STANCE TENDENCY</div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 11 }}>
+                <span style={{ color: "#00e4a5", fontWeight: 700 }}>찬성 {proPct}%</span>
+                <span style={{ color: "#ff4d8d", fontWeight: 700 }}>반대 {conPct}%</span>
+              </div>
+              <div style={{ display: "flex", height: 4, borderRadius: 2, gap: 2 }}>
+                <div style={{ width: `${proPct}%`, background: "#00e4a5", borderRadius: 2 }} />
+                <div style={{ width: `${conPct}%`, background: "#ff4d8d", borderRadius: 2 }} />
+              </div>
+              <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(0,228,165,0.06)", textAlign: "center", fontSize: 11, color: "#00e4a5", fontWeight: 600 }}>
+                🔥 {getStanceLabel(proPct)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── 토론 수정 모달 (portal) ── */}
-      {editThread &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) closeEditModal()
-            }}
-          >
-            <div className="relative mx-4 w-full max-w-lg rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-2xl">
-              <button
-                type="button"
-                onClick={closeEditModal}
-                className="absolute top-4 right-4 rounded-full p-1 text-zinc-500 hover:bg-white/10 hover:text-zinc-300"
-              >
-                <X className="size-5" />
-              </button>
-
-              <h2 className="mb-5 text-lg font-semibold text-zinc-100">
-                토론 수정
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-                    제목
-                  </label>
-                  <input
-                    type="text"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    maxLength={100}
-                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-zinc-100 outline-none focus:border-cyan-400/40"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-                    내용
-                  </label>
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    rows={4}
-                    maxLength={2000}
-                    className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-zinc-100 outline-none focus:border-cyan-400/40"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-                    카테고리
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "AI",
-                      "정치",
-                      "경제",
-                      "사회",
-                      "기술",
-                      "문화",
-                      "교육",
-                      "환경",
-                      "기타",
-                    ].map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() =>
-                          setEditTag(editTag === cat ? "" : cat)
-                        }
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                          editTag === cat
-                            ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
-                            : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={closeEditModal}
-                    className="border-white/10 text-zinc-400"
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    onClick={handleSaveThread}
-                    disabled={saving || !editTitle.trim()}
-                    className="bg-gradient-to-r from-cyan-300 via-sky-200 to-fuchsia-300 text-sm font-semibold text-black hover:from-cyan-200 hover:via-sky-100 hover:to-fuchsia-200 disabled:opacity-60"
-                  >
-                    {saving ? "저장 중…" : "저장"}
-                  </Button>
+      {/* ── 토론 수정 모달 ── */}
+      {editThread && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }} onClick={(e) => { if (e.target === e.currentTarget) closeEditModal() }}>
+          <div style={{ position: "relative", margin: "0 16px", width: "100%", maxWidth: 480, borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", background: "#0f0f14", padding: 24 }}>
+            <button type="button" onClick={closeEditModal} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "#555", cursor: "pointer" }}><X style={{ width: 20, height: 20 }} /></button>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#eee", marginBottom: 20 }}>토론 수정</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 6 }}>제목</label>
+                <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} maxLength={100} style={{ width: "100%", padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.3)", color: "#eee", fontSize: 14, outline: "none", fontFamily: "inherit" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 6 }}>내용</label>
+                <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} maxLength={2000} style={{ width: "100%", padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.3)", color: "#eee", fontSize: 14, outline: "none", resize: "none", fontFamily: "inherit" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 6 }}>카테고리</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["AI", "정치", "경제", "사회", "기술", "문화", "교육", "환경", "기타"].map((cat) => (
+                    <button key={cat} type="button" onClick={() => setEditTag(editTag === cat ? "" : cat)} style={{ padding: "4px 12px", borderRadius: 20, border: editTag === cat ? "1px solid rgba(0,228,165,0.4)" : "1px solid rgba(255,255,255,0.06)", background: editTag === cat ? "rgba(0,228,165,0.1)" : "rgba(255,255,255,0.03)", color: editTag === cat ? "#00e4a5" : "#888", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+                      {cat}
+                    </button>
+                  ))}
                 </div>
               </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 8 }}>
+                <Button variant="outline" onClick={closeEditModal} className="border-white/10 text-zinc-400">취소</Button>
+                <Button onClick={handleSaveThread} disabled={saving || !editTitle.trim()} style={{ background: "linear-gradient(90deg, #00e4a5, #c084fc)", color: "#000", fontWeight: 700 }}>
+                  {saving ? "저장 중…" : "저장"}
+                </Button>
+              </div>
             </div>
-          </div>,
-          document.body
-        )}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

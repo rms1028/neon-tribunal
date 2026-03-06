@@ -3,38 +3,61 @@
 import { useCallback, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/components/auth-provider"
-import { useSupabaseFetch } from "@/hooks/useSupabaseFetch"
 
 export function useTagSubscriptions() {
   const auth = useAuth()
-  const user = auth?.user ?? null
-  const loading = auth?.loading ?? true
+  const user = auth ? auth.user : null
+  const loading = auth ? auth.loading : true
   const [subscribed, setSubscribed] = useState<Set<string>>(new Set())
+  const [fetched, setFetched] = useState(false)
 
-  const userId = user?.id ?? null
-  const { data } = useSupabaseFetch<{ tag: string }[]>(
-    () => {
-      if (!userId) return Promise.resolve({ data: null, error: null })
-      return supabase
-        .from("tag_subscriptions")
-        .select("tag")
-        .eq("user_id", userId) as any
-    },
-    [userId, loading],
-    { enabled: !loading && !!userId }
-  )
+  const userId = user && user.id ? user.id : null
 
+  // 태그 구독 로드
   useEffect(() => {
-    if (data) {
-      setSubscribed(new Set(data.map((r) => r.tag)))
-    } else if (!user || loading) {
+    if (loading || !userId) {
+      if (!loading) setFetched(true)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("tag_subscriptions")
+          .select("tag")
+          .eq("user_id", userId)
+        if (cancelled) return
+        if (error) {
+          // 테이블 미존재 등 무시
+          if (error.code !== "42P01" && error.code !== "PGRST205") {
+            console.warn("[TagSub]", error.code, error.message)
+          }
+          setFetched(true)
+          return
+        }
+        if (data && data.length > 0) {
+          setSubscribed(new Set(data.map((r: { tag: string }) => r.tag)))
+        } else {
+          setSubscribed(new Set())
+        }
+      } catch {
+        // 네트워크 에러 등 무시
+      }
+      if (!cancelled) setFetched(true)
+    })()
+    return () => { cancelled = true }
+  }, [userId, loading])
+
+  // 로그아웃 시 초기화
+  useEffect(() => {
+    if (!user && !loading) {
       setSubscribed(new Set())
     }
-  }, [data, user, loading])
+  }, [user, loading])
 
   const toggleSubscription = useCallback(
     async (tag: string) => {
-      if (!user) return
+      if (!user || !user.id) return
 
       const wasSub = subscribed.has(tag)
 
@@ -46,34 +69,42 @@ export function useTagSubscriptions() {
         return next
       })
 
-      if (wasSub) {
-        const { error } = await supabase
-          .from("tag_subscriptions")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("tag", tag)
+      try {
+        if (wasSub) {
+          const { error } = await supabase
+            .from("tag_subscriptions")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("tag", tag)
 
-        if (error && error.code !== "42P01" && error.code !== "PGRST205") {
-          // 롤백
-          setSubscribed((prev) => new Set([...prev, tag]))
-        }
-      } else {
-        const { error } = await supabase
-          .from("tag_subscriptions")
-          .insert({ user_id: user.id, tag })
+          if (error && error.code !== "42P01" && error.code !== "PGRST205") {
+            setSubscribed((prev) => new Set([...prev, tag]))
+          }
+        } else {
+          const { error } = await supabase
+            .from("tag_subscriptions")
+            .insert({ user_id: user.id, tag })
 
-        if (error && error.code !== "42P01" && error.code !== "PGRST205") {
-          // 롤백
-          setSubscribed((prev) => {
-            const next = new Set(prev)
-            next.delete(tag)
-            return next
-          })
+          if (error && error.code !== "42P01" && error.code !== "PGRST205") {
+            setSubscribed((prev) => {
+              const next = new Set(prev)
+              next.delete(tag)
+              return next
+            })
+          }
         }
+      } catch {
+        // 롤백
+        setSubscribed((prev) => {
+          const next = new Set(prev)
+          if (wasSub) next.add(tag)
+          else next.delete(tag)
+          return next
+        })
       }
     },
     [user, subscribed]
   )
 
-  return { subscribed, toggleSubscription }
+  return { subscribed, toggleSubscription, loaded: fetched }
 }

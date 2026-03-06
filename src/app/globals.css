@@ -1484,6 +1484,492 @@ html body {
   animation: search-glow-pulse 2.5s ease-in-out infinite;
 }
 
+/* ── 라이브 디베이트 리디자인 ── */
+
+@keyframes live-neon-border-flow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 찬성 칼럼: 민트 네온 흐르는 보더 */
+.live-chat-column-pro {
+  position: relative;
+  z-index: 0;
+}
+.live-chat-column-pro::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 209, 0.1),
+    rgba(0, 255, 209, 0.5),
+    rgba(34, 211, 238, 0.6),
+    rgba(0, 255, 209, 0.5),
+    rgba(0, 255, 209, 0.1)
+  );
+  background-size: 300% 100%;
+  animation: live-neon-border-flow 4s linear infinite;
+  will-change: background-position;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 반대 칼럼: 핑크 네온 흐르는 보더 (역방향) */
+.live-chat-column-con {
+  position: relative;
+  z-index: 0;
+}
+.live-chat-column-con::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 0, 255, 0.1),
+    rgba(255, 0, 255, 0.5),
+    rgba(236, 72, 153, 0.6),
+    rgba(255, 0, 255, 0.5),
+    rgba(255, 0, 255, 0.1)
+  );
+  background-size: 300% 100%;
+  animation: live-neon-border-flow 4s linear infinite reverse;
+  will-change: background-position;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 중앙 구분선 네온 글로우 */
+.live-neon-divider {
+  position: relative;
+}
+.live-neon-divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(34, 211, 238, 0.4) 20%,
+    rgba(236, 72, 153, 0.3) 50%,
+    rgba(34, 211, 238, 0.4) 80%,
+    transparent
+  );
+  background-size: 100% 200%;
+  animation: neon-divider-flow 4s linear infinite;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.2), 0 0 16px rgba(34, 211, 238, 0.08);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* 말풍선 등장 애니메이션 */
+@keyframes live-bubble-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.live-bubble-enter {
+  animation: live-bubble-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 타이머 긴급 깜빡임 */
+@keyframes live-timer-urgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.live-timer-urgent {
+  animation: live-timer-urgent 1s ease-in-out infinite;
+  color: #f87171;
+}
+
+/* ── 3단 대시보드 UI ── */
+
+/* 사이드 뱃지 글로우 */
+@keyframes side-badge-pulse {
+  0%, 100% { box-shadow: 0 0 4px var(--badge-glow); }
+  50% { box-shadow: 0 0 10px var(--badge-glow); }
+}
+.side-badge-pro {
+  --badge-glow: rgba(52,211,153,0.3);
+  animation: side-badge-pulse 3s ease-in-out infinite;
+}
+.side-badge-con {
+  --badge-glow: rgba(236,72,153,0.3);
+  animation: side-badge-pulse 3s ease-in-out infinite;
+}
+
+/* 댓글 입장 애니메이션 */
+@keyframes comment-enter {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.comment-enter {
+  animation: comment-enter 0.25s ease-out;
+}
+
+/* 디스코드 입력창 포커스 글로우 */
+.composer-glow-pro {
+  box-shadow: 0 0 12px rgba(52,211,153,0.2);
+}
+.composer-glow-con {
+  box-shadow: 0 0 12px rgba(236,72,153,0.2);
+}
+
+/* ── 카드 그리드 + 쓰레드 패널 UI (v2) ── */
+
+/* 의견 카드 */
+.opinion-card {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.opinion-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(52,211,153,0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.opinion-card:hover::before { opacity: 1; }
+
+/* 쓰레드 패널 슬라이드 인 */
+.thread-panel {
+  animation: slideInRight 0.3s cubic-bezier(.22,1,.36,1);
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* 쓰레드 연결선 */
+.thread-reply-line {
+  border-left: 1px solid rgba(255,255,255,0.06);
+}
+.thread-reply-item .thread-connect-line {
+  background: linear-gradient(180deg, rgba(52,211,153,0.12), rgba(255,255,255,0.04));
+}
+.thread-reply-item .thread-connect-branch {
+  background: linear-gradient(90deg, rgba(52,211,153,0.12), transparent);
+}
+.thread-reply-item:last-child .thread-connect-line {
+  height: 20px;
+}
+
+/* 리액션 버튼 호버 */
+.reaction-btn {
+  transition: all 0.15s ease;
+}
+.reaction-btn:hover {
+  transform: scale(1.1);
+}
+.reaction-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── 찬반 스플릿 뷰 UI (legacy) ── */
+
+/* 사이드 패널 스크롤 */
+.side-panel-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
+}
+.side-panel-scroll::-webkit-scrollbar { width: 4px; }
+.side-panel-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* 사이드 패널 배경 그라데이션 */
+.side-pro { background: linear-gradient(170deg, #0b1a1a 0%, #0a0f14 70%); }
+.side-con { background: linear-gradient(190deg, #1a0b1a 0%, #0a0f14 70%); }
+
+/* 센터 게이지 글로우 */
+.gauge-fill-pro {
+  background: linear-gradient(180deg, #00ffcc, rgba(0,255,160,0.25));
+  box-shadow: 0 0 16px #00ffcc;
+  transition: height 1s cubic-bezier(.22,1,.36,1);
+}
+.gauge-fill-con {
+  background: linear-gradient(0deg, #ff00ff, rgba(255,0,255,0.25));
+  box-shadow: 0 0 16px #ff00ff;
+  transition: height 1s cubic-bezier(.22,1,.36,1);
+}
+.gauge-glow-pro {
+  background: radial-gradient(ellipse, rgba(0,255,204,0.15), transparent 70%);
+}
+.gauge-glow-con {
+  background: radial-gradient(ellipse, rgba(255,0,255,0.15), transparent 70%);
+}
+
+/* 진행률 바 */
+.progress-pro {
+  background: linear-gradient(90deg, #00ffcc, #00ffa0);
+  transition: width 0.8s ease;
+}
+.progress-con {
+  background: linear-gradient(90deg, rgba(255,0,255,0.5), #ff00ff);
+  transition: width 0.8s ease;
+}
+
+/* 글래스모피즘 드로어 패널 */
+.drawer-glass {
+  background: rgba(10,15,20,0.55);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 4px 0 40px rgba(0,0,0,0.5);
+}
+.drawer-glass::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 220px;
+  background: linear-gradient(0deg, rgba(0,255,204,0.04), rgba(255,0,255,0.04), transparent);
+  pointer-events: none;
+}
+
+/* 도구 카드 */
+.tool-card-split {
+  border-radius: 12px;
+  padding: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.tool-card-split::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.tool-card-split.cyan-card::before { background: linear-gradient(90deg, #00ffcc, transparent); }
+.tool-card-split.magenta-card::before { background: linear-gradient(90deg, #ff00ff, transparent); }
+.tool-card-split:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+}
+.tool-card-split:hover::before { opacity: 1; }
+
+/* 카드 등장 애니메이션 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card-anim { animation: fadeInUp 0.4s ease both; }
+
+/* 하단 찬성/반대 버튼 */
+.add-btn-split {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.add-btn-pro {
+  background: rgba(0,255,204,0.12);
+  color: #00ffcc;
+  border: 1px solid rgba(0,255,204,0.35);
+}
+.add-btn-pro:hover {
+  background: rgba(0,255,204,0.22);
+  box-shadow: 0 0 20px rgba(0,255,204,0.2);
+}
+.add-btn-con {
+  background: rgba(255,0,255,0.12);
+  color: #ff00ff;
+  border: 1px solid rgba(255,0,255,0.35);
+}
+.add-btn-con:hover {
+  background: rgba(255,0,255,0.22);
+  box-shadow: 0 0 20px rgba(255,0,255,0.2);
+}
+
+/* ── HUD 툴벨트 ── */
+.hud-main-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #2dd4bf;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.hud-main-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #5eead4;
+  box-shadow: 0 0 16px rgba(45,212,191,0.35);
+}
+
+.hud-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: rgba(255,255,255,0.08);
+}
+
+.hud-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.hud-icon-btn:hover {
+  color: #2dd4bf;
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 8px rgba(45,212,191,0.8));
+}
+
+/* Orbitron 폰트 */
+.font-orbitron { font-family: var(--font-orbitron), 'Orbitron', sans-serif; }
+
+/* ════════════════════════════════════════════════════════════
+   찬반토론 (ProCon) 리디자인 — procon-battle.tsx
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 페이드인 + 카드 등장 ── */
+@keyframes procon-fadein-anim {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.procon-fadein {
+  animation: procon-fadein-anim 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes procon-slidein {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes procon-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 라이브 버튼 펄스 ── */
+@keyframes procon-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,68,68,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(255,68,68,0); }
+}
+
+/* ── 라이브 토론 버튼 ── */
+.procon-live-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 68, 68, 0.25);
+  background: rgba(255, 68, 68, 0.08);
+  color: #ff4444;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: procon-live-pulse 2s ease-in-out infinite;
+}
+.procon-live-btn:hover {
+  background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.4);
+}
+
+/* ── 프로필 페이지 애니메이션 ── */
+
+@keyframes profile-fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes profile-borderGlow {
+  0%, 100% { border-color: rgba(0,228,165,0.15); }
+  50% { border-color: rgba(0,228,165,0.3); }
+}
+
+@keyframes profile-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.profile-fadeUp {
+  animation: profile-fadeUp 0.4s ease both;
+}
+
+.profile-avatar-glow {
+  animation: profile-borderGlow 3s ease infinite;
+}
+
+.profile-online-glow {
+  animation: profile-glow 2s ease infinite;
+}
+
+.profile-list-card:hover {
+  border-color: rgba(255,255,255,0.1) !important;
+  background: rgba(255,255,255,0.025) !important;
+}
+
+.profile-list-card:hover .profile-card-actions {
+  opacity: 1 !important;
+}
+
+.profile-badge-card:hover {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+.profile-stat-card:hover {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
 /* ── 접근성: prefers-reduced-motion ── */
 
 @media (prefers-reduced-motion: reduce) {

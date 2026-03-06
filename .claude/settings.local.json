@@ -23,7 +23,13 @@
       "Bash(tasklist:*)",
       "Bash(netstat:*)",
       "Bash(xargs:*)",
-      "Bash(\"C:\\\\Users\\\\82108\\\\Desktop\\\\deabte-app\\\\.env.example\":*)"
+      "Bash(\"C:\\\\Users\\\\82108\\\\Desktop\\\\deabte-app\\\\.env.example\":*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(do basename:*)",
+      "Bash(do echo:*)",
+      "Bash(unzip:*)",
+      "Bash(do:*)",
+      "Bash(/tmp/check_imports.sh:*)"
     ]
   }
 }

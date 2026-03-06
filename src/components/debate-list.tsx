@@ -777,7 +777,8 @@ export function DebateList({ initialDebates, initialTag }: { initialDebates: Deb
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "threads" },
         (payload) => {
-          const row = payload.new as Record<string, unknown>
+          const row = payload.new as Record<string, unknown> | null
+          if (!row) return
           const rid = String(row.id ?? "")
           if (!rid || pendingVotes.current.has(rid)) return
           const pro = Math.max(0, Number(row.pro_count) || 0)
@@ -1220,7 +1221,7 @@ export function DebateList({ initialDebates, initialTag }: { initialDebates: Deb
               건
               {statusFilter !== "all" && (
                 <span className="ml-1 text-zinc-500">
-                  ({statusFilter === "live" ? "진행 중" : statusFilter === "settled" ? "판결 완료" : "내가 참여한"})
+                  ({statusFilter === "live" ? "진행 중" : statusFilter === "settled" ? "마감" : "내가 참여한"})
                 </span>
               )}
               {filterTag && (
@@ -1239,7 +1240,7 @@ export function DebateList({ initialDebates, initialTag }: { initialDebates: Deb
         {([
           { key: "all" as StatusFilter, label: "전체", color: "cyan" },
           { key: "live" as StatusFilter, label: "진행 중", color: "green" },
-          { key: "settled" as StatusFilter, label: "판결 완료", color: "violet" },
+          { key: "settled" as StatusFilter, label: "마감", color: "violet" },
           { key: "my" as StatusFilter, label: "내가 참여한", color: "amber" },
         ] as const).map(({ key, label, color }) => {
           const active = statusFilter === key
@@ -1371,7 +1372,7 @@ export function DebateList({ initialDebates, initialTag }: { initialDebates: Deb
                     : statusFilter === "my"
                       ? "아직 참여한 토론이 없습니다"
                       : statusFilter === "settled"
-                        ? "판결 완료된 토론이 없습니다"
+                        ? "마감된 토론이 없습니다."
                         : statusFilter === "live"
                           ? "진행 중인 토론이 없습니다"
                           : sortBy === "ending"

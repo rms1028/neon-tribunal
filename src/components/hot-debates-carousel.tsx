@@ -190,7 +190,7 @@ export function HotDebatesCarousel({
                 className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/20 hover:shadow-[0_0_16px_rgba(34,211,238,0.2)]"
               >
                 <Sparkles className="size-3.5" />
-                참전하기
+                토론 참여
               </Link>
             </div>
           </motion.div>
