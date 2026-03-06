@@ -422,7 +422,7 @@ export function ProConBattle({
 
       {/* ═══ CLOSED BANNER ═══ */}
       {isClosed && (
-        <div style={{ padding: "0 24px", flexShrink: 0 }}>
+        <div className="px-3 md:px-6" style={{ flexShrink: 0 }}>
           <div style={{ marginTop: 8 }} className="rounded-xl border border-red-500/20 bg-red-500/[0.03] px-4 py-2.5 text-center text-[12px] font-bold tracking-wide text-red-400/80">
             DEBATE CLOSED — 이 토론은 마감되었습니다
           </div>
@@ -468,8 +468,7 @@ export function ProConBattle({
         <div style={{
           flexShrink: 0,
           display: "flex", alignItems: "center", gap: 6,
-          padding: "10px 16px",
-          paddingBottom: "max(10px, env(safe-area-inset-bottom))",
+          padding: "10px 16px 60px",
           background: "rgba(14,14,20,0.95)", backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,255,255,0.03)",

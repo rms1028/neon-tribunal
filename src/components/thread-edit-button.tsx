@@ -42,6 +42,7 @@ export function ThreadEditButton({
   const [tag, setTag] = useState(initialTag)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -117,8 +118,6 @@ export function ThreadEditButton({
     showToast("토론이 삭제되었습니다.", "success")
     router.push("/")
   }
-
-  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <>
