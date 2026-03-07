@@ -465,13 +465,13 @@ export function useCommentState({
     const prevComments = localComments
     setLocalComments((prev) =>
       prev.map((c) =>
-        c.id === commentId ? { ...c, isDeleted: true, content: "" } : c
+        c.id === commentId ? { ...c, isDeleted: true, content: "[삭제됨]" } : c
       )
     )
 
     const { error } = await supabase
       .from("comments")
-      .update({ is_deleted: true, content: "", updated_at: new Date().toISOString() })
+      .update({ is_deleted: true, content: "[삭제됨]", updated_at: new Date().toISOString() })
       .eq("id", commentId)
       .eq("user_id", user.id)
 
