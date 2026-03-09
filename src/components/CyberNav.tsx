@@ -140,15 +140,14 @@ export default function CyberNav() {
             right: "20px",
             fontFamily: "var(--font-share-tech)",
             fontSize: "12px",
-            fontWeight: 600,
+            fontWeight: 700,
             letterSpacing: "0.06em",
-            color: "#39ff14",
-            background: "rgba(8,8,24,0.95)",
-            border: "1px solid rgba(57,255,20,0.5)",
-            backdropFilter: "blur(12px)",
-            padding: "10px 16px",
+            color: "#000000",
+            background: "#00E5FF",
+            border: "none",
+            padding: "12px 20px",
             borderRadius: "9999px",
-            boxShadow: "0 0 12px rgba(57,255,20,0.2), 0 2px 12px rgba(0,0,0,0.6)",
+            boxShadow: "0 0 16px rgba(0,229,255,0.4), 0 0 40px rgba(0,229,255,0.15), 0 2px 12px rgba(0,0,0,0.5)",
           }}
         >
           {"\u2696\uFE0F"} 새 재판

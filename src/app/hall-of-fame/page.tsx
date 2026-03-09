@@ -56,10 +56,7 @@ export default function HallOfFamePage() {
   const [highlightEntries, setHighlightEntries] = useState<
     HallOfFameEntry[]
   >([]);
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const [isSliding, setIsSliding] = useState(false);
-  const [showScanline, setShowScanline] = useState(false);
-  const slideKey = useRef(0);
+  const [isHeroCollapsed, setIsHeroCollapsed] = useState(false);
 
   const [sort, setSort] = useState<SortMode>("newest");
   const [judgeFilter, setJudgeFilter] = useState<string | null>(null);
@@ -76,6 +73,14 @@ export default function HallOfFamePage() {
   useEffect(() => {
     setLikedIds(getLikedIds());
     setMyVerdicts(getMyVerdicts());
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsHeroCollapsed(window.scrollY > 80);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   /* ── fetch highlight top entries ── */
@@ -223,692 +228,202 @@ export default function HallOfFamePage() {
   const getJudgeData = (judgeId: string) =>
     judges.find((j) => j.id === judgeId);
 
-  /* ── Carousel navigation ── */
-  const goToSlide = (newIndex: number) => {
-    if (
-      isSliding ||
-      newIndex === highlightIndex ||
-      highlightEntries.length === 0
-    )
-      return;
-    setIsSliding(true);
-    setShowScanline(true);
-
-    setTimeout(() => {
-      slideKey.current += 1;
-      setHighlightIndex(newIndex);
-      setTimeout(() => {
-        setIsSliding(false);
-        setShowScanline(false);
-      }, 500);
-    }, 250);
-  };
-
-  const goPrev = () => {
-    const newIdx =
-      highlightIndex === 0
-        ? highlightEntries.length - 1
-        : highlightIndex - 1;
-    goToSlide(newIdx);
-  };
-
-  const goNext = () => {
-    const newIdx =
-      highlightIndex === highlightEntries.length - 1
-        ? 0
-        : highlightIndex + 1;
-    goToSlide(newIdx);
-  };
-
   /* ───────────────────────────────────────────────
-   *  HIGHLIGHT CAROUSEL renderer
+   *  HIGHLIGHT CAROUSEL renderer (horizontal scroll)
    * ─────────────────────────────────────────────── */
   const renderHighlightCarousel = () => {
     if (highlightEntries.length === 0) return null;
-    const entry = highlightEntries[highlightIndex];
-    if (!entry) return null;
-
-    const judge = getJudgeData(entry.judge_id);
-    const accentColor = judge?.accentColor || "#00f0ff";
-    const glowRgb = judge?.glowRgb || "0,240,255";
-    const isLiked = likedIds.has(entry.id);
-    const total =
-      (entry.jury_agree ?? 0) + (entry.jury_disagree ?? 0);
-    const agreePercent =
-      total > 0
-        ? Math.round(((entry.jury_agree ?? 0) / total) * 100)
-        : 0;
-    const disagreePercent = total > 0 ? 100 - agreePercent : 0;
 
     return (
-      <div className="mb-10">
-        {/* Section label */}
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            style={{
-              width: "4px",
-              height: "24px",
-              background:
-                "linear-gradient(180deg, #ffaa00, #ff4444)",
-              borderRadius: "2px",
-              boxShadow: "0 0 8px rgba(255,170,0,0.5)",
-            }}
-          />
-          <h2
-            className="text-lg md:text-xl font-bold uppercase tracking-wider"
-            style={{
-              fontFamily: "var(--font-orbitron)",
-              color: "#ffaa00",
-              textShadow:
-                "0 0 8px rgba(255,170,0,0.8), 0 0 30px rgba(255,170,0,0.4)",
-            }}
-          >
-            {"\uD83D\uDD25"} 명예의 전당
-          </h2>
+      <div style={{ marginBottom: "24px" }}>
+        {/* Section header */}
+        <div
+          className="flex items-center justify-between"
+          style={{ marginBottom: "12px" }}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              style={{
+                width: "3px",
+                height: "20px",
+                background: "linear-gradient(180deg, #ffaa00, #ff4444)",
+                borderRadius: "2px",
+                boxShadow: "0 0 6px rgba(255,170,0,0.4)",
+              }}
+            />
+            <h2
+              style={{
+                fontFamily: "var(--font-orbitron)",
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "#ffaa00",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                textShadow: "0 0 8px rgba(255,170,0,0.6)",
+              }}
+            >
+              {"\uD83D\uDD25"} 명예의 전당
+            </h2>
+          </div>
           <span
-            className="tracking-widest uppercase"
             style={{
               fontFamily: "var(--font-share-tech)",
-              fontSize: "10px",
+              fontSize: "11px",
               color: "rgba(255,170,0,0.5)",
+              letterSpacing: "0.06em",
             }}
           >
-            TOP {highlightEntries.length} LEGENDS
-          </span>
-          <span
-            className="tracking-wider"
-            style={{
-              fontFamily: "var(--font-share-tech)",
-              fontSize: "10px",
-              color: "rgba(255,170,0,0.35)",
-              marginLeft: "auto",
-            }}
-          >
-            {highlightIndex + 1} / {highlightEntries.length}
+            TOP {highlightEntries.length}
           </span>
         </div>
 
-        {/* Carousel wrapper */}
-        <div className="relative">
-          {/* Left arrow */}
-          <button
-            onClick={goPrev}
-            disabled={isSliding}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 cursor-pointer transition-all duration-200 disabled:opacity-30 hidden sm:flex"
-            style={{
-              marginLeft: "-20px",
-              width: "44px",
-              height: "80px",
-              background: "rgba(8,8,24,0.9)",
-              border: "1px solid rgba(255,170,0,0.3)",
-              color: "#ffaa00",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              clipPath:
-                "polygon(30% 0, 100% 0, 100% 100%, 30% 100%, 0 50%)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background =
-                "rgba(255,170,0,0.12)";
-              e.currentTarget.style.boxShadow =
-                "0 0 20px rgba(255,170,0,0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background =
-                "rgba(8,8,24,0.9)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ width: "18px", height: "18px" }}
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
+        {/* Horizontal scroll container */}
+        <div
+          className="scrollbar-hide"
+          style={{
+            display: "flex",
+            gap: "12px",
+            overflowX: "auto",
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch",
+            paddingBottom: "4px",
+            marginLeft: "-16px",
+            marginRight: "-16px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+          }}
+        >
+          {highlightEntries.map((entry, idx) => {
+            const judge = getJudgeData(entry.judge_id);
+            const accentColor = judge?.accentColor || "#00f0ff";
 
-          {/* Right arrow */}
-          <button
-            onClick={goNext}
-            disabled={isSliding}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 cursor-pointer transition-all duration-200 disabled:opacity-30 hidden sm:flex"
-            style={{
-              marginRight: "-20px",
-              width: "44px",
-              height: "80px",
-              background: "rgba(8,8,24,0.9)",
-              border: "1px solid rgba(255,170,0,0.3)",
-              color: "#ffaa00",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              clipPath:
-                "polygon(0 0, 70% 0, 100% 50%, 70% 100%, 0 100%)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background =
-                "rgba(255,170,0,0.12)";
-              e.currentTarget.style.boxShadow =
-                "0 0 20px rgba(255,170,0,0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background =
-                "rgba(8,8,24,0.9)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ width: "18px", height: "18px" }}
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
+            return (
+              <Link
+                key={entry.id}
+                href={`/verdict/${entry.id}`}
+                className="shrink-0 block"
+                style={{
+                  width: "80vw",
+                  maxWidth: "340px",
+                  scrollSnapAlign: "start",
+                  background: "rgba(8,8,24,0.85)",
+                  border: "1px solid rgba(255,170,0,0.25)",
+                  padding: "16px",
+                  position: "relative",
+                  textDecoration: "none",
+                }}
+              >
+                {/* Rank badge */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "0",
+                    left: "12px",
+                    padding: "3px 10px",
+                    background: "linear-gradient(135deg, #ffaa00, #ff6600)",
+                    color: "#000",
+                    fontFamily: "var(--font-orbitron)",
+                    fontSize: "9px",
+                    fontWeight: 800,
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  {"\uD83D\uDC51"} #{idx + 1}
+                </div>
 
-          {/* Card container */}
-          <div
-            className="relative overflow-hidden cyber-clip highlight-pulse"
-            style={{
-              background: "rgba(8,8,24,0.8)",
-              backdropFilter: "blur(12px)",
-              border: "2px solid rgba(255,170,0,0.5)",
-            }}
-          >
-            {/* Scanline flash overlay */}
-            {showScanline && <div className="carousel-scanline" />}
-
-            {/* Badge */}
-            <div
-              className="absolute badge-flicker"
-              style={{
-                top: "-1px",
-                left: "24px",
-                padding: "6px 16px",
-                background:
-                  "linear-gradient(135deg, #ffaa00, #ff6600)",
-                color: "#000",
-                fontFamily: "var(--font-orbitron)",
-                fontSize: "10px",
-                fontWeight: 800,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                clipPath:
-                  "polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%)",
-                boxShadow:
-                  "0 0 15px rgba(255,170,0,0.6), 0 4px 12px rgba(0,0,0,0.4)",
-                zIndex: 10,
-              }}
-            >
-              {"\uD83D\uDC51"} #{highlightIndex + 1} 명예의 전당
-            </div>
-
-            {/* Slide content with glitch transition */}
-            <div
-              key={slideKey.current}
-              className="carousel-enter"
-            >
-              <div className="p-4 sm:p-6 md:p-8 pt-12 sm:pt-12 md:pt-10">
-                {/* Judge header */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    {judge ? (
-                      <JudgeAvatar
-                        avatarUrl={judge.avatarUrl}
-                        name={judge.name}
-                        size={36}
-                        glowRgb={glowRgb}
-                      />
-                    ) : (
-                      <span className="text-3xl">
-                        {"\u2696"}
-                      </span>
-                    )}
-                    <div>
-                      <span
-                        className="font-bold text-sm uppercase tracking-wide"
-                        style={{
-                          fontFamily: "var(--font-orbitron)",
-                          color: accentColor,
-                        }}
-                      >
-                        {entry.judge_name}
-                      </span>
-                      <p
-                        className="tracking-wider"
-                        style={{
-                          fontFamily: "var(--font-share-tech)",
-                          fontSize: "10px",
-                          color: "#6b7280",
-                          marginTop: "2px",
-                        }}
-                      >
-                        {timeAgo(entry.created_at)} &middot;{" "}
-                        {"\u2764"} {entry.likes}
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/verdict/${entry.id}`}
-                    className="hidden sm:inline-block px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all duration-200"
+                {/* Judge row */}
+                <div
+                  className="flex items-center"
+                  style={{ marginTop: "20px", marginBottom: "8px", gap: "8px" }}
+                >
+                  {judge && (
+                    <JudgeAvatar
+                      avatarUrl={judge.avatarUrl}
+                      name={judge.name}
+                      size={28}
+                      glowRgb={judge.glowRgb}
+                    />
+                  )}
+                  <span
                     style={{
                       fontFamily: "var(--font-orbitron)",
-                      border: "1px solid rgba(255,170,0,0.4)",
-                      color: "#ffaa00",
-                      background: "rgba(255,170,0,0.05)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255,170,0,0.15)";
-                      e.currentTarget.style.boxShadow =
-                        "0 0 20px rgba(255,170,0,0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255,170,0,0.05)";
-                      e.currentTarget.style.boxShadow = "none";
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      color: accentColor,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
                     }}
                   >
-                    자세히 보기 &rarr;
-                  </Link>
+                    {entry.judge_name}
+                  </span>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontFamily: "var(--font-share-tech)",
+                      fontSize: "10px",
+                      color: "#888",
+                    }}
+                  >
+                    {"\u2764"} {entry.likes}
+                  </span>
                 </div>
 
-                {/* Two-column: Story + Verdict */}
-                <div
-                  className="flex flex-col md:flex-row gap-5 mb-6"
-                  style={{ minHeight: "120px" }}
-                >
-                  {/* Story */}
-                  <div
-                    className="flex-1"
-                    style={{
-                      padding: "16px 18px",
-                      borderRadius: "8px",
-                      background: "rgba(255,255,255,0.04)",
-                      borderLeft:
-                        "3px solid rgba(255,170,0,0.4)",
-                    }}
-                  >
-                    <p
-                      className="uppercase mb-2"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "9px",
-                        color: "rgba(255,170,0,0.6)",
-                        letterSpacing: "0.15em",
-                      }}
-                    >
-                      {"\uD83D\uDCDD"} 사연
-                    </p>
-                    <p
-                      className="leading-relaxed whitespace-pre-wrap"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "13px",
-                        color: "#d1d5db",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      &quot;{entry.story}&quot;
-                    </p>
-                  </div>
-
-                  {/* Verdict */}
-                  <div
-                    className="flex-1"
-                    style={{
-                      padding: "16px 18px",
-                      borderRadius: "8px",
-                      background: "rgba(255,68,68,0.03)",
-                      borderLeft:
-                        "3px solid rgba(255,68,68,0.35)",
-                    }}
-                  >
-                    <p
-                      className="uppercase mb-2"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "9px",
-                        color: "rgba(255,68,68,0.7)",
-                        letterSpacing: "0.15em",
-                      }}
-                    >
-                      {"\u2696\uFE0F"} AI 판결
-                    </p>
-                    <p
-                      className="leading-relaxed whitespace-pre-wrap"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "13px",
-                        color: "#e5e7eb",
-                      }}
-                    >
-                      {entry.verdict}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Vote gauge — 32px */}
-                <div
-                  className="p-4"
+                {/* Story preview - 2 lines */}
+                <p
+                  className="line-clamp-2"
                   style={{
-                    borderRadius: "6px",
-                    border: "1px solid rgba(255,170,0,0.15)",
-                    background: "rgba(255,170,0,0.02)",
+                    fontFamily: "var(--font-share-tech)",
+                    fontSize: "12px",
+                    color: "#E0E0E0",
+                    fontStyle: "italic",
+                    lineHeight: "1.5",
+                    marginBottom: "8px",
                   }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      className="uppercase"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "10px",
-                        color: "rgba(255,170,0,0.6)",
-                        letterSpacing: "0.15em",
-                      }}
-                    >
-                      {"\uD83D\uDDF3\uFE0F"} 배심원단 투표 현황
-                    </span>
-                    <span
-                      className="tracking-wider"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "10px",
-                        color: "#6b7280",
-                      }}
-                    >
-                      {total > 0
-                        ? `${total}명 참여`
-                        : "투표 대기 중"}
-                    </span>
-                  </div>
-                  <div
-                    className="flex overflow-hidden"
-                    style={{
-                      height: "32px",
-                      borderRadius: "6px",
-                      background: "rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    {total > 0 ? (
-                      <>
-                        <div
-                          className="transition-all duration-700 ease-out flex items-center justify-center"
-                          style={{
-                            width: `${agreePercent}%`,
-                            height: "100%",
-                            background:
-                              "linear-gradient(90deg, #39ff14, rgba(57,255,20,0.6))",
-                            boxShadow:
-                              "0 0 20px rgba(57,255,20,0.6), inset 0 0 12px rgba(57,255,20,0.3)",
-                            fontFamily:
-                              "var(--font-share-tech)",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            color: "rgba(0,0,0,0.7)",
-                          }}
-                        >
-                          {agreePercent >= 15
-                            ? `${agreePercent}%`
-                            : ""}
-                        </div>
-                        <div
-                          className="transition-all duration-700 ease-out flex items-center justify-center"
-                          style={{
-                            width: `${disagreePercent}%`,
-                            height: "100%",
-                            background:
-                              "linear-gradient(90deg, rgba(255,45,149,0.6), #ff2d95)",
-                            boxShadow:
-                              "0 0 20px rgba(255,45,149,0.6), inset 0 0 12px rgba(255,45,149,0.3)",
-                            fontFamily:
-                              "var(--font-share-tech)",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            color: "rgba(255,255,255,0.9)",
-                          }}
-                        >
-                          {disagreePercent >= 15
-                            ? `${disagreePercent}%`
-                            : ""}
-                        </div>
-                      </>
-                    ) : (
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          background: "rgba(255,255,255,0.03)",
-                        }}
-                      />
-                    )}
-                  </div>
-                  {total > 0 && (
-                    <div className="flex justify-between mt-2">
-                      <span
-                        style={{
-                          fontFamily: "var(--font-share-tech)",
-                          fontSize: "10px",
-                          color: "rgba(57,255,20,0.8)",
-                        }}
-                      >
-                        {"\uD83D\uDC4D"} 공감 {agreePercent}%
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-share-tech)",
-                          fontSize: "10px",
-                          color: "rgba(255,45,149,0.8)",
-                        }}
-                      >
-                        반대 {disagreePercent}%{" "}
-                        {"\uD83D\uDC4E"}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                  &quot;{entry.story}&quot;
+                </p>
 
-                {/* Bottom actions */}
-                <div
-                  className="flex items-center justify-between mt-5 pt-4"
-                  style={{
-                    borderTop:
-                      "1px solid rgba(255,170,0,0.1)",
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleLike(entry.id)}
-                      className="flex items-center gap-2 px-4 py-2 text-xs tracking-wider transition-all duration-200 cursor-pointer"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        border: isLiked
-                          ? "1px solid rgba(255,45,149,0.5)"
-                          : "1px solid rgba(255,170,0,0.3)",
-                        color: isLiked
-                          ? "#ff2d95"
-                          : "#ffaa00",
-                        background: isLiked
-                          ? "rgba(255,45,149,0.1)"
-                          : "rgba(255,170,0,0.05)",
-                        boxShadow: isLiked
-                          ? "0 0 12px rgba(255,45,149,0.2)"
-                          : "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isLiked) {
-                          e.currentTarget.style.background =
-                            "rgba(255,170,0,0.12)";
-                          e.currentTarget.style.boxShadow =
-                            "0 0 15px rgba(255,170,0,0.2)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isLiked) {
-                          e.currentTarget.style.background =
-                            "rgba(255,170,0,0.05)";
-                          e.currentTarget.style.boxShadow =
-                            "none";
-                        }
-                      }}
-                    >
-                      <span
-                        className={
-                          animatingId === entry.id
-                            ? "like-animate"
-                            : ""
-                        }
-                      >
-                        {isLiked ? "\u2764" : "\u2661"}
-                      </span>
-                      <span>{entry.likes}</span>
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleShareCopy(entry.id)
-                      }
-                      className="flex items-center gap-1 px-4 py-2 tracking-wider transition-all duration-200 cursor-pointer"
-                      style={{
-                        fontFamily: "var(--font-share-tech)",
-                        fontSize: "11px",
-                        border:
-                          copiedId === entry.id
-                            ? "1px solid rgba(57,255,20,0.5)"
-                            : "1px solid rgba(255,170,0,0.3)",
-                        color:
-                          copiedId === entry.id
-                            ? "#39ff14"
-                            : "#ffaa00",
-                        background:
-                          copiedId === entry.id
-                            ? "rgba(57,255,20,0.1)"
-                            : "rgba(255,170,0,0.05)",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (copiedId !== entry.id) {
-                          e.currentTarget.style.background =
-                            "rgba(255,170,0,0.12)";
-                          e.currentTarget.style.boxShadow =
-                            "0 0 15px rgba(255,170,0,0.2)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (copiedId !== entry.id) {
-                          e.currentTarget.style.background =
-                            "rgba(255,170,0,0.05)";
-                          e.currentTarget.style.boxShadow =
-                            "none";
-                        }
-                      }}
-                    >
-                      {copiedId === entry.id
-                        ? "\u2713 복사됨"
-                        : "\uD83D\uDD17 공유"}
-                    </button>
-                  </div>
-
-                  <Link
-                    href={`/verdict/${entry.id}`}
-                    className="px-4 py-2 tracking-widest transition-all duration-200"
+                {/* Viral quote if available */}
+                {entry.viral_quote && (
+                  <p
+                    className="line-clamp-1"
                     style={{
                       fontFamily: "var(--font-share-tech)",
                       fontSize: "11px",
-                      border:
-                        "1px solid rgba(255,170,0,0.25)",
                       color: "#ffaa00",
-                      background: "rgba(255,170,0,0.03)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255,170,0,0.12)";
-                      e.currentTarget.style.boxShadow =
-                        "0 0 15px rgba(255,170,0,0.25)";
-                      e.currentTarget.style.textShadow =
-                        "0 0 8px rgba(255,170,0,0.5)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255,170,0,0.03)";
-                      e.currentTarget.style.boxShadow =
-                        "none";
-                      e.currentTarget.style.textShadow =
-                        "none";
+                      opacity: 0.7,
                     }}
                   >
-                    {"\uD83D\uDC49"} 투표하러 가기
-                  </Link>
-                </div>
-              </div>
-            </div>
+                    &ldquo;{entry.viral_quote}&rdquo;
+                  </p>
+                )}
 
-            {/* Corner decorations — gold */}
-            <div
-              className="absolute"
-              style={{
-                top: "6px",
-                right: "8px",
-                width: "12px",
-                height: "12px",
-                borderTop: "2px solid rgba(255,170,0,0.5)",
-                borderRight: "2px solid rgba(255,170,0,0.5)",
-              }}
-            />
-            <div
-              className="absolute"
-              style={{
-                bottom: "6px",
-                left: "8px",
-                width: "12px",
-                height: "12px",
-                borderBottom:
-                  "2px solid rgba(255,170,0,0.5)",
-                borderLeft: "2px solid rgba(255,170,0,0.5)",
-              }}
-            />
-          </div>
-
-          {/* ── DOT INDICATORS ── */}
-          <div className="flex items-center justify-center gap-4 mt-5">
-            {highlightEntries.map((_, idx) => {
-              const isActive = idx === highlightIndex;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => goToSlide(idx)}
-                  disabled={isSliding}
-                  className={`transition-all duration-300 cursor-pointer ${
-                    isActive ? "dot-active" : ""
-                  }`}
+                {/* Corner decorations */}
+                <div
+                  className="absolute"
                   style={{
-                    width: isActive ? "28px" : "10px",
-                    height: "10px",
-                    borderRadius: isActive ? "5px" : "50%",
-                    background: isActive
-                      ? "linear-gradient(90deg, #ffaa00, #ff6600)"
-                      : "rgba(255,170,0,0.2)",
-                    border: "none",
-                    padding: "8px 0",
-                    boxSizing: "content-box",
-                    boxShadow: isActive
-                      ? "0 0 8px rgba(255,170,0,0.6)"
-                      : "none",
+                    top: "6px",
+                    right: "8px",
+                    width: "8px",
+                    height: "8px",
+                    borderTop: "1px solid rgba(255,170,0,0.3)",
+                    borderRight: "1px solid rgba(255,170,0,0.3)",
                   }}
-                  aria-label={`슬라이드 ${idx + 1}`}
                 />
-              );
-            })}
-          </div>
+                <div
+                  className="absolute"
+                  style={{
+                    bottom: "6px",
+                    left: "8px",
+                    width: "8px",
+                    height: "8px",
+                    borderBottom: "1px solid rgba(255,170,0,0.3)",
+                    borderLeft: "1px solid rgba(255,170,0,0.3)",
+                  }}
+                />
+              </Link>
+            );
+          })}
         </div>
       </div>
     );
@@ -919,6 +434,37 @@ export default function HallOfFamePage() {
    * ─────────────────────────────────────────────── */
   return (
     <div className="min-h-screen cyber-grid crt-overlay relative overflow-hidden pt-14">
+      {/* Sticky collapsed hero bar */}
+      {isHeroCollapsed && (
+        <div
+          className="fixed left-0 right-0 z-40"
+          style={{
+            top: "53px",
+            height: "40px",
+            background: "rgba(5,5,14,0.95)",
+            backdropFilter: "blur(12px)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-orbitron)",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: "#ffffff",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              textShadow: "0 0 6px rgba(240,225,48,0.4)",
+            }}
+          >
+            공개 재판소
+          </h2>
+        </div>
+      )}
+
       {/* Ambient glow */}
       <div
         className="fixed pointer-events-none rounded-full"
@@ -944,16 +490,17 @@ export default function HallOfFamePage() {
       />
 
       <div
-        className="relative z-10 w-full mx-auto px-4 md:px-8 lg:px-10 py-12"
-        style={{ maxWidth: "95%" }}
+        className="relative z-10 w-full mx-auto px-4 md:px-8 lg:px-10"
+        style={{ maxWidth: "95%", paddingTop: "16px", paddingBottom: "16px" }}
       >
         {/* ===== HEADER ===== */}
-        <div className="text-center mb-10">
+        <div className="text-center" style={{ marginBottom: "12px" }}>
           <h1
-            className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-wider mb-4"
+            className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-wider"
             style={{
               fontFamily: "var(--font-orbitron)",
               color: "#ffffff",
+              marginBottom: "6px",
               textShadow: [
                 "0 0 6px rgba(240,225,48,0.5)",
                 "0 0 15px rgba(240,225,48,0.3)",
@@ -964,133 +511,109 @@ export default function HallOfFamePage() {
             공개 재판소
           </h1>
           <p
-            className="text-sm md:text-base tracking-wider"
+            className="tracking-wider"
             style={{
               fontFamily: "var(--font-share-tech)",
-              color: "#9ca3af",
+              fontSize: "11px",
+              color: "#888",
               wordBreak: "keep-all",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             국민 배심원단이 소집된 재판을 모아볼 수 있습니다
           </p>
         </div>
 
-        <div className="holo-line mb-8" />
+        <div className="holo-line" style={{ marginBottom: "12px" }} />
 
-        {/* ===== SORT BUTTONS ===== */}
-        <div className="flex gap-4 mb-8 justify-center flex-nowrap overflow-x-auto scrollbar-hide">
-          {(
-            [
-              {
-                key: "newest" as SortMode,
-                label: "\u23F0 최신순",
-                color: "240,225,48",
-              },
-              {
-                key: "popular" as SortMode,
-                label: "\u2764 공감순",
-                color: "255,45,149",
-              },
-            ] as const
-          ).map((tab) => {
-            const isActive = sort === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => handleSortChange(tab.key)}
-                className="cyber-clip-btn px-6 py-3 text-xs tracking-widest uppercase border transition-all duration-300 cursor-pointer whitespace-nowrap shrink-0"
-                style={{
-                  fontFamily: "var(--font-share-tech)",
-                  borderColor: isActive
-                    ? `rgb(${tab.color})`
-                    : "rgba(255,255,255,0.18)",
-                  color: isActive
-                    ? `rgb(${tab.color})`
-                    : "#9ca3af",
-                  backgroundColor: isActive
-                    ? `rgba(${tab.color},0.15)`
-                    : "transparent",
-                  boxShadow: isActive
-                    ? `0 0 20px rgba(${tab.color},0.25), inset 0 0 15px rgba(${tab.color},0.06)`
-                    : "none",
-                  textShadow: isActive
-                    ? `0 0 8px rgba(${tab.color},0.7)`
-                    : "none",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* ===== FILTER + SORT (1 ROW) ===== */}
+        <div
+          className="flex items-center"
+          style={{ gap: "8px", marginBottom: "16px" }}
+        >
+          {/* Judge filter tabs - scrollable */}
+          <div
+            className="flex-1 flex scrollbar-hide"
+            style={{ gap: "6px", overflowX: "auto", paddingBottom: "2px" }}
+          >
+            <button
+              onClick={() => handleJudgeFilter(null)}
+              className="shrink-0 cursor-pointer transition-all duration-200"
+              style={{
+                fontFamily: "var(--font-share-tech)",
+                fontSize: "11px",
+                letterSpacing: "0.06em",
+                padding: "7px 14px",
+                border: judgeFilter === null
+                  ? "1px solid #00E5FF"
+                  : "1px solid rgba(255,255,255,0.08)",
+                color: judgeFilter === null ? "#00E5FF" : "#888",
+                background: judgeFilter === null
+                  ? "rgba(0,229,255,0.1)"
+                  : "transparent",
+                boxShadow: judgeFilter === null
+                  ? "0 0 10px rgba(0,229,255,0.2)"
+                  : "none",
+              }}
+            >
+              전체
+            </button>
+            {judges.map((j) => {
+              const isActive = judgeFilter === j.id;
+              return (
+                <button
+                  key={j.id}
+                  onClick={() => handleJudgeFilter(j.id)}
+                  className="shrink-0 cursor-pointer transition-all duration-200 flex items-center"
+                  style={{
+                    fontFamily: "var(--font-share-tech)",
+                    fontSize: "11px",
+                    letterSpacing: "0.04em",
+                    padding: "7px 10px",
+                    gap: "5px",
+                    border: isActive
+                      ? "1px solid #00E5FF"
+                      : "1px solid rgba(255,255,255,0.08)",
+                    color: isActive ? "#00E5FF" : "#888",
+                    background: isActive
+                      ? "rgba(0,229,255,0.1)"
+                      : "transparent",
+                    boxShadow: isActive
+                      ? "0 0 10px rgba(0,229,255,0.2)"
+                      : "none",
+                  }}
+                >
+                  <JudgeAvatar
+                    avatarUrl={j.avatarUrl}
+                    name={j.name}
+                    size={16}
+                  />
+                  <span>{j.name}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* ===== JUDGE FILTER ===== */}
-        <div className="flex gap-2 mb-8 justify-start md:justify-center flex-nowrap overflow-x-auto scrollbar-hide pb-1">
+          {/* Sort toggle - compact right side */}
           <button
-            onClick={() => handleJudgeFilter(null)}
-            className="px-4 py-2.5 tracking-widest border transition-all duration-300 cursor-pointer whitespace-nowrap shrink-0"
+            onClick={() => handleSortChange(sort === "newest" ? "popular" : "newest")}
+            className="shrink-0 cursor-pointer transition-all duration-200 flex items-center"
             style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "10px",
-              borderColor:
-                judgeFilter === null
-                  ? "var(--color-neon-blue)"
-                  : "rgba(255,255,255,0.18)",
-              color:
-                judgeFilter === null
-                  ? "var(--color-neon-blue)"
-                  : "#9ca3af",
-              backgroundColor:
-                judgeFilter === null
-                  ? "rgba(0,240,255,0.15)"
-                  : "transparent",
-              boxShadow:
-                judgeFilter === null
-                  ? "0 0 15px rgba(0,240,255,0.2), inset 0 0 10px rgba(0,240,255,0.05)"
-                  : "none",
-              textShadow:
-                judgeFilter === null
-                  ? "0 0 8px rgba(0,240,255,0.6)"
-                  : "none",
+              letterSpacing: "0.04em",
+              padding: "7px 10px",
+              gap: "4px",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#888",
+              background: "transparent",
             }}
           >
-            전체
+            <span>{sort === "newest" ? "\u23F0" : "\u2764"}</span>
+            <span>{sort === "newest" ? "최신" : "공감"}</span>
           </button>
-          {judges.map((j) => {
-            const isActive = judgeFilter === j.id;
-            return (
-              <button
-                key={j.id}
-                onClick={() => handleJudgeFilter(j.id)}
-                className="px-4 py-2.5 tracking-widest border transition-all duration-300 cursor-pointer whitespace-nowrap shrink-0"
-                style={{
-                  fontFamily: "var(--font-share-tech)",
-                  fontSize: "10px",
-                  borderColor: isActive
-                    ? j.accentColor
-                    : "rgba(255,255,255,0.18)",
-                  color: isActive ? j.accentColor : "#9ca3af",
-                  backgroundColor: isActive
-                    ? `${j.accentColor}26`
-                    : "transparent",
-                  boxShadow: isActive
-                    ? `0 0 15px ${j.accentColor}33, inset 0 0 10px ${j.accentColor}0d`
-                    : "none",
-                  textShadow: isActive
-                    ? `0 0 8px ${j.accentColor}b3`
-                    : "none",
-                }}
-              >
-                <JudgeAvatar
-                  avatarUrl={j.avatarUrl}
-                  name={j.name}
-                  size={18}
-                  className="inline-block align-middle mr-1"
-                />{" "}
-                {j.name}
-              </button>
-            );
-          })}
         </div>
 
         {/* ===== HIGHLIGHT CAROUSEL ===== */}
@@ -1156,7 +679,7 @@ export default function HallOfFamePage() {
 
         {/* ===== CARD GRID ===== */}
         {!isLoading && entries.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ gap: "12px" }}>
             {entries.map((entry) => {
               const judge = getJudgeData(entry.judge_id);
               const isLiked = likedIds.has(entry.id);
@@ -1186,16 +709,16 @@ export default function HallOfFamePage() {
               return (
                 <div
                   key={entry.id}
-                  className={`verdict-card cyber-clip glass-card relative p-3 sm:p-6 cursor-pointer ${
+                  className={`verdict-card glass-card relative cursor-pointer ${
                     isExpanded
-                      ? "col-span-2 lg:col-span-3 xl:col-span-4"
+                      ? "sm:col-span-2 lg:col-span-3 xl:col-span-4"
                       : ""
                   }`}
                   style={{
-                    ["--card-glow-color" as string]:
-                      accentColor,
+                    padding: "16px",
+                    border: "1px solid rgba(255,255,255,0.08)",
                     boxShadow: isExpanded
-                      ? `0 0 30px rgba(${glowRgb},0.15), inset 0 0 30px rgba(${glowRgb},0.03)`
+                      ? `0 0 20px rgba(${glowRgb},0.12)`
                       : undefined,
                   }}
                   onClick={() =>
@@ -1204,45 +727,56 @@ export default function HallOfFamePage() {
                     )
                   }
                 >
-                  {/* Judge header */}
-                  <div className="flex items-center justify-between mb-2 sm:mb-3">
-                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                      {judge ? (
-                        <JudgeAvatar
-                          avatarUrl={judge.avatarUrl}
-                          name={judge.name}
-                          size={22}
-                          glowRgb={glowRgb}
-                          className="shrink-0 sm:[&]:w-7 sm:[&]:h-7"
-                        />
-                      ) : (
-                        <span className="text-lg sm:text-2xl shrink-0">
-                          {"\u2696"}
-                        </span>
-                      )}
+                  {/* Judge header - compact single row */}
+                  <div className="flex items-center" style={{ gap: "8px", marginBottom: "8px" }}>
+                    {judge ? (
+                      <JudgeAvatar
+                        avatarUrl={judge.avatarUrl}
+                        name={judge.name}
+                        size={36}
+                        glowRgb={glowRgb}
+                      />
+                    ) : (
+                      <span style={{ fontSize: "24px" }}>
+                        {"\u2696"}
+                      </span>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <span
-                        className="font-bold uppercase tracking-wide truncate"
+                        className="truncate"
                         style={{
-                          fontFamily:
-                            "var(--font-orbitron)",
-                          fontSize: "clamp(9px, 2.5vw, 12px)",
+                          fontFamily: "var(--font-orbitron)",
+                          fontSize: "11px",
+                          fontWeight: 700,
                           color: accentColor,
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
+                          display: "block",
                         }}
                       >
                         {entry.judge_name}
                       </span>
+                      <div className="flex items-center" style={{ gap: "8px" }}>
+                        <span
+                          style={{
+                            fontFamily: "var(--font-share-tech)",
+                            fontSize: "10px",
+                            color: "#888",
+                          }}
+                        >
+                          {timeAgo(entry.created_at)}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: "var(--font-share-tech)",
+                            fontSize: "10px",
+                            color: "#888",
+                          }}
+                        >
+                          {"\u2764"} {entry.likes}
+                        </span>
+                      </div>
                     </div>
-                    <span
-                      className="tracking-wider shrink-0 hidden sm:inline"
-                      style={{
-                        fontFamily:
-                          "var(--font-share-tech)",
-                        fontSize: "9px",
-                        color: "#4b5563",
-                      }}
-                    >
-                      {timeAgo(entry.created_at)}
-                    </span>
                   </div>
 
                   {/* Evidence image - hidden on mobile compact */}
@@ -1268,59 +802,37 @@ export default function HallOfFamePage() {
 
                   {/* Story */}
                   <div
-                    className="mb-2 sm:mb-3"
                     style={{
-                      padding: "8px 10px",
-                      borderRadius: "6px",
-                      background:
-                        "rgba(255,255,255,0.05)",
-                      borderLeft: `2px solid rgba(${glowRgb},0.35)`,
+                      padding: "8px",
+                      borderRadius: "4px",
+                      background: "rgba(255,255,255,0.04)",
+                      borderLeft: `2px solid rgba(${glowRgb},0.3)`,
+                      marginBottom: "8px",
                     }}
                   >
                     <p
-                      className={`leading-relaxed whitespace-pre-wrap ${!isExpanded ? "line-clamp-2 sm:line-clamp-none" : ""}`}
+                      className={`whitespace-pre-wrap ${!isExpanded ? "line-clamp-2" : ""}`}
                       style={{
-                        fontFamily:
-                          "var(--font-share-tech)",
-                        fontSize: "clamp(10px, 2.5vw, 11px)",
-                        color: "#9ca3af",
+                        fontFamily: "var(--font-share-tech)",
+                        fontSize: "12px",
+                        lineHeight: "1.5",
+                        color: "#E0E0E0",
                         fontStyle: "italic",
                       }}
                     >
-                      &quot;
-                      {isExpanded || !storyTruncated
-                        ? entry.story
-                        : entry.story.slice(0, 100) +
-                          "..."}
-                      &quot;
+                      &quot;{entry.story}&quot;
                     </p>
                   </div>
 
                   {/* Verdict */}
-                  <div className="mb-2 sm:mb-4">
+                  <div style={{ marginBottom: "8px" }}>
                     <p
-                      className="uppercase mb-1 sm:mb-1.5 hidden sm:block"
+                      className={`whitespace-pre-wrap ${!isExpanded ? "line-clamp-2" : ""}`}
                       style={{
-                        fontFamily:
-                          "var(--font-share-tech)",
-                        fontSize: "9px",
-                        color: "#4b5563",
-                        letterSpacing: "0.15em",
-                      }}
-                    >
-                      AI 판결
-                    </p>
-                    <p
-                      className={`leading-relaxed whitespace-pre-wrap ${
-                        !isExpanded
-                          ? "line-clamp-2 sm:line-clamp-3"
-                          : ""
-                      }`}
-                      style={{
-                        fontFamily:
-                          "var(--font-share-tech)",
-                        fontSize: "clamp(10px, 2.5vw, 12px)",
-                        color: "#e5e7eb",
+                        fontFamily: "var(--font-share-tech)",
+                        fontSize: "12px",
+                        lineHeight: "1.5",
+                        color: "#E0E0E0",
                       }}
                     >
                       {entry.verdict}
@@ -1329,48 +841,26 @@ export default function HallOfFamePage() {
 
                   {/* Vote gauge */}
                   <div
-                    className="mb-2 sm:mb-4 p-2 sm:p-3"
-                    style={{
-                      borderRadius: "4px",
-                      border: `1px solid rgba(${glowRgb},0.15)`,
-                      background: `rgba(${glowRgb},0.02)`,
-                    }}
+                    style={{ marginBottom: "8px" }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                    <div className="flex items-center justify-between" style={{ marginBottom: "4px" }}>
                       <span
-                        className="uppercase hidden sm:inline"
                         style={{
-                          fontFamily:
-                            "var(--font-share-tech)",
+                          fontFamily: "var(--font-share-tech)",
                           fontSize: "9px",
-                          color: "#6b7280",
-                          letterSpacing: "0.15em",
+                          color: "#888",
                         }}
                       >
-                        배심원단 투표 현황
-                      </span>
-                      <span
-                        className="tracking-wider"
-                        style={{
-                          fontFamily:
-                            "var(--font-share-tech)",
-                          fontSize: "9px",
-                          color: "#4b5563",
-                        }}
-                      >
-                        {total > 0
-                          ? `${total}명 참여`
-                          : "투표 대기 중"}
+                        {total > 0 ? `${total}명 참여` : "투표 대기 중"}
                       </span>
                     </div>
                     <div
                       className="flex overflow-hidden"
                       style={{
-                        height: "16px",
-                        borderRadius: "4px",
-                        background:
-                          "rgba(255,255,255,0.06)",
+                        height: "14px",
+                        borderRadius: "3px",
+                        background: "rgba(255,255,255,0.06)",
                       }}
                     >
                       {total > 0 ? (
@@ -1380,10 +870,8 @@ export default function HallOfFamePage() {
                             style={{
                               width: `${agreePercent}%`,
                               height: "100%",
-                              background:
-                                "linear-gradient(90deg, #39ff14, rgba(57,255,20,0.6))",
-                              boxShadow:
-                                "0 0 12px rgba(57,255,20,0.6), inset 0 0 8px rgba(57,255,20,0.3)",
+                              background: "linear-gradient(90deg, #39ff14, rgba(57,255,20,0.6))",
+                              boxShadow: "0 0 8px rgba(57,255,20,0.4)",
                             }}
                           />
                           <div
@@ -1391,270 +879,130 @@ export default function HallOfFamePage() {
                             style={{
                               width: `${disagreePercent}%`,
                               height: "100%",
-                              background:
-                                "linear-gradient(90deg, rgba(255,45,149,0.6), #ff2d95)",
-                              boxShadow:
-                                "0 0 12px rgba(255,45,149,0.6), inset 0 0 8px rgba(255,45,149,0.3)",
+                              background: "linear-gradient(90deg, rgba(255,45,149,0.6), #ff2d95)",
+                              boxShadow: "0 0 8px rgba(255,45,149,0.4)",
                             }}
                           />
                         </>
                       ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            background:
-                              "rgba(255,255,255,0.03)",
-                          }}
-                        />
+                        <div style={{ width: "100%", height: "100%", background: "rgba(255,255,255,0.03)" }} />
                       )}
                     </div>
                     {total > 0 && (
-                      <div className="flex justify-between mt-1.5">
-                        <span
-                          style={{
-                            fontFamily:
-                              "var(--font-share-tech)",
-                            fontSize: "9px",
-                            color: "rgba(57,255,20,0.7)",
-                          }}
-                        >
+                      <div className="flex justify-between" style={{ marginTop: "3px" }}>
+                        <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "9px", color: "rgba(57,255,20,0.7)" }}>
                           {"\uD83D\uDC4D"} {agreePercent}%
                         </span>
-                        <span
-                          style={{
-                            fontFamily:
-                              "var(--font-share-tech)",
-                            fontSize: "9px",
-                            color:
-                              "rgba(255,45,149,0.7)",
-                          }}
-                        >
-                          {disagreePercent}%{" "}
-                          {"\uD83D\uDC4E"}
+                        <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "9px", color: "rgba(255,45,149,0.7)" }}>
+                          {disagreePercent}% {"\uD83D\uDC4E"}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Vote CTA - hidden on mobile compact, visible on sm+ or expanded */}
+                  {/* Vote CTA - always visible */}
                   <div
-                    className={`${isExpanded ? "" : "hidden sm:block"}`}
                     onClick={(e) => e.stopPropagation()}
+                    style={{ marginBottom: "8px" }}
                   >
                     {isAuthor ? (
                       <div
-                        className="text-center py-2 sm:py-2.5 mb-2 sm:mb-4"
+                        className="text-center"
                         style={{
-                          borderRadius: "4px",
-                          border: `1px solid rgba(${glowRgb},0.2)`,
+                          padding: "6px",
+                          border: `1px solid rgba(${glowRgb},0.15)`,
                           background: `rgba(${glowRgb},0.03)`,
                         }}
                       >
-                        <p
-                          className="tracking-wide"
-                          style={{
-                            fontFamily:
-                              "var(--font-share-tech)",
-                            fontSize: "10px",
-                            color: accentColor,
-                          }}
-                        >
+                        <p style={{ fontFamily: "var(--font-share-tech)", fontSize: "10px", color: accentColor }}>
                           {"\u2696\uFE0F"} 내 사연
                         </p>
                       </div>
                     ) : (
                       <Link
                         href={`/verdict/${entry.id}`}
-                        className="flex items-center justify-center gap-2 w-full py-2 sm:py-3 mb-2 sm:mb-4 tracking-wider transition-all duration-200"
+                        className="flex items-center justify-center w-full transition-all duration-200"
                         style={{
-                          fontFamily:
-                            "var(--font-share-tech)",
+                          fontFamily: "var(--font-share-tech)",
                           fontSize: "11px",
-                          border:
-                            "1px solid rgba(0,240,255,0.25)",
-                          color: "#00f0ff",
-                          background:
-                            "rgba(0,240,255,0.03)",
+                          padding: "6px",
+                          border: "1px solid rgba(0,229,255,0.2)",
+                          color: "#00E5FF",
+                          background: "rgba(0,229,255,0.03)",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background =
-                            "rgba(0,240,255,0.1)";
-                          e.currentTarget.style.boxShadow =
-                            "0 0 15px rgba(0,240,255,0.2)";
+                          e.currentTarget.style.background = "rgba(0,229,255,0.1)";
+                          e.currentTarget.style.boxShadow = "0 0 10px rgba(0,229,255,0.2)";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background =
-                            "rgba(0,240,255,0.03)";
-                          e.currentTarget.style.boxShadow =
-                            "none";
+                          e.currentTarget.style.background = "rgba(0,229,255,0.03)";
+                          e.currentTarget.style.boxShadow = "none";
                         }}
                       >
-                        {"\uD83D\uDC49"} 투표하기
+                        투표하기
                       </Link>
                     )}
                   </div>
 
-                  {/* Action buttons */}
+                  {/* Action buttons - compact */}
                   <div
-                    className="flex items-center justify-between pt-2 sm:pt-3"
-                    style={{
-                      borderTop:
-                        "1px solid rgba(255,255,255,0.05)",
-                    }}
+                    className="flex items-center justify-between"
+                    style={{ paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.06)" }}
                   >
-                    <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="flex items-center" style={{ gap: "6px" }}>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLike(entry.id);
-                        }}
-                        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs tracking-wider transition-all duration-200 cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); handleLike(entry.id); }}
+                        className="flex items-center cursor-pointer transition-all duration-200"
                         style={{
-                          fontFamily:
-                            "var(--font-share-tech)",
-                          border: isLiked
-                            ? "1px solid rgba(255,45,149,0.5)"
-                            : "1px solid var(--color-dark-border)",
-                          color: isLiked
-                            ? "#ff2d95"
-                            : "#6b7280",
-                          background: isLiked
-                            ? "rgba(255,45,149,0.1)"
-                            : "transparent",
-                          boxShadow: isLiked
-                            ? "0 0 10px rgba(255,45,149,0.2)"
-                            : "none",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isLiked) {
-                            e.currentTarget.style.color =
-                              "#ff2d95";
-                            e.currentTarget.style.borderColor =
-                              "rgba(255,45,149,0.4)";
-                            e.currentTarget.style.background =
-                              "rgba(255,45,149,0.05)";
-                            e.currentTarget.style.boxShadow =
-                              "0 0 12px rgba(255,45,149,0.2)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isLiked) {
-                            e.currentTarget.style.color =
-                              "#6b7280";
-                            e.currentTarget.style.borderColor =
-                              "var(--color-dark-border)";
-                            e.currentTarget.style.background =
-                              "transparent";
-                            e.currentTarget.style.boxShadow =
-                              "none";
-                          }
+                          fontFamily: "var(--font-share-tech)",
+                          fontSize: "10px",
+                          gap: "4px",
+                          padding: "4px 8px",
+                          border: isLiked ? "1px solid rgba(255,45,149,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                          color: isLiked ? "#ff2d95" : "#888",
+                          background: isLiked ? "rgba(255,45,149,0.08)" : "transparent",
                         }}
                       >
-                        <span
-                          className={
-                            animatingId === entry.id
-                              ? "like-animate"
-                              : ""
-                          }
-                        >
+                        <span className={animatingId === entry.id ? "like-animate" : ""}>
                           {isLiked ? "\u2764" : "\u2661"}
                         </span>
                         <span>{entry.likes}</span>
                       </button>
 
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShareCopy(entry.id);
-                        }}
-                        className="flex items-center gap-1 px-2 sm:px-4 py-2 sm:py-2.5 tracking-wider transition-all duration-200 cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); handleShareCopy(entry.id); }}
+                        className="flex items-center cursor-pointer transition-all duration-200"
                         style={{
-                          fontFamily:
-                            "var(--font-share-tech)",
+                          fontFamily: "var(--font-share-tech)",
                           fontSize: "10px",
-                          border:
-                            copiedId === entry.id
-                              ? "1px solid rgba(57,255,20,0.5)"
-                              : "1px solid var(--color-dark-border)",
-                          color:
-                            copiedId === entry.id
-                              ? "#39ff14"
-                              : "#6b7280",
-                          background:
-                            copiedId === entry.id
-                              ? "rgba(57,255,20,0.1)"
-                              : "transparent",
-                          boxShadow:
-                            copiedId === entry.id
-                              ? "0 0 10px rgba(57,255,20,0.2)"
-                              : "none",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (copiedId !== entry.id) {
-                            e.currentTarget.style.color =
-                              "#00f0ff";
-                            e.currentTarget.style.borderColor =
-                              "rgba(0,240,255,0.4)";
-                            e.currentTarget.style.background =
-                              "rgba(0,240,255,0.05)";
-                            e.currentTarget.style.boxShadow =
-                              "0 0 12px rgba(0,240,255,0.2)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (copiedId !== entry.id) {
-                            e.currentTarget.style.color =
-                              "#6b7280";
-                            e.currentTarget.style.borderColor =
-                              "var(--color-dark-border)";
-                            e.currentTarget.style.background =
-                              "transparent";
-                            e.currentTarget.style.boxShadow =
-                              "none";
-                          }
+                          padding: "4px 8px",
+                          border: copiedId === entry.id ? "1px solid rgba(57,255,20,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                          color: copiedId === entry.id ? "#39ff14" : "#888",
+                          background: copiedId === entry.id ? "rgba(57,255,20,0.08)" : "transparent",
                         }}
                       >
-                        {copiedId === entry.id
-                          ? "\u2713"
-                          : "\uD83D\uDD17"}
+                        {copiedId === entry.id ? "\u2713" : "\uD83D\uDD17"}
                       </button>
                     </div>
 
                     <Link
                       href={`/verdict/${entry.id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="px-2 sm:px-4 py-2 sm:py-2.5 tracking-widest transition-all duration-200"
+                      className="transition-all duration-200"
                       style={{
-                        fontFamily:
-                          "var(--font-share-tech)",
+                        fontFamily: "var(--font-share-tech)",
                         fontSize: "10px",
+                        padding: "4px 8px",
                         border: "1px solid transparent",
-                        color: "#6b7280",
+                        color: "#888",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color =
-                          "#00f0ff";
-                        e.currentTarget.style.borderColor =
-                          "rgba(0,240,255,0.3)";
-                        e.currentTarget.style.background =
-                          "rgba(0,240,255,0.05)";
-                        e.currentTarget.style.boxShadow =
-                          "0 0 12px rgba(0,240,255,0.15)";
-                        e.currentTarget.style.textShadow =
-                          "0 0 6px rgba(0,240,255,0.5)";
+                        e.currentTarget.style.color = "#00E5FF";
+                        e.currentTarget.style.borderColor = "rgba(0,229,255,0.2)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color =
-                          "#6b7280";
-                        e.currentTarget.style.borderColor =
-                          "transparent";
-                        e.currentTarget.style.background =
-                          "transparent";
-                        e.currentTarget.style.boxShadow =
-                          "none";
-                        e.currentTarget.style.textShadow =
-                          "none";
+                        e.currentTarget.style.color = "#888";
+                        e.currentTarget.style.borderColor = "transparent";
                       }}
                     >
                       보기 &rarr;
@@ -1665,23 +1013,23 @@ export default function HallOfFamePage() {
                   <div
                     className="absolute"
                     style={{
-                      top: "6px",
-                      right: "8px",
-                      width: "8px",
-                      height: "8px",
-                      borderTop: `1px solid rgba(${glowRgb},0.3)`,
-                      borderRight: `1px solid rgba(${glowRgb},0.3)`,
+                      top: "4px",
+                      right: "6px",
+                      width: "6px",
+                      height: "6px",
+                      borderTop: "1px solid rgba(255,255,255,0.1)",
+                      borderRight: "1px solid rgba(255,255,255,0.1)",
                     }}
                   />
                   <div
                     className="absolute"
                     style={{
-                      bottom: "6px",
-                      left: "8px",
-                      width: "8px",
-                      height: "8px",
-                      borderBottom: `1px solid rgba(${glowRgb},0.3)`,
-                      borderLeft: `1px solid rgba(${glowRgb},0.3)`,
+                      bottom: "4px",
+                      left: "6px",
+                      width: "6px",
+                      height: "6px",
+                      borderBottom: "1px solid rgba(255,255,255,0.1)",
+                      borderLeft: "1px solid rgba(255,255,255,0.1)",
                     }}
                   />
                 </div>
@@ -1692,26 +1040,29 @@ export default function HallOfFamePage() {
 
         {/* ===== LOAD MORE ===== */}
         {hasMore && !isLoading && (
-          <div className="flex justify-center mt-10">
+          <div className="flex justify-center" style={{ marginTop: "24px" }}>
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="cyber-clip-btn px-10 py-4 text-xs font-bold uppercase tracking-widest transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               style={{
                 fontFamily: "var(--font-orbitron)",
-                letterSpacing: "0.2em",
-                border: "1px solid rgba(240,225,48,0.4)",
-                color: "var(--color-neon-yellow)",
-                background: "rgba(240,225,48,0.05)",
-                boxShadow: "0 0 15px rgba(240,225,48,0.1)",
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                padding: "12px 32px",
+                border: "1px solid rgba(0,229,255,0.3)",
+                color: "#00E5FF",
+                background: "rgba(0,229,255,0.05)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background =
-                  "rgba(240,225,48,0.1)";
+                e.currentTarget.style.background = "rgba(0,229,255,0.1)";
+                e.currentTarget.style.boxShadow = "0 0 12px rgba(0,229,255,0.15)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background =
-                  "rgba(240,225,48,0.05)";
+                e.currentTarget.style.background = "rgba(0,229,255,0.05)";
+                e.currentTarget.style.boxShadow = "none";
               }}
             >
               {isLoadingMore ? (
