@@ -1,0 +1,7 @@
+export const metadata = {
+  openGraph: {
+    title: '전국민 고민 재판소: 네온즈 | NEON COURT',
+    description: '고민이나 다툼 상황을 올리면 4명의 AI 판사가 판결을 내려드립니다',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+  },
+};
