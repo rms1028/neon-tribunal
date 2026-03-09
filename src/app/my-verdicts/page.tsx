@@ -1013,7 +1013,7 @@ export default function MyVerdictsPage() {
           onToast={handleToast}
           kakaoTitle={`[네온 코트] ${shareTarget.judgeName}의 판결`}
           kakaoDescription={shareTarget.viralQuote || shareTarget.verdict.slice(0, 80)}
-          kakaoImageUrl=""
+          kakaoImageUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/verdict/${shareTarget.id}/opengraph-image`}
         />
       )}
 

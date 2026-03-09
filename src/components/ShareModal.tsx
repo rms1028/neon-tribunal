@@ -14,7 +14,9 @@ interface ShareModalProps {
 }
 
 const NEON_IMAGE =
-  "https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=1000&auto=format&fit=crop";
+  typeof window !== "undefined"
+    ? `${window.location.origin}/opengraph-image`
+    : "/opengraph-image";
 
 const copyToClipboard = async (text: string): Promise<boolean> => {
   try {
