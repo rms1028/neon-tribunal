@@ -134,22 +134,21 @@ export default function CyberNav() {
       {showFab && (
         <Link
           href="/"
-          className="fixed md:hidden z-50 flex items-center justify-center gap-2 transition-all duration-200"
+          className="fixed md:hidden z-50 flex items-center justify-center gap-1.5 transition-all duration-200"
           style={{
-            bottom: "20px",
-            right: "16px",
+            bottom: "24px",
+            right: "20px",
             fontFamily: "var(--font-share-tech)",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "0.06em",
             color: "#39ff14",
-            background: "rgba(8,8,24,0.92)",
-            border: "1px solid rgba(57,255,20,0.4)",
+            background: "rgba(8,8,24,0.95)",
+            border: "1px solid rgba(57,255,20,0.5)",
             backdropFilter: "blur(12px)",
-            padding: "12px 20px",
-            minHeight: "48px",
-            boxShadow: "0 0 20px rgba(57,255,20,0.15), 0 4px 20px rgba(0,0,0,0.5)",
-            clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+            padding: "10px 16px",
+            borderRadius: "9999px",
+            boxShadow: "0 0 12px rgba(57,255,20,0.2), 0 2px 12px rgba(0,0,0,0.6)",
           }}
         >
           {"\u2696\uFE0F"} 새 재판

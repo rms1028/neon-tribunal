@@ -550,7 +550,7 @@ export default function MyVerdictsPage() {
               fontWeight: 900,
               color: "#ffffff",
               letterSpacing: "0.1em",
-              textShadow: "0 0 10px rgba(57,255,20,0.6), 0 0 30px rgba(57,255,20,0.25)",
+              textShadow: "0 0 6px rgba(57,255,20,0.35), 0 0 18px rgba(57,255,20,0.12)",
               marginBottom: "8px",
             }}
           >

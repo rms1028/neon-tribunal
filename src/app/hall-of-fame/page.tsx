@@ -955,10 +955,9 @@ export default function HallOfFamePage() {
               fontFamily: "var(--font-orbitron)",
               color: "#ffffff",
               textShadow: [
-                "0 0 8px rgba(240,225,48,0.9)",
-                "0 0 25px rgba(240,225,48,0.6)",
-                "0 0 60px rgba(240,225,48,0.3)",
-                "0 0 100px rgba(240,225,48,0.15)",
+                "0 0 6px rgba(240,225,48,0.5)",
+                "0 0 15px rgba(240,225,48,0.3)",
+                "0 0 40px rgba(240,225,48,0.15)",
               ].join(", "),
             }}
           >
@@ -969,6 +968,7 @@ export default function HallOfFamePage() {
             style={{
               fontFamily: "var(--font-share-tech)",
               color: "#9ca3af",
+              wordBreak: "keep-all",
             }}
           >
             국민 배심원단이 소집된 재판을 모아볼 수 있습니다
@@ -978,7 +978,7 @@ export default function HallOfFamePage() {
         <div className="holo-line mb-8" />
 
         {/* ===== SORT BUTTONS ===== */}
-        <div className="flex gap-4 mb-8 justify-center">
+        <div className="flex gap-4 mb-8 justify-center flex-nowrap overflow-x-auto scrollbar-hide">
           {(
             [
               {
@@ -998,15 +998,15 @@ export default function HallOfFamePage() {
               <button
                 key={tab.key}
                 onClick={() => handleSortChange(tab.key)}
-                className="cyber-clip-btn px-6 py-3 text-xs tracking-widest uppercase border transition-all duration-300 cursor-pointer"
+                className="cyber-clip-btn px-6 py-3 text-xs tracking-widest uppercase border transition-all duration-300 cursor-pointer whitespace-nowrap shrink-0"
                 style={{
                   fontFamily: "var(--font-share-tech)",
                   borderColor: isActive
                     ? `rgb(${tab.color})`
-                    : "var(--color-dark-border)",
+                    : "rgba(255,255,255,0.18)",
                   color: isActive
                     ? `rgb(${tab.color})`
-                    : "#6b7280",
+                    : "#9ca3af",
                   backgroundColor: isActive
                     ? `rgba(${tab.color},0.15)`
                     : "transparent",
@@ -1025,21 +1025,21 @@ export default function HallOfFamePage() {
         </div>
 
         {/* ===== JUDGE FILTER ===== */}
-        <div className="flex gap-2 mb-8 justify-center flex-wrap">
+        <div className="flex gap-2 mb-8 justify-start md:justify-center flex-nowrap overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => handleJudgeFilter(null)}
-            className="px-4 py-2.5 tracking-widest border transition-all duration-300 cursor-pointer"
+            className="px-4 py-2.5 tracking-widest border transition-all duration-300 cursor-pointer whitespace-nowrap shrink-0"
             style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "10px",
               borderColor:
                 judgeFilter === null
                   ? "var(--color-neon-blue)"
-                  : "var(--color-dark-border)",
+                  : "rgba(255,255,255,0.18)",
               color:
                 judgeFilter === null
                   ? "var(--color-neon-blue)"
-                  : "#6b7280",
+                  : "#9ca3af",
               backgroundColor:
                 judgeFilter === null
                   ? "rgba(0,240,255,0.15)"
@@ -1062,14 +1062,14 @@ export default function HallOfFamePage() {
               <button
                 key={j.id}
                 onClick={() => handleJudgeFilter(j.id)}
-                className="px-4 py-2.5 tracking-widest border transition-all duration-300 cursor-pointer"
+                className="px-4 py-2.5 tracking-widest border transition-all duration-300 cursor-pointer whitespace-nowrap shrink-0"
                 style={{
                   fontFamily: "var(--font-share-tech)",
                   fontSize: "10px",
                   borderColor: isActive
                     ? j.accentColor
-                    : "var(--color-dark-border)",
-                  color: isActive ? j.accentColor : "#6b7280",
+                    : "rgba(255,255,255,0.18)",
+                  color: isActive ? j.accentColor : "#9ca3af",
                   backgroundColor: isActive
                     ? `${j.accentColor}26`
                     : "transparent",
