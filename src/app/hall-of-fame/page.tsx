@@ -1156,7 +1156,7 @@ export default function HallOfFamePage() {
 
         {/* ===== CARD GRID ===== */}
         {!isLoading && entries.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {entries.map((entry) => {
               const judge = getJudgeData(entry.judge_id);
               const isLiked = likedIds.has(entry.id);
@@ -1186,9 +1186,9 @@ export default function HallOfFamePage() {
               return (
                 <div
                   key={entry.id}
-                  className={`verdict-card cyber-clip glass-card relative p-4 sm:p-6 cursor-pointer ${
+                  className={`verdict-card cyber-clip glass-card relative p-3 sm:p-6 cursor-pointer ${
                     isExpanded
-                      ? "col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4"
+                      ? "col-span-2 lg:col-span-3 xl:col-span-4"
                       : ""
                   }`}
                   style={{
@@ -1205,68 +1205,49 @@ export default function HallOfFamePage() {
                   }
                 >
                   {/* Judge header */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                       {judge ? (
                         <JudgeAvatar
                           avatarUrl={judge.avatarUrl}
                           name={judge.name}
-                          size={28}
+                          size={22}
                           glowRgb={glowRgb}
+                          className="shrink-0 sm:[&]:w-7 sm:[&]:h-7"
                         />
                       ) : (
-                        <span className="text-2xl">
+                        <span className="text-lg sm:text-2xl shrink-0">
                           {"\u2696"}
                         </span>
                       )}
                       <span
-                        className="font-bold text-xs uppercase tracking-wide"
+                        className="font-bold uppercase tracking-wide truncate"
                         style={{
                           fontFamily:
                             "var(--font-orbitron)",
+                          fontSize: "clamp(9px, 2.5vw, 12px)",
                           color: accentColor,
                         }}
                       >
                         {entry.judge_name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="tracking-wider"
-                        style={{
-                          fontFamily:
-                            "var(--font-share-tech)",
-                          fontSize: "9px",
-                          color: "#4b5563",
-                        }}
-                      >
-                        {timeAgo(entry.created_at)}
-                      </span>
-                      {(storyTruncated ||
-                        verdictTruncated ||
-                        entry.image_url) && (
-                        <span
-                          className="tracking-wider transition-colors"
-                          style={{
-                            fontFamily:
-                              "var(--font-share-tech)",
-                            fontSize: "9px",
-                            color: isExpanded
-                              ? accentColor
-                              : "#555",
-                          }}
-                        >
-                          {isExpanded
-                            ? "\u25B2 접기"
-                            : "\u25BC 펼치기"}
-                        </span>
-                      )}
-                    </div>
+                    <span
+                      className="tracking-wider shrink-0 hidden sm:inline"
+                      style={{
+                        fontFamily:
+                          "var(--font-share-tech)",
+                        fontSize: "9px",
+                        color: "#4b5563",
+                      }}
+                    >
+                      {timeAgo(entry.created_at)}
+                    </span>
                   </div>
 
-                  {/* Evidence image */}
+                  {/* Evidence image - hidden on mobile compact */}
                   {entry.image_url && (
-                    <div className="mb-2">
+                    <div className={`mb-2 ${isExpanded ? "" : "hidden sm:block"}`}>
                       <img
                         src={entry.image_url}
                         alt="증거 사진"
@@ -1287,9 +1268,9 @@ export default function HallOfFamePage() {
 
                   {/* Story */}
                   <div
-                    className="mb-3"
+                    className="mb-2 sm:mb-3"
                     style={{
-                      padding: "12px 14px",
+                      padding: "8px 10px",
                       borderRadius: "6px",
                       background:
                         "rgba(255,255,255,0.05)",
@@ -1297,11 +1278,11 @@ export default function HallOfFamePage() {
                     }}
                   >
                     <p
-                      className="leading-relaxed whitespace-pre-wrap"
+                      className={`leading-relaxed whitespace-pre-wrap ${!isExpanded ? "line-clamp-2 sm:line-clamp-none" : ""}`}
                       style={{
                         fontFamily:
                           "var(--font-share-tech)",
-                        fontSize: "11px",
+                        fontSize: "clamp(10px, 2.5vw, 11px)",
                         color: "#9ca3af",
                         fontStyle: "italic",
                       }}
@@ -1316,9 +1297,9 @@ export default function HallOfFamePage() {
                   </div>
 
                   {/* Verdict */}
-                  <div className="mb-4">
+                  <div className="mb-2 sm:mb-4">
                     <p
-                      className="uppercase mb-1.5"
+                      className="uppercase mb-1 sm:mb-1.5 hidden sm:block"
                       style={{
                         fontFamily:
                           "var(--font-share-tech)",
@@ -1331,14 +1312,14 @@ export default function HallOfFamePage() {
                     </p>
                     <p
                       className={`leading-relaxed whitespace-pre-wrap ${
-                        !isExpanded && verdictTruncated
-                          ? "line-clamp-3"
+                        !isExpanded
+                          ? "line-clamp-2 sm:line-clamp-3"
                           : ""
                       }`}
                       style={{
                         fontFamily:
                           "var(--font-share-tech)",
-                        fontSize: "12px",
+                        fontSize: "clamp(10px, 2.5vw, 12px)",
                         color: "#e5e7eb",
                       }}
                     >
@@ -1348,7 +1329,7 @@ export default function HallOfFamePage() {
 
                   {/* Vote gauge */}
                   <div
-                    className="mb-4 p-3"
+                    className="mb-2 sm:mb-4 p-2 sm:p-3"
                     style={{
                       borderRadius: "4px",
                       border: `1px solid rgba(${glowRgb},0.15)`,
@@ -1356,9 +1337,9 @@ export default function HallOfFamePage() {
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
                       <span
-                        className="uppercase"
+                        className="uppercase hidden sm:inline"
                         style={{
                           fontFamily:
                             "var(--font-share-tech)",
@@ -1456,13 +1437,14 @@ export default function HallOfFamePage() {
                     )}
                   </div>
 
-                  {/* Vote CTA */}
+                  {/* Vote CTA - hidden on mobile compact, visible on sm+ or expanded */}
                   <div
+                    className={`${isExpanded ? "" : "hidden sm:block"}`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {isAuthor ? (
                       <div
-                        className="text-center py-2.5 mb-4"
+                        className="text-center py-2 sm:py-2.5 mb-2 sm:mb-4"
                         style={{
                           borderRadius: "4px",
                           border: `1px solid rgba(${glowRgb},0.2)`,
@@ -1478,14 +1460,13 @@ export default function HallOfFamePage() {
                             color: accentColor,
                           }}
                         >
-                          {"\u2696\uFE0F"} 내 사연 &mdash;
-                          배심원단의 투표를 지켜보세요!
+                          {"\u2696\uFE0F"} 내 사연
                         </p>
                       </div>
                     ) : (
                       <Link
                         href={`/verdict/${entry.id}`}
-                        className="flex items-center justify-center gap-2 w-full py-3 mb-4 tracking-wider transition-all duration-200"
+                        className="flex items-center justify-center gap-2 w-full py-2 sm:py-3 mb-2 sm:mb-4 tracking-wider transition-all duration-200"
                         style={{
                           fontFamily:
                             "var(--font-share-tech)",
@@ -1509,27 +1490,26 @@ export default function HallOfFamePage() {
                             "none";
                         }}
                       >
-                        {"\uD83D\uDC49"} 자세히 보고
-                        투표하기
+                        {"\uD83D\uDC49"} 투표하기
                       </Link>
                     )}
                   </div>
 
                   {/* Action buttons */}
                   <div
-                    className="flex items-center justify-between pt-3"
+                    className="flex items-center justify-between pt-2 sm:pt-3"
                     style={{
                       borderTop:
                         "1px solid rgba(255,255,255,0.05)",
                     }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleLike(entry.id);
                         }}
-                        className="flex items-center gap-2 px-4 py-2.5 text-xs tracking-wider transition-all duration-200 cursor-pointer"
+                        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs tracking-wider transition-all duration-200 cursor-pointer"
                         style={{
                           fontFamily:
                             "var(--font-share-tech)",
@@ -1588,7 +1568,7 @@ export default function HallOfFamePage() {
                           e.stopPropagation();
                           handleShareCopy(entry.id);
                         }}
-                        className="flex items-center gap-1 px-4 py-2.5 tracking-wider transition-all duration-200 cursor-pointer"
+                        className="flex items-center gap-1 px-2 sm:px-4 py-2 sm:py-2.5 tracking-wider transition-all duration-200 cursor-pointer"
                         style={{
                           fontFamily:
                             "var(--font-share-tech)",
@@ -1644,7 +1624,7 @@ export default function HallOfFamePage() {
                     <Link
                       href={`/verdict/${entry.id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="px-4 py-2.5 tracking-widest transition-all duration-200"
+                      className="px-2 sm:px-4 py-2 sm:py-2.5 tracking-widest transition-all duration-200"
                       style={{
                         fontFamily:
                           "var(--font-share-tech)",

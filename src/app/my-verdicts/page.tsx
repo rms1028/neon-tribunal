@@ -571,12 +571,81 @@ export default function MyVerdictsPage() {
 
         <div className="holo-line" style={{ marginBottom: "24px" }} />
 
-        {/* Mobile stat bar (hidden since sidebar is now visible on all screens) */}
+        {/* ===== MOBILE COMPACT STAT BAR ===== */}
+        {records.length > 0 && (
+          <div
+            className="lg:hidden mb-5"
+            style={{
+              background: "rgba(8,8,24,0.85)",
+              border: "1px solid rgba(57,255,20,0.18)",
+              borderRadius: "8px",
+              padding: "12px 16px",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              {/* Rank + Total */}
+              <div className="flex items-center gap-3 min-w-0">
+                <span
+                  style={{
+                    fontFamily: "var(--font-orbitron)",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    color: rank.color,
+                    border: `1px solid ${rank.color}50`,
+                    background: `${rank.color}15`,
+                    padding: "4px 10px",
+                    whiteSpace: "nowrap",
+                    textShadow: `0 0 6px ${rank.color}60`,
+                  }}
+                >
+                  {rank.icon} {rank.label}
+                </span>
+                <div className="flex items-baseline gap-1">
+                  <span
+                    style={{
+                      fontFamily: "var(--font-orbitron)",
+                      fontSize: "22px",
+                      fontWeight: 900,
+                      color: "#39ff14",
+                      textShadow: "0 0 10px rgba(57,255,20,0.5)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {stats.total}
+                  </span>
+                  <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "11px", color: "#9ca3af" }}>회</span>
+                </div>
+              </div>
 
-        {/* ===== 2-COLUMN LAYOUT (mobile: stacked, desktop: side-by-side) ===== */}
+              {/* Spice gauge + Fav judge */}
+              <div className="flex items-center gap-3 shrink-0">
+                {stats.favoriteJudgeId && (() => {
+                  const fj = getJudgeData(stats.favoriteJudgeId);
+                  if (!fj) return null;
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      <JudgeAvatar avatarUrl={fj.avatarUrl} name={fj.name} size={22} glowRgb={fj.glowRgb} />
+                      <span style={{ fontFamily: "var(--font-orbitron)", fontSize: "9px", fontWeight: 700, color: fj.accentColor }}>
+                        {fj.name}
+                      </span>
+                    </div>
+                  );
+                })()}
+                <div className="flex items-center gap-1.5">
+                  <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "10px", color: "#ff2d95" }}>{"\uD83C\uDF36\uFE0F"}</span>
+                  <span style={{ fontFamily: "var(--font-orbitron)", fontSize: "12px", fontWeight: 800, color: "#ff2d95" }}>{stats.avgSpice}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== 2-COLUMN LAYOUT (mobile: no sidebar, desktop: side-by-side) ===== */}
         <div className="flex flex-col lg:flex-row lg:items-start" style={{ gap: "24px" }}>
-          {/* Left: Sidebar (sticky on desktop, stacked on mobile) */}
-          {records.length > 0 && renderSidebar()}
+          {/* Left: Sidebar (hidden on mobile, sticky on desktop) */}
+          <div className="hidden lg:block">
+            {records.length > 0 && renderSidebar()}
+          </div>
 
           {/* Right: Timeline records */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -674,29 +743,29 @@ export default function MyVerdictsPage() {
                               background: "rgba(8,8,24,0.8)",
                               backdropFilter: "blur(8px)",
                               border: `1px solid rgba(${glowRgb},${isExpanded ? "0.25" : "0.12"})`,
-                              padding: "16px",
+                              padding: "12px",
                               boxShadow: isExpanded ? `0 0 25px rgba(${glowRgb},0.12), inset 0 0 25px rgba(${glowRgb},0.03)` : "none",
                               transition: "box-shadow 0.3s ease, border-color 0.3s ease",
                             }}
                             onClick={() => setExpandedId(isExpanded ? null : record.id)}
                           >
                             {/* ── COLLAPSED HEADER (always visible) ── */}
-                            <div className="relative z-10 flex items-center" style={{ gap: "10px" }}>
+                            <div className="relative z-10 flex items-center" style={{ gap: "8px" }}>
                               {/* Judge avatar */}
                               {judge ? (
-                                <JudgeAvatar avatarUrl={judge.avatarUrl} name={judge.name} size={36} glowRgb={glowRgb} />
+                                <JudgeAvatar avatarUrl={judge.avatarUrl} name={judge.name} size={28} glowRgb={glowRgb} className="shrink-0 sm:[&]:w-9 sm:[&]:h-9" />
                               ) : (
-                                <span style={{ fontSize: "28px" }}>{"\u2696"}</span>
+                                <span className="shrink-0" style={{ fontSize: "22px" }}>{"\u2696"}</span>
                               )}
 
                               {/* Info */}
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div className="flex items-center" style={{ gap: "10px", marginBottom: "4px" }}>
+                                <div className="flex items-center flex-wrap" style={{ gap: "6px", marginBottom: "3px" }}>
                                   <span
                                     className="uppercase tracking-wide"
                                     style={{
                                       fontFamily: "var(--font-orbitron)",
-                                      fontSize: "clamp(11px, 2.5vw, 14px)",
+                                      fontSize: "clamp(10px, 2.5vw, 14px)",
                                       fontWeight: 800,
                                       color: accentColor,
                                       textShadow: `0 0 8px ${accentColor}50`,
@@ -706,26 +775,32 @@ export default function MyVerdictsPage() {
                                   </span>
                                   {/* Spice badge */}
                                   <span
-                                    className="tracking-wider"
+                                    className="tracking-wider hidden sm:inline"
                                     style={{
                                       fontFamily: "var(--font-share-tech)",
-                                      fontSize: "12px",
+                                      fontSize: "11px",
                                       fontWeight: 700,
                                       color: spiceBadge.color,
                                       background: `${spiceBadge.color}18`,
                                       border: `1px solid ${spiceBadge.color}35`,
                                       borderRadius: "3px",
-                                      padding: "3px 8px",
+                                      padding: "2px 6px",
                                     }}
                                   >
                                     {spiceBadge.icon} {spiceBadge.label}
+                                  </span>
+                                  <span
+                                    className="sm:hidden"
+                                    style={{ fontFamily: "var(--font-share-tech)", fontSize: "10px", color: "#9ca3af" }}
+                                  >
+                                    {timeAgo(record.createdAt)}
                                   </span>
                                 </div>
                                 {/* Story summary (1 line) */}
                                 <p
                                   style={{
                                     fontFamily: "var(--font-share-tech)",
-                                    fontSize: "14px",
+                                    fontSize: "clamp(11px, 3vw, 14px)",
                                     color: "#d1d5db",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
@@ -739,8 +814,8 @@ export default function MyVerdictsPage() {
                               </div>
 
                               {/* Right side */}
-                              <div className="flex items-center flex-shrink-0" style={{ gap: "10px" }}>
-                                <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "12px", color: "#9ca3af", fontWeight: 500 }}>
+                              <div className="flex items-center flex-shrink-0" style={{ gap: "8px" }}>
+                                <span className="hidden sm:inline" style={{ fontFamily: "var(--font-share-tech)", fontSize: "12px", color: "#9ca3af", fontWeight: 500 }}>
                                   {timeAgo(record.createdAt)}
                                 </span>
                                 {hasMore && (
@@ -749,7 +824,7 @@ export default function MyVerdictsPage() {
                                     style={{
                                       display: "inline-block",
                                       fontFamily: "var(--font-share-tech)",
-                                      fontSize: "13px",
+                                      fontSize: "12px",
                                       color: isExpanded ? accentColor : "#777",
                                       transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
                                     }}
@@ -761,11 +836,11 @@ export default function MyVerdictsPage() {
                             </div>
 
                             {/* One-liner verdict (always visible) */}
-                            <div className="relative z-10" style={{ marginTop: "10px", paddingLeft: "0" }}>
+                            <div className="relative z-10" style={{ marginTop: "8px", paddingLeft: "0" }}>
                               <p
                                 style={{
                                   fontFamily: "var(--font-share-tech)",
-                                  fontSize: "14px",
+                                  fontSize: "clamp(11px, 3vw, 14px)",
                                   color: "#e5e7eb",
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",

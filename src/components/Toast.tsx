@@ -26,24 +26,24 @@ export default function Toast({ message, visible }: ToastProps) {
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 ${
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-32px)] max-w-md ${
         animating ? "animate-toast-in" : "animate-toast-out"
       }`}
     >
       <div
-        className="flex items-center gap-3 px-5 py-3 rounded-sm border border-neon-green/30"
+        className="flex items-start gap-3 px-4 py-3 rounded-lg border border-neon-green/30"
         style={{
-          background: "rgba(8, 8, 24, 0.9)",
+          background: "rgba(8, 8, 24, 0.95)",
           backdropFilter: "blur(12px)",
           boxShadow:
             "0 0 20px rgba(57,255,20,0.1), inset 0 0 20px rgba(57,255,20,0.02)",
         }}
       >
         <span
-          className="w-0.5 h-5 rounded-full shrink-0"
+          className="w-0.5 min-h-5 rounded-full shrink-0 mt-0.5"
           style={{ backgroundColor: "#39ff14" }}
         />
-        <span className="font-[family-name:var(--font-share-tech)] text-xs text-gray-200 tracking-wider whitespace-nowrap">
+        <span className="font-[family-name:var(--font-share-tech)] text-xs text-gray-200 tracking-wider leading-relaxed">
           {message}
         </span>
       </div>
