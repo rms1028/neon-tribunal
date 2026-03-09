@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <radialGradient id="hb-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff2d95" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ff2d95" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hb-hair" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ff7eb8"/>
+      <stop offset="100%" stop-color="#cc1a6e"/>
+    </linearGradient>
+    <linearGradient id="hb-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2a1025"/>
+      <stop offset="100%" stop-color="#150812"/>
+    </linearGradient>
+  </defs>
+  <!-- Background glow -->
+  <circle cx="100" cy="100" r="95" fill="url(#hb-glow)"/>
+  <!-- Hair - flowing, soft -->
+  <ellipse cx="100" cy="60" rx="48" ry="38" fill="url(#hb-hair)" opacity="0.9"/>
+  <path d="M52 60 Q48 90 50 120 Q52 100 56 85 Z" fill="url(#hb-hair)" opacity="0.7"/>
+  <path d="M148 60 Q152 90 150 120 Q148 100 144 85 Z" fill="url(#hb-hair)" opacity="0.7"/>
+  <!-- Flowing strands -->
+  <path d="M55 65 Q45 95 48 130" stroke="#ff7eb8" stroke-width="2" stroke-opacity="0.5" fill="none"/>
+  <path d="M145 65 Q155 95 152 130" stroke="#ff7eb8" stroke-width="2" stroke-opacity="0.5" fill="none"/>
+  <!-- Face - soft oval -->
+  <ellipse cx="100" cy="85" rx="36" ry="42" fill="#1a1225" stroke="#ff2d95" stroke-width="0.8" stroke-opacity="0.3"/>
+  <!-- Skin highlight -->
+  <ellipse cx="100" cy="80" rx="30" ry="35" fill="#1e1530" opacity="0.6"/>
+  <!-- Eyes - warm, expressive -->
+  <ellipse cx="84" cy="80" rx="8" ry="6" fill="#0e0818"/>
+  <ellipse cx="84" cy="80" rx="5" ry="4" fill="#ff2d95" opacity="0.7"/>
+  <circle cx="84" cy="79" r="2" fill="#ffffff" opacity="0.8"/>
+  <ellipse cx="116" cy="80" rx="8" ry="6" fill="#0e0818"/>
+  <ellipse cx="116" cy="80" rx="5" ry="4" fill="#ff2d95" opacity="0.7"/>
+  <circle cx="116" cy="79" r="2" fill="#ffffff" opacity="0.8"/>
+  <!-- Eyebrows - gentle curve -->
+  <path d="M74 72 Q84 68 92 71" stroke="#ff7eb8" stroke-width="1.5" stroke-opacity="0.5" fill="none"/>
+  <path d="M108 71 Q116 68 126 72" stroke="#ff7eb8" stroke-width="1.5" stroke-opacity="0.5" fill="none"/>
+  <!-- Nose -->
+  <path d="M100 88 Q98 94 100 97 Q102 94 100 88" stroke="#ff2d95" stroke-width="0.6" stroke-opacity="0.3" fill="none"/>
+  <!-- Smile - warm -->
+  <path d="M88 104 Q100 112 112 104" stroke="#ff2d95" stroke-width="1.2" stroke-opacity="0.5" fill="none"/>
+  <!-- Blush marks -->
+  <ellipse cx="74" cy="95" rx="7" ry="4" fill="#ff2d95" opacity="0.12"/>
+  <ellipse cx="126" cy="95" rx="7" ry="4" fill="#ff2d95" opacity="0.12"/>
+  <!-- Heart earrings -->
+  <path d="M58 88 Q56 84 60 84 Q62 84 60 88 Z" fill="#ff2d95" opacity="0.6"/>
+  <path d="M142 88 Q140 84 144 84 Q146 84 144 88 Z" fill="#ff2d95" opacity="0.6"/>
+  <!-- Neck -->
+  <rect x="90" y="126" width="20" height="14" rx="4" fill="#1a1225"/>
+  <!-- Body -->
+  <path d="M55 140 L90 140 L90 175 L40 175 L48 152 Z" fill="url(#hb-body)" stroke="#ff2d95" stroke-width="0.8" stroke-opacity="0.3"/>
+  <path d="M145 140 L110 140 L110 175 L160 175 L152 152 Z" fill="url(#hb-body)" stroke="#ff2d95" stroke-width="0.8" stroke-opacity="0.3"/>
+  <rect x="90" y="140" width="20" height="35" fill="#1e1530" stroke="#ff2d95" stroke-width="0.5" stroke-opacity="0.2"/>
+  <!-- Heart on chest -->
+  <path d="M94 155 Q92 150 96 150 Q100 150 100 155 Q100 150 104 150 Q108 150 106 155 L100 164 Z" fill="#ff2d95" opacity="0.5"/>
+  <!-- Glow particles -->
+  <circle cx="45" cy="70" r="1.5" fill="#ff2d95" opacity="0.4"/>
+  <circle cx="155" cy="75" r="1" fill="#ff2d95" opacity="0.35"/>
+  <circle cx="50" cy="110" r="1" fill="#ff7eb8" opacity="0.3"/>
+  <circle cx="150" cy="105" r="1.5" fill="#ff7eb8" opacity="0.3"/>
+</svg>

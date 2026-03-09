@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <radialGradient id="dn-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#b44aff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#b44aff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dn-hat" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2a1a3a"/>
+      <stop offset="100%" stop-color="#15082a"/>
+    </linearGradient>
+    <linearGradient id="dn-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1a102a"/>
+      <stop offset="100%" stop-color="#0e0618"/>
+    </linearGradient>
+  </defs>
+  <!-- Background glow -->
+  <circle cx="100" cy="100" r="95" fill="url(#dn-glow)"/>
+  <!-- Fedora hat -->
+  <ellipse cx="100" cy="52" rx="60" ry="10" fill="#15082a" stroke="#b44aff" stroke-width="1" stroke-opacity="0.4"/>
+  <path d="M45 52 Q50 22 100 18 Q150 22 155 52 Z" fill="url(#dn-hat)" stroke="#b44aff" stroke-width="0.8" stroke-opacity="0.35"/>
+  <!-- Hat band -->
+  <path d="M48 48 Q100 42 152 48" stroke="#b44aff" stroke-width="2" stroke-opacity="0.5" fill="none"/>
+  <!-- Hat shadow on face -->
+  <ellipse cx="100" cy="65" rx="38" ry="8" fill="#0a0412" opacity="0.5"/>
+  <!-- Face -->
+  <ellipse cx="100" cy="88" rx="34" ry="40" fill="#14082a" stroke="#b44aff" stroke-width="0.6" stroke-opacity="0.25"/>
+  <!-- Shadow across eyes (noir) -->
+  <rect x="66" y="70" width="68" height="16" rx="4" fill="#0a0418" opacity="0.7"/>
+  <!-- Eyes - piercing, narrow -->
+  <path d="M74 76 L92 74 L92 82 L74 80 Z" fill="#0e0620"/>
+  <path d="M78 77 L90 75.5 L90 80.5 L78 79 Z" fill="#b44aff" opacity="0.75"/>
+  <circle cx="85" cy="78" r="2" fill="#ffffff" opacity="0.85"/>
+  <path d="M126 76 L108 74 L108 82 L126 80 Z" fill="#0e0620"/>
+  <path d="M122 77 L110 75.5 L110 80.5 L122 79 Z" fill="#b44aff" opacity="0.75"/>
+  <circle cx="115" cy="78" r="2" fill="#ffffff" opacity="0.85"/>
+  <!-- Eyebrows - serious -->
+  <path d="M72 70 L92 68" stroke="#b44aff" stroke-width="1.8" stroke-opacity="0.5" stroke-linecap="round"/>
+  <path d="M128 70 L108 68" stroke="#b44aff" stroke-width="1.8" stroke-opacity="0.5" stroke-linecap="round"/>
+  <!-- Nose - defined -->
+  <path d="M100 86 L97 98 L103 98" stroke="#b44aff" stroke-width="0.7" stroke-opacity="0.3" fill="none"/>
+  <!-- Mouth - stern, slight frown -->
+  <path d="M86 108 Q93 112 100 110 Q107 112 114 108" stroke="#b44aff" stroke-width="1.2" stroke-opacity="0.4" fill="none"/>
+  <!-- Stubble dots -->
+  <circle cx="88" cy="114" r="0.5" fill="#b44aff" opacity="0.2"/>
+  <circle cx="94" cy="116" r="0.5" fill="#b44aff" opacity="0.2"/>
+  <circle cx="100" cy="117" r="0.5" fill="#b44aff" opacity="0.2"/>
+  <circle cx="106" cy="116" r="0.5" fill="#b44aff" opacity="0.2"/>
+  <circle cx="112" cy="114" r="0.5" fill="#b44aff" opacity="0.2"/>
+  <!-- Jaw line -->
+  <path d="M66 88 Q68 120 100 128 Q132 120 134 88" stroke="#b44aff" stroke-width="0.5" stroke-opacity="0.15" fill="none"/>
+  <!-- Neck -->
+  <rect x="88" y="126" width="24" height="14" fill="#14082a"/>
+  <!-- Coat collar - high, noir style -->
+  <path d="M45 140 L75 130 L88 140 L88 175 L32 175 L38 150 Z" fill="url(#dn-body)" stroke="#b44aff" stroke-width="1" stroke-opacity="0.35"/>
+  <path d="M155 140 L125 130 L112 140 L112 175 L168 175 L162 150 Z" fill="url(#dn-body)" stroke="#b44aff" stroke-width="1" stroke-opacity="0.35"/>
+  <!-- Coat center -->
+  <rect x="88" y="140" width="24" height="35" fill="#100822" stroke="#b44aff" stroke-width="0.5" stroke-opacity="0.2"/>
+  <!-- Coat lapels -->
+  <path d="M88 140 L78 132 L75 145 L88 155 Z" fill="#1e1035" stroke="#b44aff" stroke-width="0.6" stroke-opacity="0.3"/>
+  <path d="M112 140 L122 132 L125 145 L112 155 Z" fill="#1e1035" stroke="#b44aff" stroke-width="0.6" stroke-opacity="0.3"/>
+  <!-- Tie -->
+  <path d="M97 140 L100 145 L103 140 L101 165 L99 165 Z" fill="#b44aff" opacity="0.35"/>
+  <!-- Coat buttons -->
+  <circle cx="100" cy="150" r="1.5" fill="#b44aff" opacity="0.3"/>
+  <circle cx="100" cy="160" r="1.5" fill="#b44aff" opacity="0.3"/>
+</svg>

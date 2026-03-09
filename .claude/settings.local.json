@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(cp:*)",
+      "Bash(xcopy C:\\\\Users\\\\82108\\\\Desktop\\\\neon-4ai-temp\\\\*:*)",
+      "Bash(read f:*)",
+      "Bash(npm run:*)",
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx next:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs wc:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(npx eslint:*)"
+    ]
+  }
+}

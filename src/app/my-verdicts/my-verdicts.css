@@ -1,0 +1,83 @@
+/* Timeline line */
+@keyframes timeline-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.timeline-line {
+  animation: timeline-glow 4s ease-in-out infinite;
+}
+
+/* Classified stamp */
+@keyframes stamp-flicker {
+  0%, 90%, 93%, 95%, 100% { opacity: 0.12; }
+  91%, 94% { opacity: 0.2; }
+}
+.classified-stamp {
+  animation: stamp-flicker 5s ease-in-out infinite;
+}
+
+/* Scanline effect on cards */
+.card-scanline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.015) 2px,
+    rgba(255,255,255,0.015) 4px
+  );
+  z-index: 1;
+}
+
+/* Stat bar fill animation */
+@keyframes stat-fill {
+  from { width: 0; }
+}
+.stat-fill {
+  animation: stat-fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Rank badge pulse */
+@keyframes rank-pulse {
+  0%, 100% { text-shadow: 0 0 8px currentColor; }
+  50% { text-shadow: 0 0 16px currentColor, 0 0 30px currentColor; }
+}
+.rank-pulse {
+  animation: rank-pulse 2.5s ease-in-out infinite;
+}
+
+/* Timeline dot pulse */
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 6px currentColor; }
+  50% { box-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+}
+.timeline-dot {
+  animation: dot-pulse 3s ease-in-out infinite;
+}
+
+/* Accordion expand */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.3s ease;
+  opacity: 0;
+}
+.accordion-content.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.accordion-inner {
+  overflow: hidden;
+}
+
+/* Donut chart rotation */
+@keyframes donut-appear {
+  from { stroke-dashoffset: var(--circumference); }
+}
+.donut-segment {
+  animation: donut-appear 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

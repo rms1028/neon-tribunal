@@ -1,0 +1,444 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-neon-blue: #00f0ff;
+  --color-neon-purple: #b44aff;
+  --color-neon-pink: #ff2d95;
+  --color-neon-green: #39ff14;
+  --color-neon-yellow: #f0e130;
+  --color-dark-bg: #05050e;
+  --color-dark-surface: #0c0c1a;
+  --color-dark-card: #111125;
+  --color-dark-border: #1e1e3a;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-cyber: var(--font-orbitron);
+}
+
+/* ========================================
+   SCROLLBAR
+   ======================================== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-neon-blue); border-radius: 0; }
+
+/* ========================================
+   BASE
+   ======================================== */
+body {
+  background: var(--color-dark-bg);
+  color: #c8c8e0;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+/* ========================================
+   CRT SCANLINE OVERLAY
+   전체 화면에 옅은 가로줄 노이즈
+   ======================================== */
+.crt-overlay::before {
+  content: none;
+}
+
+.crt-overlay::after {
+  content: none;
+}
+
+/* ========================================
+   CYBER GRID (배경 격자)
+   ======================================== */
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ========================================
+   GLITCH ANIMATION (메인 타이틀)
+   ======================================== */
+.glitch {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glitch::before {
+  color: var(--color-neon-pink);
+  opacity: 0.6;
+  z-index: 1;
+  animation: glitch-shift-1 4s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  color: var(--color-neon-blue);
+  opacity: 0.6;
+  z-index: 1;
+  animation: glitch-shift-2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-shift-1 {
+  0%, 85% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  86% { clip-path: inset(20% 0 60% 0); transform: translate(-4px, -2px); }
+  88% { clip-path: inset(70% 0 5% 0); transform: translate(3px, 1px); }
+  89% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  92% { clip-path: inset(40% 0 30% 0); transform: translate(-3px, 2px); }
+  93% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+}
+
+@keyframes glitch-shift-2 {
+  0%, 80% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  81% { clip-path: inset(60% 0 10% 0); transform: translate(4px, 1px); }
+  83% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, -1px); }
+  84% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  95% { clip-path: inset(30% 0 50% 0); transform: translate(2px, -2px); }
+  96% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+}
+
+/* Glitch flicker on the whole text block */
+@keyframes glitch-flicker {
+  0%, 94%, 96%, 100% { opacity: 1; }
+  95% { opacity: 0.8; }
+}
+
+.glitch {
+  animation: glitch-flicker 5s infinite;
+}
+
+/* ========================================
+   CLIP-PATH: 비대칭 컷아웃 셰이프
+   사이버펑크 2077 스타일 각진 모서리
+   ======================================== */
+
+/* 우상단 + 좌하단 컷 (카드, 버튼 등) */
+.cyber-clip {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 18px) 0,
+    100% 18px,
+    100% 100%,
+    18px 100%,
+    0 calc(100% - 18px)
+  );
+}
+
+/* 좌상단 컷 (작은 요소) */
+.cyber-clip-sm {
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 12px
+  );
+}
+
+/* 우상단만 컷 (버튼) */
+.cyber-clip-btn {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% 100%,
+    0 100%
+  );
+}
+
+/* 좌하단만 컷 (텍스트 박스) */
+.cyber-clip-input {
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    14px 100%,
+    0 calc(100% - 14px)
+  );
+}
+
+/* ========================================
+   GLASSMORPHISM / 홀로그램 카드
+   ======================================== */
+.glass-card {
+  background: rgba(8, 8, 24, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+/* 그라데이션 보더 글로우 — pseudo element */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 240, 255, 0.3),
+    rgba(180, 74, 255, 0.1),
+    transparent 50%,
+    rgba(255, 45, 149, 0.1),
+    rgba(0, 240, 255, 0.2)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 선택된 카드용 강화 글로우 */
+.glass-card-active::before {
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    var(--card-glow-color, var(--color-neon-blue)) 0%,
+    transparent 40%,
+    transparent 60%,
+    var(--card-glow-color, var(--color-neon-blue)) 100%
+  );
+  animation: border-rotate 3s linear infinite;
+}
+
+@keyframes border-rotate {
+  0% { background: linear-gradient(0deg, var(--card-glow-color, var(--color-neon-blue)) 0%, transparent 40%, transparent 60%, var(--card-glow-color, var(--color-neon-blue)) 100%); }
+  25% { background: linear-gradient(90deg, var(--card-glow-color, var(--color-neon-blue)) 0%, transparent 40%, transparent 60%, var(--card-glow-color, var(--color-neon-blue)) 100%); }
+  50% { background: linear-gradient(180deg, var(--card-glow-color, var(--color-neon-blue)) 0%, transparent 40%, transparent 60%, var(--card-glow-color, var(--color-neon-blue)) 100%); }
+  75% { background: linear-gradient(270deg, var(--card-glow-color, var(--color-neon-blue)) 0%, transparent 40%, transparent 60%, var(--card-glow-color, var(--color-neon-blue)) 100%); }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes neon-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes holo-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1.5s linear infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+}
+
+.animate-holo {
+  background-size: 200% 200%;
+  animation: holo-shift 4s ease infinite;
+}
+
+/* ========================================
+   VERDICT REVEAL ANIMATION
+   ======================================== */
+@keyframes verdict-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.verdict-reveal {
+  animation: verdict-reveal 0.6s ease-out forwards;
+}
+
+/* ========================================
+   MODAL / TOAST ANIMATIONS
+   ======================================== */
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(20px); }
+}
+.animate-modal-in { animation: modal-in 0.2s ease-out forwards; }
+.animate-toast-in { animation: toast-in 0.3s ease-out forwards; }
+.animate-toast-out { animation: toast-out 0.3s ease-in forwards; }
+
+/* ========================================
+   VERDICT PAGE: NEON SIGN & FIRE EFFECTS
+   ======================================== */
+
+@keyframes avatar-fire {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px var(--fire-color)) drop-shadow(0 0 40px var(--fire-color));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 35px var(--fire-color)) drop-shadow(0 0 70px var(--fire-color)) drop-shadow(0 0 100px var(--fire-color));
+    transform: scale(1.05);
+  }
+}
+.animate-avatar-fire {
+  animation: avatar-fire 2s ease-in-out infinite;
+}
+
+@keyframes neon-sign-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.85; }
+}
+.animate-neon-sign {
+  animation: neon-sign-flicker 4s ease-in-out infinite;
+}
+
+@keyframes fire-line {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.animate-fire-line {
+  background-size: 200% auto;
+  animation: fire-line 3s linear infinite;
+}
+
+/* ========================================
+   NEON GLOW UTILITIES
+   ======================================== */
+.neon-text-blue {
+  text-shadow:
+    0 0 7px var(--color-neon-blue),
+    0 0 30px var(--color-neon-blue),
+    0 0 60px rgba(0, 240, 255, 0.4),
+    0 0 100px rgba(0, 240, 255, 0.15);
+}
+
+.neon-text-purple {
+  text-shadow:
+    0 0 7px var(--color-neon-purple),
+    0 0 30px var(--color-neon-purple),
+    0 0 60px rgba(180, 74, 255, 0.3);
+}
+
+.neon-border-blue {
+  box-shadow:
+    0 0 8px rgba(0, 240, 255, 0.4),
+    0 0 20px rgba(0, 240, 255, 0.15),
+    inset 0 0 8px rgba(0, 240, 255, 0.1);
+}
+
+/* ========================================
+   ACCENT BAR (섹션 제목 좌측 바)
+   ======================================== */
+.accent-bar {
+  width: 3px;
+  height: 20px;
+  display: inline-block;
+  clip-path: polygon(0 0, 100% 4px, 100% 100%, 0 calc(100% - 4px));
+}
+
+/* ========================================
+   TEXTAREA FOCUS GLOW
+   ======================================== */
+.textarea-cyber:focus {
+  box-shadow:
+    0 0 0 1px var(--color-neon-blue),
+    0 0 15px rgba(0, 240, 255, 0.2),
+    inset 0 0 30px rgba(0, 240, 255, 0.03);
+}
+
+/* ========================================
+   HOLO DECORATION LINE
+   ======================================== */
+/* ========================================
+   FULL COURT CARD ANIMATIONS
+   ======================================== */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 2px;
+}
+
+@keyframes card-verdict-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+.verdict-card-reveal {
+  animation: card-verdict-reveal 0.5s ease-out forwards;
+}
+
+/* ========================================
+   HOLO DECORATION LINE
+   ======================================== */
+.holo-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-neon-blue),
+    var(--color-neon-purple),
+    var(--color-neon-pink),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: holo-shift 3s ease infinite;
+}

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <radialGradient id="cr-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#39ff14" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#39ff14" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cr-flame" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#ff6600"/>
+      <stop offset="40%" stop-color="#ff3300"/>
+      <stop offset="70%" stop-color="#39ff14"/>
+      <stop offset="100%" stop-color="#39ff14" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="cr-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1a2a10"/>
+      <stop offset="100%" stop-color="#0a1505"/>
+    </linearGradient>
+  </defs>
+  <!-- Background glow -->
+  <circle cx="100" cy="100" r="95" fill="url(#cr-glow)"/>
+  <!-- Flame hair -->
+  <path d="M70 55 Q65 25 80 15 Q85 35 90 20 Q95 5 100 18 Q105 5 110 20 Q115 35 120 15 Q135 25 130 55 Z" fill="url(#cr-flame)" opacity="0.85"/>
+  <path d="M65 60 Q55 30 72 10 Q70 40 78 25 Q82 10 88 22 Z" fill="#ff6600" opacity="0.5"/>
+  <path d="M135 60 Q145 30 128 10 Q130 40 122 25 Q118 10 112 22 Z" fill="#ff6600" opacity="0.5"/>
+  <!-- Head - angular, aggressive -->
+  <path d="M100 38 L138 58 L142 95 L135 125 L65 125 L58 95 L62 58 Z" fill="#121a0e" stroke="#39ff14" stroke-width="1.2" stroke-opacity="0.5"/>
+  <!-- Face inner -->
+  <path d="M100 46 L130 62 L133 92 L128 118 L72 118 L67 92 L70 62 Z" fill="#0e140a" opacity="0.8"/>
+  <!-- Eyes - sharp, angry -->
+  <path d="M72 75 L92 72 L92 84 L72 81 Z" fill="#0a0e08"/>
+  <path d="M76 76 L90 74 L90 82 L76 80 Z" fill="#39ff14" opacity="0.8"/>
+  <circle cx="84" cy="78" r="2.5" fill="#ffffff" opacity="0.9"/>
+  <path d="M128 75 L108 72 L108 84 L128 81 Z" fill="#0a0e08"/>
+  <path d="M124 76 L110 74 L110 82 L124 80 Z" fill="#39ff14" opacity="0.8"/>
+  <circle cx="116" cy="78" r="2.5" fill="#ffffff" opacity="0.9"/>
+  <!-- Angry eyebrows -->
+  <path d="M70 68 L92 64" stroke="#39ff14" stroke-width="2.5" stroke-opacity="0.7" stroke-linecap="round"/>
+  <path d="M130 68 L108 64" stroke="#39ff14" stroke-width="2.5" stroke-opacity="0.7" stroke-linecap="round"/>
+  <!-- Nose - sharp -->
+  <path d="M100 88 L96 100 L104 100 Z" stroke="#39ff14" stroke-width="0.6" stroke-opacity="0.3" fill="none"/>
+  <!-- Mouth - smirk -->
+  <path d="M82 108 Q95 104 100 106 Q105 104 118 112" stroke="#39ff14" stroke-width="1.5" stroke-opacity="0.6" fill="none"/>
+  <!-- Scar on cheek -->
+  <line x1="120" y1="90" x2="132" y2="100" stroke="#39ff14" stroke-width="1" stroke-opacity="0.4"/>
+  <line x1="122" y1="93" x2="130" y2="96" stroke="#39ff14" stroke-width="0.8" stroke-opacity="0.3"/>
+  <!-- Piercings -->
+  <circle cx="72" cy="95" r="2" fill="#39ff14" opacity="0.5"/>
+  <circle cx="95" cy="114" r="1.5" fill="#39ff14" opacity="0.4"/>
+  <!-- Neck -->
+  <rect x="86" y="125" width="28" height="14" fill="#121a0e" stroke="#39ff14" stroke-width="0.6" stroke-opacity="0.3"/>
+  <!-- Body - armored -->
+  <path d="M50 139 L86 139 L86 175 L32 175 L40 152 Z" fill="url(#cr-body)" stroke="#39ff14" stroke-width="1" stroke-opacity="0.4"/>
+  <path d="M150 139 L114 139 L114 175 L168 175 L160 152 Z" fill="url(#cr-body)" stroke="#39ff14" stroke-width="1" stroke-opacity="0.4"/>
+  <rect x="86" y="139" width="28" height="36" fill="#0e140a" stroke="#39ff14" stroke-width="0.6" stroke-opacity="0.3"/>
+  <!-- Collar spikes -->
+  <path d="M78 139 L72 132 L80 137 Z" fill="#39ff14" opacity="0.4"/>
+  <path d="M122 139 L128 132 L120 137 Z" fill="#39ff14" opacity="0.4"/>
+  <!-- Fire particles -->
+  <circle cx="60" cy="30" r="2" fill="#ff6600" opacity="0.5"/>
+  <circle cx="140" cy="25" r="1.5" fill="#39ff14" opacity="0.4"/>
+  <circle cx="75" cy="15" r="1" fill="#ff3300" opacity="0.5"/>
+  <circle cx="125" cy="12" r="1.5" fill="#ff6600" opacity="0.4"/>
+</svg>
