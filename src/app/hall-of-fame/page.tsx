@@ -1106,6 +1106,13 @@ export default function HallOfFamePage() {
             Neon Court System &copy; 2026 &mdash; All judgments
             are AI-generated
           </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginTop: "12px", fontFamily: "var(--font-share-tech)", fontSize: "9px", color: "#374151", letterSpacing: "0.15em" }}>
+            <Link href="/terms" style={{ transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget.style.color = "#22d3ee")} onMouseLeave={e => (e.currentTarget.style.color = "#374151")}>이용약관</Link>
+            <span>|</span>
+            <Link href="/privacy" style={{ transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget.style.color = "#22d3ee")} onMouseLeave={e => (e.currentTarget.style.color = "#374151")}>개인정보처리방침</Link>
+            <span>|</span>
+            <Link href="/legal" style={{ transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget.style.color = "#f87171")} onMouseLeave={e => (e.currentTarget.style.color = "#374151")}>저작권 보호 및 법적 고지</Link>
+          </div>
         </footer>
       </div>
     </div>

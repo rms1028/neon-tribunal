@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-<<<<<<< HEAD
       "Bash(npx create-next-app@latest:*)",
       "Bash(cp:*)",
       "Bash(xcopy C:\\\\Users\\\\82108\\\\Desktop\\\\neon-4ai-temp\\\\*:*)",
@@ -19,26 +18,13 @@
       "Bash(grep:*)",
       "Bash(wc:*)",
       "Bash(head:*)",
-      "Bash(npx eslint:*)"
-=======
-      "Bash(npx tsc:*)",
-      "Bash(npx next:*)",
-      "Bash(ls:*)",
+      "Bash(npx eslint:*)",
       "WebSearch",
-      "Bash(npm install:*)",
-      "Bash(npm run:*)",
-      "Bash(rm:*)",
-      "Bash(grep:*)",
       "Bash(test:*)",
-      "Bash(wc:*)",
       "Bash(npm ls:*)",
       "Bash(tr -d '\\(')",
       "Bash(find:*)",
-      "Bash(npx eslint:*)",
       "Bash(npm start:*)",
-      "Bash(curl:*)",
-      "Bash(node:*)",
-      "Bash(taskkill:*)",
       "WebFetch(domain:ai.google.dev)",
       "Bash(tasklist:*)",
       "Bash(netstat:*)",
@@ -49,8 +35,8 @@
       "Bash(do echo:*)",
       "Bash(unzip:*)",
       "Bash(do:*)",
-      "Bash(/tmp/check_imports.sh:*)"
->>>>>>> fa6b4c1b2ce350bb3dba5b3fd22e8596f3bbefc5
+      "Bash(/tmp/check_imports.sh:*)",
+      "Bash(tail:*)"
     ]
   }
 }

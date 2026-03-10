@@ -120,9 +120,12 @@ export default function TermsPage() {
           </Section>
         </article>
 
-        <div className="mt-12 border-t border-white/10 pt-6 text-xs text-zinc-600">
+        <div className="mt-12 flex gap-4 border-t border-white/10 pt-6 text-xs text-zinc-600">
           <Link href="/privacy" className="transition hover:text-cyan-300">
             개인정보처리방침 보기 &rarr;
+          </Link>
+          <Link href="/legal" className="transition hover:text-red-300">
+            저작권 보호 및 법적 고지 보기 &rarr;
           </Link>
         </div>
       </div>
