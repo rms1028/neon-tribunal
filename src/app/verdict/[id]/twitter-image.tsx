@@ -1,6 +1,4 @@
 import { ImageResponse } from "next/og";
-import { join } from "path";
-import { readFile } from "fs/promises";
 import { getSupabase } from "@/lib/supabase";
 import { getJudgeById } from "@/lib/judges";
 
@@ -19,23 +17,21 @@ export default async function TwitterImage({
 }) {
   const { id } = await params;
 
-  const fontsDir = join(process.cwd(), "public", "fonts");
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://neon-tribunal.vercel.app";
 
   // Load fonts and data in parallel
   const [notoFont, oFont, stFont, dbResult] = await Promise.all([
-    readFile(join(fontsDir, "NotoSansKR-Bold.woff")),
-    readFile(join(fontsDir, "Orbitron-Bold.ttf")),
-    readFile(join(fontsDir, "ShareTechMono-Regular.ttf")),
+    fetch(`${baseUrl}/fonts/NotoSansKR-Bold.woff`).then((r) => r.arrayBuffer()),
+    fetch(`${baseUrl}/fonts/Orbitron-Bold.ttf`).then((r) => r.arrayBuffer()),
+    fetch(`${baseUrl}/fonts/ShareTechMono-Regular.ttf`).then((r) => r.arrayBuffer()),
     getSupabase().from("verdicts").select("*").eq("id", id).single(),
   ]);
 
-  const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
-    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-
   const fontConfig = [
-    { name: "Orbitron", data: toArrayBuffer(oFont), weight: 700 as const, style: "normal" as const },
-    { name: "ShareTechMono", data: toArrayBuffer(stFont), weight: 400 as const, style: "normal" as const },
-    { name: "NotoSansKR", data: toArrayBuffer(notoFont), weight: 700 as const, style: "normal" as const },
+    { name: "Orbitron", data: oFont, weight: 700 as const, style: "normal" as const },
+    { name: "ShareTechMono", data: stFont, weight: 400 as const, style: "normal" as const },
+    { name: "NotoSansKR", data: notoFont, weight: 700 as const, style: "normal" as const },
   ];
 
   const data = dbResult.data;
