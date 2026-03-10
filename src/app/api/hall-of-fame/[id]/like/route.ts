@@ -7,78 +7,50 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Rate limiting: 1분당 30회
   const rateLimitResponse = likeRateLimit(_req);
   if (rateLimitResponse) return rateLimitResponse;
 
   const { id } = await params;
 
-  const { data: current } = await getSupabase()
-    .from("verdicts")
-    .select("likes")
-    .eq("id", id)
-    .single();
-
-  if (!current) {
-    return NextResponse.json(
-      { error: "존재하지 않는 판결입니다." },
-      { status: 404 }
-    );
-  }
-
-  const newLikes = current.likes + 1;
-
-  const { error } = await getSupabase()
-    .from("verdicts")
-    .update({ likes: newLikes })
-    .eq("id", id);
+  const { data, error } = await getSupabase().rpc("increment_likes", {
+    row_id: id,
+    delta: 1,
+  });
 
   if (error) {
-    return NextResponse.json(
-      { error: "좋아요 처리에 실패했습니다." },
-      { status: 500 }
-    );
+    const status = error.code === "PGRST116" ? 404 : 500;
+    const msg =
+      status === 404
+        ? "존재하지 않는 판결입니다."
+        : "좋아요 처리에 실패했습니다.";
+    return NextResponse.json({ error: msg }, { status });
   }
 
-  return NextResponse.json<HallOfFameLikeResponse>({ likes: newLikes });
+  return NextResponse.json<HallOfFameLikeResponse>({ likes: data });
 }
 
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Rate limiting: 1분당 30회 (좋아요와 공유)
   const rateLimitResponse = likeRateLimit(_req);
   if (rateLimitResponse) return rateLimitResponse;
 
   const { id } = await params;
 
-  const { data: current } = await getSupabase()
-    .from("verdicts")
-    .select("likes")
-    .eq("id", id)
-    .single();
-
-  if (!current) {
-    return NextResponse.json(
-      { error: "존재하지 않는 판결입니다." },
-      { status: 404 }
-    );
-  }
-
-  const newLikes = Math.max(0, current.likes - 1);
-
-  const { error } = await getSupabase()
-    .from("verdicts")
-    .update({ likes: newLikes })
-    .eq("id", id);
+  const { data, error } = await getSupabase().rpc("increment_likes", {
+    row_id: id,
+    delta: -1,
+  });
 
   if (error) {
-    return NextResponse.json(
-      { error: "좋아요 취소에 실패했습니다." },
-      { status: 500 }
-    );
+    const status = error.code === "PGRST116" ? 404 : 500;
+    const msg =
+      status === 404
+        ? "존재하지 않는 판결입니다."
+        : "좋아요 취소에 실패했습니다.";
+    return NextResponse.json({ error: msg }, { status });
   }
 
-  return NextResponse.json<HallOfFameLikeResponse>({ likes: newLikes });
+  return NextResponse.json<HallOfFameLikeResponse>({ likes: data });
 }

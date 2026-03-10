@@ -38,7 +38,8 @@
       "Bash(/tmp/check_imports.sh:*)",
       "Bash(tail:*)",
       "WebFetch(domain:neon-tribunal.vercel.app)",
-      "WebFetch(domain:neon-court.vercel.app)"
+      "WebFetch(domain:neon-court.vercel.app)",
+      "Bash(git:*)"
     ]
   }
 }

@@ -10,6 +10,28 @@ function stripViralTag(text: string): string {
   return text.replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*$/, "").trim();
 }
 
+function fallbackImage(text: string) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#05050e",
+          color: "#888",
+          fontSize: 32,
+        }}
+      >
+        {text}
+      </div>
+    ),
+    { width: 1200, height: 630 }
+  );
+}
+
 export default async function TwitterImage({
   params,
 }: {
@@ -20,13 +42,20 @@ export default async function TwitterImage({
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || "https://neon-tribunal.vercel.app";
 
-  // Load fonts and data in parallel
-  const [notoFont, oFont, stFont, dbResult] = await Promise.all([
-    fetch(`${baseUrl}/fonts/NotoSansKR-Bold.woff`).then((r) => r.arrayBuffer()),
-    fetch(`${baseUrl}/fonts/Orbitron-Bold.ttf`).then((r) => r.arrayBuffer()),
-    fetch(`${baseUrl}/fonts/ShareTechMono-Regular.ttf`).then((r) => r.arrayBuffer()),
-    getSupabase().from("verdicts").select("*").eq("id", id).single(),
-  ]);
+  let notoFont: ArrayBuffer, oFont: ArrayBuffer, stFont: ArrayBuffer;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let dbResult: { data: any };
+
+  try {
+    [notoFont, oFont, stFont, dbResult] = await Promise.all([
+      fetch(`${baseUrl}/fonts/NotoSansKR-Bold.woff`).then((r) => r.arrayBuffer()),
+      fetch(`${baseUrl}/fonts/Orbitron-Bold.ttf`).then((r) => r.arrayBuffer()),
+      fetch(`${baseUrl}/fonts/ShareTechMono-Regular.ttf`).then((r) => r.arrayBuffer()),
+      getSupabase().from("verdicts").select("*").eq("id", id).single(),
+    ]);
+  } catch {
+    return fallbackImage("NEON COURT");
+  }
 
   const fontConfig = [
     { name: "Orbitron", data: oFont, weight: 700 as const, style: "normal" as const },
@@ -37,26 +66,7 @@ export default async function TwitterImage({
   const data = dbResult.data;
 
   if (!data) {
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#05050e",
-            color: "#888",
-            fontSize: 32,
-            fontFamily: "NotoSansKR",
-          }}
-        >
-          판결을 찾을 수 없습니다
-        </div>
-      ),
-      { ...size, fonts: fontConfig }
-    );
+    return fallbackImage("판결을 찾을 수 없습니다");
   }
 
   const judge = getJudgeById(data.judge_id);
