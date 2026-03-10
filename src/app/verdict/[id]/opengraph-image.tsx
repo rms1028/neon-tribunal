@@ -1,19 +1,15 @@
 import { ImageResponse } from "next/og";
+import { join } from "path";
+import { readFile } from "fs/promises";
 import { getSupabase } from "@/lib/supabase";
 import { getJudgeById } from "@/lib/judges";
 
-export const runtime = "edge";
 export const alt = "NEON COURT 판결문";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 function stripViralTag(text: string): string {
   return text.replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*$/, "").trim();
-}
-
-function getFontBaseUrl(): string {
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return process.env.NEXT_PUBLIC_BASE_URL || "https://neon-tribunal.vercel.app";
 }
 
 export default async function OgImage({
@@ -23,19 +19,23 @@ export default async function OgImage({
 }) {
   const { id } = await params;
 
+  const fontsDir = join(process.cwd(), "public", "fonts");
+
   // Load fonts and data in parallel
-  const baseUrl = getFontBaseUrl();
   const [notoFont, oFont, stFont, dbResult] = await Promise.all([
-    fetch(`${baseUrl}/fonts/NotoSansKR-Bold.woff`).then((r) => r.arrayBuffer()),
-    fetch(`${baseUrl}/fonts/Orbitron-Bold.ttf`).then((r) => r.arrayBuffer()),
-    fetch(`${baseUrl}/fonts/ShareTechMono-Regular.ttf`).then((r) => r.arrayBuffer()),
+    readFile(join(fontsDir, "NotoSansKR-Bold.woff")),
+    readFile(join(fontsDir, "Orbitron-Bold.ttf")),
+    readFile(join(fontsDir, "ShareTechMono-Regular.ttf")),
     getSupabase().from("verdicts").select("*").eq("id", id).single(),
   ]);
 
+  const toArrayBuffer = (buf: Buffer) =>
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+
   const fontConfig = [
-    { name: "Orbitron", data: oFont, weight: 700 as const, style: "normal" as const },
-    { name: "ShareTechMono", data: stFont, weight: 400 as const, style: "normal" as const },
-    { name: "NotoSansKR", data: notoFont, weight: 700 as const, style: "normal" as const },
+    { name: "Orbitron", data: toArrayBuffer(oFont), weight: 700 as const, style: "normal" as const },
+    { name: "ShareTechMono", data: toArrayBuffer(stFont), weight: 400 as const, style: "normal" as const },
+    { name: "NotoSansKR", data: toArrayBuffer(notoFont), weight: 700 as const, style: "normal" as const },
   ];
 
   const data = dbResult.data;
