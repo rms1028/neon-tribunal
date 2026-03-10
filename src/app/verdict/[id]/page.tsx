@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${emoji} ${entry.judge_name}의 판결 | NEON COURT`;
   const description = `"${entry.story.length > 60 ? entry.story.slice(0, 60) + "..." : entry.story}" — ${verdictSummary}`;
 
-  const ogImageUrl = `/verdict/${id}/opengraph-image`;
+  const ogImageUrl = entry.og_image_url || `/verdict/${id}/opengraph-image`;
 
   return {
     title,

@@ -121,7 +121,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
     const title = "\uD83D\uDEA8 AI 판사의 미친 팩폭 ㅋㅋㅋ";
     const storySummaryText = entry.story.length > 50 ? entry.story.slice(0, 50) + "..." : entry.story;
     const description = `${storySummaryText} 과연 결과는? 지금 들어와서 국민 배심원 투표에 참여해 보세요!`;
-    const ogImageUrl = `${origin}/verdict/${entry.id}/opengraph-image`;
+    const ogImageUrl = entry.og_image_url || `${origin}/verdict/${entry.id}/opengraph-image`;
 
     if (typeof window !== "undefined" && window.Kakao && window.Kakao.isInitialized()) {
       try {

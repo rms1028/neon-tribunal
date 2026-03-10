@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { hallOfFameWriteRateLimit, hallOfFameReadRateLimit } from "@/lib/rate-limit";
 import { sanitizeInput, containsProfanity, PROFANITY_ERROR_MESSAGE } from "@/lib/content-filter";
+import { generateOgImageBuffer } from "@/lib/generate-og-image";
 import type {
   HallOfFameSubmitRequest,
   HallOfFameListResponse,
@@ -124,5 +125,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ id: data.id }, { status: 201 });
+  // Generate and upload OG image (non-blocking, don't fail the request)
+  const verdictId = data.id as string;
+  try {
+    const imgBuffer = await generateOgImageBuffer({
+      judgeId: insertData.judge_id as string,
+      judgeName: insertData.judge_name as string,
+      story: insertData.story as string,
+      verdict: insertData.verdict as string,
+      likes: 0,
+    });
+
+    const filePath = `og/${verdictId}.png`;
+    const { error: uploadError } = await getSupabase()
+      .storage.from("og-images")
+      .upload(filePath, imgBuffer, {
+        contentType: "image/png",
+        upsert: true,
+      });
+
+    if (!uploadError) {
+      const { data: urlData } = getSupabase()
+        .storage.from("og-images")
+        .getPublicUrl(filePath);
+
+      if (urlData?.publicUrl) {
+        await getSupabase()
+          .from("verdicts")
+          .update({ og_image_url: urlData.publicUrl })
+          .eq("id", verdictId);
+      }
+    }
+  } catch {
+    // OG image generation failed, but verdict was saved successfully
+  }
+
+  return NextResponse.json({ id: verdictId }, { status: 201 });
 }
