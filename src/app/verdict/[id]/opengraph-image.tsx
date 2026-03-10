@@ -29,8 +29,8 @@ export default async function OgImage({
     getSupabase().from("verdicts").select("*").eq("id", id).single(),
   ]);
 
-  const toArrayBuffer = (buf: Buffer) =>
-    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
 
   const fontConfig = [
     { name: "Orbitron", data: toArrayBuffer(oFont), weight: 700 as const, style: "normal" as const },
