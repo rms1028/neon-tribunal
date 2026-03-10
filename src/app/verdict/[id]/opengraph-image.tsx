@@ -7,6 +7,15 @@ export const alt = "NEON COURT 판결문";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+function stripViralTag(text: string): string {
+  return text.replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*$/, "").trim();
+}
+
+function getFontBaseUrl(): string {
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+}
+
 export default async function OgImage({
   params,
 }: {
@@ -14,11 +23,22 @@ export default async function OgImage({
 }) {
   const { id } = await params;
 
-  const { data } = await getSupabase()
-    .from("verdicts")
-    .select("*")
-    .eq("id", id)
-    .single();
+  // Load fonts and data in parallel
+  const baseUrl = getFontBaseUrl();
+  const [notoFont, oFont, stFont, dbResult] = await Promise.all([
+    fetch(`${baseUrl}/fonts/NotoSansKR-Bold.woff`).then((r) => r.arrayBuffer()),
+    fetch(`${baseUrl}/fonts/Orbitron-Bold.ttf`).then((r) => r.arrayBuffer()),
+    fetch(`${baseUrl}/fonts/ShareTechMono-Regular.ttf`).then((r) => r.arrayBuffer()),
+    getSupabase().from("verdicts").select("*").eq("id", id).single(),
+  ]);
+
+  const fontConfig = [
+    { name: "Orbitron", data: oFont, weight: 700 as const, style: "normal" as const },
+    { name: "ShareTechMono", data: stFont, weight: 400 as const, style: "normal" as const },
+    { name: "NotoSansKR", data: notoFont, weight: 700 as const, style: "normal" as const },
+  ];
+
+  const data = dbResult.data;
 
   if (!data) {
     return new ImageResponse(
@@ -33,12 +53,13 @@ export default async function OgImage({
             background: "#05050e",
             color: "#888",
             fontSize: 32,
+            fontFamily: "NotoSansKR",
           }}
         >
           판결을 찾을 수 없습니다
         </div>
       ),
-      { ...size }
+      { ...size, fonts: fontConfig }
     );
   }
 
@@ -47,12 +68,11 @@ export default async function OgImage({
   const glowRgb = judge?.glowRgb || "0,240,255";
   const emoji = judge?.emoji || "\u2696";
 
+  const cleanVerdict = stripViralTag(data.verdict);
   const storySummary =
-    data.story.length > 80 ? data.story.slice(0, 80) + "..." : data.story;
+    data.story.length > 70 ? data.story.slice(0, 70) + "..." : data.story;
   const verdictSummary =
-    data.verdict.length > 120
-      ? data.verdict.slice(0, 120) + "..."
-      : data.verdict;
+    cleanVerdict.length > 120 ? cleanVerdict.slice(0, 120) + "..." : cleanVerdict;
 
   return new ImageResponse(
     (
@@ -67,6 +87,7 @@ export default async function OgImage({
           position: "relative",
           overflow: "hidden",
           padding: "40px 50px",
+          fontFamily: "NotoSansKR",
         }}
       >
         {/* Background grid */}
@@ -81,7 +102,7 @@ export default async function OgImage({
           }}
         />
 
-        {/* Accent glow */}
+        {/* Accent glow - top right */}
         <div
           style={{
             position: "absolute",
@@ -90,10 +111,11 @@ export default async function OgImage({
             width: 350,
             height: 350,
             borderRadius: "50%",
-            background: `radial-gradient(circle, rgba(${glowRgb}, 0.15) 0%, transparent 70%)`,
+            background: `radial-gradient(circle, rgba(${glowRgb}, 0.18) 0%, transparent 70%)`,
             display: "flex",
           }}
         />
+        {/* Accent glow - bottom left */}
         <div
           style={{
             position: "absolute",
@@ -109,54 +131,10 @@ export default async function OgImage({
         />
 
         {/* Corner brackets */}
-        <div
-          style={{
-            position: "absolute",
-            top: 20,
-            left: 20,
-            width: 40,
-            height: 40,
-            borderTop: `2px solid rgba(${glowRgb}, 0.4)`,
-            borderLeft: `2px solid rgba(${glowRgb}, 0.4)`,
-            display: "flex",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            width: 40,
-            height: 40,
-            borderTop: `2px solid rgba(${glowRgb}, 0.4)`,
-            borderRight: `2px solid rgba(${glowRgb}, 0.4)`,
-            display: "flex",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            left: 20,
-            width: 40,
-            height: 40,
-            borderBottom: `2px solid rgba(${glowRgb}, 0.4)`,
-            borderLeft: `2px solid rgba(${glowRgb}, 0.4)`,
-            display: "flex",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            right: 20,
-            width: 40,
-            height: 40,
-            borderBottom: `2px solid rgba(${glowRgb}, 0.4)`,
-            borderRight: `2px solid rgba(${glowRgb}, 0.4)`,
-            display: "flex",
-          }}
-        />
+        <div style={{ position: "absolute", top: 20, left: 20, width: 40, height: 40, borderTop: `2px solid rgba(${glowRgb}, 0.4)`, borderLeft: `2px solid rgba(${glowRgb}, 0.4)`, display: "flex" }} />
+        <div style={{ position: "absolute", top: 20, right: 20, width: 40, height: 40, borderTop: `2px solid rgba(${glowRgb}, 0.4)`, borderRight: `2px solid rgba(${glowRgb}, 0.4)`, display: "flex" }} />
+        <div style={{ position: "absolute", bottom: 20, left: 20, width: 40, height: 40, borderBottom: `2px solid rgba(${glowRgb}, 0.4)`, borderLeft: `2px solid rgba(${glowRgb}, 0.4)`, display: "flex" }} />
+        <div style={{ position: "absolute", bottom: 20, right: 20, width: 40, height: 40, borderBottom: `2px solid rgba(${glowRgb}, 0.4)`, borderRight: `2px solid rgba(${glowRgb}, 0.4)`, display: "flex" }} />
 
         {/* Judge header */}
         <div
@@ -171,8 +149,9 @@ export default async function OgImage({
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span
               style={{
+                fontFamily: "NotoSansKR",
                 fontSize: 28,
-                fontWeight: 900,
+                fontWeight: 700,
                 color: accentColor,
                 letterSpacing: "0.05em",
                 textShadow: `0 0 20px rgba(${glowRgb}, 0.5)`,
@@ -182,6 +161,7 @@ export default async function OgImage({
             </span>
             <span
               style={{
+                fontFamily: "ShareTechMono",
                 fontSize: 13,
                 color: "#666",
                 letterSpacing: "0.15em",
@@ -213,6 +193,7 @@ export default async function OgImage({
         >
           <span
             style={{
+              fontFamily: "ShareTechMono",
               fontSize: 11,
               color: "#555",
               letterSpacing: "0.2em",
@@ -223,6 +204,7 @@ export default async function OgImage({
           </span>
           <span
             style={{
+              fontFamily: "NotoSansKR",
               fontSize: 18,
               color: "#999",
               lineHeight: 1.5,
@@ -242,6 +224,7 @@ export default async function OgImage({
         >
           <span
             style={{
+              fontFamily: "ShareTechMono",
               fontSize: 11,
               color: accentColor,
               letterSpacing: "0.2em",
@@ -259,6 +242,7 @@ export default async function OgImage({
           >
             <span
               style={{
+                fontFamily: "NotoSansKR",
                 fontSize: 20,
                 color: "#ddd",
                 lineHeight: 1.6,
@@ -280,12 +264,15 @@ export default async function OgImage({
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 16, color: "#ff2d95" }}>{"\u2764"}</span>
-            <span style={{ fontSize: 14, color: "#888" }}>{data.likes}</span>
+            <span style={{ fontFamily: "ShareTechMono", fontSize: 14, color: "#888" }}>
+              {data.likes}
+            </span>
           </div>
           <span
             style={{
+              fontFamily: "Orbitron",
               fontSize: 20,
-              fontWeight: 900,
+              fontWeight: 700,
               color: "#fff",
               letterSpacing: "0.1em",
               textShadow:
@@ -297,6 +284,6 @@ export default async function OgImage({
         </div>
       </div>
     ),
-    { ...size }
+    { ...size, fonts: fontConfig }
   );
 }

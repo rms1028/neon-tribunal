@@ -16,6 +16,10 @@ async function getVerdict(id: string): Promise<HallOfFameEntry | null> {
   return data as HallOfFameEntry;
 }
 
+function stripViralTag(text: string): string {
+  return text.replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*$/, "").trim();
+}
+
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,13 +32,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const judge = getJudgeById(entry.judge_id);
   const emoji = judge?.emoji || "⚖";
+  const cleanVerdict = stripViralTag(entry.verdict);
   const verdictSummary =
-    entry.verdict.length > 80
-      ? entry.verdict.slice(0, 80) + "..."
-      : entry.verdict;
+    cleanVerdict.length > 100
+      ? cleanVerdict.slice(0, 100) + "..."
+      : cleanVerdict;
 
   const title = `${emoji} ${entry.judge_name}의 판결 | NEON COURT`;
-  const description = verdictSummary;
+  const description = `"${entry.story.length > 60 ? entry.story.slice(0, 60) + "..." : entry.story}" — ${verdictSummary}`;
+
+  const ogImageUrl = `/verdict/${id}/opengraph-image`;
 
   return {
     title,
@@ -45,11 +52,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       locale: "ko_KR",
       siteName: "전국민 고민 재판소: 네온즈",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${entry.judge_name}의 판결 — NEON COURT`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: [ogImageUrl],
     },
   };
 }
