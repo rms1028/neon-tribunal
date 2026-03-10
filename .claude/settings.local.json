@@ -36,7 +36,9 @@
       "Bash(unzip:*)",
       "Bash(do:*)",
       "Bash(/tmp/check_imports.sh:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "WebFetch(domain:neon-tribunal.vercel.app)",
+      "WebFetch(domain:neon-court.vercel.app)"
     ]
   }
 }

@@ -13,7 +13,7 @@ function stripViralTag(text: string): string {
 
 function getFontBaseUrl(): string {
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_BASE_URL || "https://neon-tribunal.vercel.app";
 }
 
 export default async function TwitterImage({
