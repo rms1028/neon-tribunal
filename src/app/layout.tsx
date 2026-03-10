@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CyberNav from "@/components/CyberNav";
 import KakaoScript from "@/components/KakaoScript";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
@@ -68,6 +69,9 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     images: ["/og-image.png"],
   },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
   other: {
     "naver-site-verification": "",
   },
@@ -99,6 +103,7 @@ export default function RootLayout({
         <Analytics />
         <SpeedInsights />
         <KakaoScript />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

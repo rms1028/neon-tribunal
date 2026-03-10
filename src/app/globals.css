@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @theme inline {
   --color-neon-blue: #00f0ff;
   --color-neon-purple: #b44aff;
