@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase";
 import { getJudgeById } from "@/lib/judges";
 import type { HallOfFameEntry } from "@/lib/types";
 import VerdictContent from "./VerdictContent";
+import CompactVerdictView from "./CompactVerdictView";
 
 async function getVerdict(id: string): Promise<HallOfFameEntry | null> {
   const { data, error } = await getSupabase()
@@ -20,7 +21,10 @@ function stripViralTag(text: string): string {
   return text.replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*$/, "").trim();
 }
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -70,11 +74,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function VerdictPage({ params }: Props) {
+export default async function VerdictPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const sp = await searchParams;
   const entry = await getVerdict(id);
 
   if (!entry) notFound();
+
+  if (sp.from === "hof") {
+    return <CompactVerdictView entry={entry} />;
+  }
 
   return <VerdictContent entry={entry} />;
 }

@@ -38,9 +38,15 @@ export default function CyberNav() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-dark-bg/80 backdrop-blur-md border-b border-dark-border">
         <Link
           href="/"
+          onClick={(e) => {
+            if (pathname === "/") {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
           className="font-[family-name:var(--font-orbitron)] text-sm font-bold text-neon-blue tracking-wider uppercase hover:text-white transition-colors"
         >
-          NEON COURT
+          NEONS
         </Link>
 
         {/* 데스크톱 네비게이션 */}

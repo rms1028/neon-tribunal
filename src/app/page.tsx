@@ -13,6 +13,7 @@ import { trackEvent } from "@/lib/analytics";
 
 function stripMetaTags(text: string): string {
   return text
+    .replace(/\n*\[\[TLDR:\s*.+?\]\]\s*/g, "")
     .replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*/g, "")
     .replace(/\n*\[\[STORY:\s*.+?\]\]\s*/g, "")
     .trim();
@@ -41,8 +42,30 @@ export default function Home() {
   const [isAppealTrial, setIsAppealTrial] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const verdictRef = useRef<HTMLDivElement>(null);
+  const actionButtonsRef = useRef<HTMLDivElement>(null);
   const appealDataRef = useRef<{ reason: string; originalVerdict: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 스트리밍 중 레이아웃이 변해도 확실히 판결 섹션까지 도달하도록 반복 스크롤
+  const scrollToVerdict = () => {
+    const el = verdictRef.current;
+    if (!el) return;
+    const delays = [0, 300, 700, 1200];
+    delays.forEach((ms) => {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, ms);
+    });
+  };
+
+  // 판결 완료 후 액션 버튼 영역까지 스크롤
+  const scrollToActionButtons = () => {
+    const el = actionButtonsRef.current;
+    if (!el) return;
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 400);
+  };
 
   const trimmedLength = story.trim().length;
   const isValidLength = trimmedLength >= 10 && trimmedLength <= 2000;
@@ -196,9 +219,7 @@ export default function Home() {
 
                 if (!hasScrolled) {
                   hasScrolled = true;
-                  setTimeout(() => {
-                    verdictRef.current?.scrollIntoView({ behavior: "smooth" });
-                  }, 100);
+                  setTimeout(() => scrollToVerdict(), 150);
                 }
               } else if (event.type === "done") {
                 receivedDone = true;
@@ -210,6 +231,7 @@ export default function Home() {
                   imageUrl: event.imageUrl,
                   viralQuote: event.viralQuote,
                   storySummary: event.storySummary,
+                  tldr: event.tldr,
                 };
                 setVerdict(judgeResponse);
                 setIsStreaming(false);
@@ -239,11 +261,14 @@ export default function Home() {
         const cleanVerdict = stripMetaTags(accumulated);
         const viralMatch = accumulated.match(/\[\[VIRAL:\s*(.+?)\]\]/);
         const viralQuote = viralMatch ? viralMatch[1].trim() : undefined;
+        const tldrMatch = accumulated.match(/\[\[TLDR:\s*(.+?)\]\]/);
+        const tldr = tldrMatch ? tldrMatch[1].trim() : undefined;
         const judgeResponse: JudgeResponse = {
           verdict: cleanVerdict,
           judgeId: selectedJudge!,
           judgeName: selectedJudgeData?.name || "",
           viralQuote,
+          tldr,
         };
         setVerdict(judgeResponse);
         setIsStreaming(false);
@@ -354,7 +379,7 @@ export default function Home() {
                   setFullCourtResults(prev => ({ ...prev, [judge.id]: { ...prev[judge.id], status: "loading", verdict: accumulated } }));
                   if (!hasScrolled) {
                     hasScrolled = true;
-                    setTimeout(() => verdictRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+                    setTimeout(() => scrollToVerdict(), 150);
                   }
                 } else if (event.type === "done") {
                   receivedDone = true;
@@ -367,6 +392,7 @@ export default function Home() {
                     imageUrl: event.imageUrl,
                     viralQuote: event.viralQuote,
                     storySummary: event.storySummary,
+                    tldr: event.tldr,
                   };
                   setFullCourtResults(prev => ({ ...prev, [judge.id]: result }));
                   saveVerdict({
@@ -391,9 +417,11 @@ export default function Home() {
           const cleanVerdict = stripMetaTags(accumulated);
           const viralMatch = accumulated.match(/\[\[VIRAL:\s*(.+?)\]\]/);
           const viralQuote = viralMatch ? viralMatch[1].trim() : undefined;
+          const tldrMatch = accumulated.match(/\[\[TLDR:\s*(.+?)\]\]/);
+          const tldr = tldrMatch ? tldrMatch[1].trim() : undefined;
           setFullCourtResults(prev => ({
             ...prev,
-            [judge.id]: { judgeId: judge.id, judgeName: judge.name, status: "success", verdict: cleanVerdict, viralQuote },
+            [judge.id]: { judgeId: judge.id, judgeName: judge.name, status: "success", verdict: cleanVerdict, viralQuote, tldr },
           }));
           saveVerdict({ story: story.trim(), judgeId: judge.id, judgeName: judge.name, verdict: cleanVerdict, viralQuote });
         }
@@ -470,7 +498,7 @@ export default function Home() {
                 const cleanVerdict = stripMetaTags(accumulated);
                 setFullCourtResults(prev => ({
                   ...prev,
-                  [judgeId]: { judgeId, judgeName: event.judgeName || judge.name, status: "success", verdict: cleanVerdict, imageUrl: event.imageUrl, viralQuote: event.viralQuote, storySummary: event.storySummary },
+                  [judgeId]: { judgeId, judgeName: event.judgeName || judge.name, status: "success", verdict: cleanVerdict, imageUrl: event.imageUrl, viralQuote: event.viralQuote, storySummary: event.storySummary, tldr: event.tldr },
                 }));
                 saveVerdict({ story: story.trim(), judgeId, judgeName: event.judgeName || judge.name, verdict: cleanVerdict, imageUrl: event.imageUrl, viralQuote: event.viralQuote });
               } else if (event.type === "error") {
@@ -485,9 +513,11 @@ export default function Home() {
         const cleanVerdict = stripMetaTags(accumulated);
         const viralMatch = accumulated.match(/\[\[VIRAL:\s*(.+?)\]\]/);
         const viralQuote = viralMatch ? viralMatch[1].trim() : undefined;
+        const tldrMatch = accumulated.match(/\[\[TLDR:\s*(.+?)\]\]/);
+        const tldr = tldrMatch ? tldrMatch[1].trim() : undefined;
         setFullCourtResults(prev => ({
           ...prev,
-          [judgeId]: { judgeId, judgeName: judge.name, status: "success", verdict: cleanVerdict, viralQuote },
+          [judgeId]: { judgeId, judgeName: judge.name, status: "success", verdict: cleanVerdict, viralQuote, tldr },
         }));
         saveVerdict({ story: story.trim(), judgeId, judgeName: judge.name, verdict: cleanVerdict, viralQuote });
       }
@@ -563,16 +593,16 @@ export default function Home() {
   const handleSubmitToHallOfFame = async () => {
     if (hofSubmitted) return;
 
-    let payload: { judgeId: string; judgeName: string; story: string; verdict: string; imageUrl?: string; viralQuote?: string };
+    let payload: { judgeId: string; judgeName: string; story: string; verdict: string; imageUrl?: string; viralQuote?: string; tldr?: string };
 
     if (trialMode === "full-court") {
       if (!selectedFavoriteJudge) return;
       const r = fullCourtResults[selectedFavoriteJudge];
       if (!r || r.status !== "success") return;
-      payload = { judgeId: r.judgeId, judgeName: r.judgeName, story: story.trim(), verdict: r.verdict!, imageUrl: r.imageUrl, viralQuote: r.viralQuote };
+      payload = { judgeId: r.judgeId, judgeName: r.judgeName, story: story.trim(), verdict: r.verdict!, imageUrl: r.imageUrl, viralQuote: r.viralQuote, tldr: r.tldr };
     } else {
       if (!verdict) return;
-      payload = { judgeId: verdict.judgeId, judgeName: verdict.judgeName, story: story.trim(), verdict: verdict.verdict, imageUrl: verdict.imageUrl, viralQuote: verdict.viralQuote };
+      payload = { judgeId: verdict.judgeId, judgeName: verdict.judgeName, story: story.trim(), verdict: verdict.verdict, imageUrl: verdict.imageUrl, viralQuote: verdict.viralQuote, tldr: verdict.tldr };
     }
 
     setIsSubmittingToHof(true);
@@ -593,6 +623,12 @@ export default function Home() {
           if (!existing.includes(data.id)) {
             existing.push(data.id);
             localStorage.setItem(key, JSON.stringify(existing));
+          }
+          // Save delete token for this verdict
+          if (data.deleteToken) {
+            const tokens = JSON.parse(localStorage.getItem("neon-court-delete-tokens") || "{}");
+            tokens[data.id] = data.deleteToken;
+            localStorage.setItem("neon-court-delete-tokens", JSON.stringify(tokens));
           }
         } catch { /* ignore */ }
         trackEvent("hall_of_fame_submitted", { judge_id: payload.judgeId, judge_name: payload.judgeName });
@@ -654,6 +690,18 @@ export default function Home() {
   const fullCourtCompletedCount = Object.values(fullCourtResults).filter(r => r.status === "success").length;
   const fullCourtHasResults = Object.keys(fullCourtResults).length > 0;
   const fullCourtAllDone = fullCourtHasResults && Object.values(fullCourtResults).every(r => r.status === "success" || r.status === "error");
+
+  // 판결 완료 시 액션 버튼 영역으로 자동 스크롤
+  useEffect(() => {
+    // 싱글 모드: verdict가 세팅되고 스트리밍이 끝났을 때
+    if (trialMode === "single" && verdict && !isStreaming) {
+      scrollToActionButtons();
+    }
+    // 풀코트 모드: 모든 판결이 완료되었을 때
+    if (trialMode === "full-court" && fullCourtAllDone) {
+      scrollToActionButtons();
+    }
+  }, [verdict, isStreaming, fullCourtAllDone, trialMode]);
 
   return (
     <div className="min-h-screen cyber-grid crt-overlay relative overflow-hidden">
@@ -736,11 +784,11 @@ export default function Home() {
       </section>
 
       {/* ===== MAIN CONTENT: FULL WIDTH ===== */}
-      <div ref={contentRef} className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-10 py-10 md:py-16">
-        <div className="holo-line mb-10" />
+      <div ref={contentRef} className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 md:px-10 py-4 md:py-16">
+        <div className="holo-line mb-4 md:mb-10" />
 
         {/* ===== MODE TOGGLE ===== */}
-        <div className="flex gap-3 mb-10 justify-center">
+        <div className="flex gap-3 mb-4 md:mb-10 justify-center">
           <button
             onClick={() => { setTrialMode("single"); setFullCourtResults({}); setSelectedFavoriteJudge(null); }}
             className={`cyber-clip-btn px-5 md:px-7 py-2.5 md:py-3 font-[family-name:var(--font-orbitron)] text-[10px] md:text-xs tracking-[0.12em] uppercase border transition-all duration-300 cursor-pointer ${
@@ -766,11 +814,11 @@ export default function Home() {
         </div>
 
         {/* ===== 2-column layout on desktop ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 lg:gap-10 mb-4 md:mb-12">
 
           {/* LEFT: Story Input */}
           <section className="flex flex-col">
-            <h2 className="font-[family-name:var(--font-orbitron)] text-sm md:text-base font-bold mb-4 text-white flex items-center gap-3 uppercase tracking-wider">
+            <h2 className="font-[family-name:var(--font-orbitron)] text-sm md:text-base font-bold mb-2 md:mb-4 text-white flex items-center gap-3 uppercase tracking-wider">
               <span className="accent-bar bg-neon-blue" />
               <span className="text-neon-blue text-xs mr-1">01</span>
               사연을 입력하세요
@@ -786,7 +834,7 @@ export default function Home() {
                   }}
                   maxLength={2000}
                   placeholder="예: 친구와 돈 문제로 다투고 있어요. 제가 빌려준 돈을 안 갚는데..."
-                  className="textarea-cyber w-full h-full min-h-[250px] lg:min-h-[340px] bg-black/50 backdrop-blur-md border border-dark-border px-5 py-4 text-sm md:text-base text-gray-200 placeholder-gray-500 resize-none outline-none transition-all duration-300 focus:border-neon-blue/40 font-[family-name:var(--font-share-tech)] leading-relaxed"
+                  className="textarea-cyber w-full h-full min-h-[130px] md:min-h-[250px] lg:min-h-[340px] bg-black/50 backdrop-blur-md border border-dark-border px-4 py-3 md:px-5 md:py-4 text-sm md:text-base text-gray-200 placeholder-gray-500 resize-none outline-none transition-all duration-300 focus:border-neon-blue/40 font-[family-name:var(--font-share-tech)] leading-relaxed"
                 />
               </div>
               <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-neon-blue/40" />
@@ -812,7 +860,7 @@ export default function Home() {
             </div>
 
             {/* Image upload */}
-            <div className="mt-3">
+            <div className="mt-2 md:mt-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -824,7 +872,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="cyber-clip-btn w-full py-2.5 font-[family-name:var(--font-share-tech)] text-xs tracking-[0.15em] uppercase border border-dark-border text-gray-500 bg-black/30 cursor-pointer hover:border-neon-blue/40 hover:text-neon-blue transition-all duration-300"
+                  className="cyber-clip-btn w-full py-1.5 md:py-2.5 font-[family-name:var(--font-share-tech)] text-[10px] md:text-xs tracking-[0.15em] uppercase border border-dark-border text-gray-500 bg-black/30 cursor-pointer hover:border-neon-blue/40 hover:text-neon-blue transition-all duration-300"
                 >
                   {"\uD83D\uDCF7"} 증거 사진 첨부 (선택)
                 </button>
@@ -867,7 +915,7 @@ export default function Home() {
 
           {/* RIGHT: Judge Selection */}
           <section className="flex flex-col">
-            <h2 className="font-[family-name:var(--font-orbitron)] text-sm md:text-base font-bold mb-4 text-white flex items-center gap-3 uppercase tracking-wider">
+            <h2 className="font-[family-name:var(--font-orbitron)] text-sm md:text-base font-bold mb-2 md:mb-4 text-white flex items-center gap-3 uppercase tracking-wider">
               <span className="accent-bar bg-neon-purple" />
               <span className="text-neon-purple text-xs mr-1">02</span>
               {trialMode === "full-court" ? "전원 출석" : "판사를 선택하세요"}
@@ -885,7 +933,7 @@ export default function Home() {
                     }}
                     className={`
                       cyber-clip
-                      relative p-4 md:p-5 text-left transition-all duration-300
+                      relative p-2.5 md:p-5 text-left transition-all duration-300
                       glass-card
                       ${trialMode === "full-court" ? "cursor-default" : "cursor-pointer"}
                       ${isSelected ? "glass-card-active" : ""}
@@ -913,20 +961,20 @@ export default function Home() {
                       />
                     </div>
 
-                    <JudgeAvatar avatarUrl={judge.avatarUrl} name={judge.name} size={48} glowRgb={isSelected ? judge.glowRgb : undefined} className="mb-2" />
+                    <JudgeAvatar avatarUrl={judge.avatarUrl} name={judge.name} size={36} glowRgb={isSelected ? judge.glowRgb : undefined} className="mb-1 md:mb-2" />
 
                     <h3
-                      className="font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm mb-1 transition-colors uppercase tracking-wide"
+                      className="font-[family-name:var(--font-orbitron)] font-bold text-[10px] md:text-sm mb-0.5 md:mb-1 transition-colors uppercase tracking-wide"
                       style={{ color: isSelected ? judge.accentColor : "#e0e0f0" }}
                     >
                       {judge.name}
                     </h3>
 
-                    <p className="font-[family-name:var(--font-share-tech)] text-[9px] md:text-[10px] text-gray-500 tracking-[0.15em] mb-1.5">
+                    <p className="font-[family-name:var(--font-share-tech)] text-[8px] md:text-[10px] text-gray-500 tracking-[0.15em] mb-0.5 md:mb-1.5">
                       &gt; {judge.subtitle}
                     </p>
 
-                    <p className="text-[11px] md:text-xs text-gray-400 leading-relaxed">
+                    <p className="text-[10px] md:text-xs text-gray-400 leading-relaxed" style={{ wordBreak: "keep-all", overflowWrap: "break-word" }}>
                       {judge.description}
                     </p>
 
@@ -957,13 +1005,13 @@ export default function Home() {
         </div>
 
         {/* ===== SUBMIT BUTTON (full width) ===== */}
-        <section className="pb-10">
+        <section className="pb-4 md:pb-10">
           <button
             onClick={trialMode === "full-court" ? handleSubmitFullCourt : handleSubmit}
             disabled={!isReady || isLoading}
             className={`
-              cyber-clip-btn w-full py-5 md:py-6 font-[family-name:var(--font-orbitron)] font-bold
-              text-base md:text-xl tracking-[0.2em] uppercase
+              cyber-clip-btn w-full py-3 md:py-6 font-[family-name:var(--font-orbitron)] font-bold
+              text-sm md:text-xl tracking-[0.15em] md:tracking-[0.2em] uppercase
               transition-all duration-300 relative overflow-hidden
               ${
                 isReady && !isLoading
@@ -1026,7 +1074,7 @@ export default function Home() {
 
         {/* ===== FULL COURT VERDICT GRID ===== */}
         {trialMode === "full-court" && fullCourtHasResults && (
-          <section ref={verdictRef} className="pb-12 verdict-reveal">
+          <section ref={verdictRef} className="pb-12 verdict-reveal" style={{ scrollMarginTop: '80px' }}>
             <div className="holo-line mb-8" />
 
             <h2 className="font-[family-name:var(--font-orbitron)] text-sm md:text-base font-bold mb-6 text-white flex items-center gap-3 uppercase tracking-wider">
@@ -1169,14 +1217,14 @@ export default function Home() {
 
             {/* 하단 2x2 액션 버튼 그리드 */}
             {fullCourtAllDone && !isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+              <div ref={actionButtonsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                 {/* 🔗 공유하기 */}
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-blue/60 text-neon-blue bg-neon-blue/10 cursor-pointer hover:bg-neon-blue/20 hover:border-neon-blue transition-all duration-300"
-                  style={{ boxShadow: "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(0,240,255,0.3), inset 0 0 25px rgba(0,240,255,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(0,240,255,0.8), 0 0 25px rgba(0,240,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)"; e.currentTarget.style.textShadow = "none"; }}
+                  className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300"
+                  style={{ borderColor: "rgba(0,240,255,0.6)", color: "#00f0ff", background: "rgba(0,240,255,0.1)", boxShadow: "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(0,240,255,0.3), inset 0 0 25px rgba(0,240,255,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(0,240,255,0.8), 0 0 25px rgba(0,240,255,0.4)"; e.currentTarget.style.borderColor = "#00f0ff"; e.currentTarget.style.background = "rgba(0,240,255,0.2)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(0,240,255,0.6)"; e.currentTarget.style.background = "rgba(0,240,255,0.1)"; }}
                 >
                   {"\uD83D\uDD17"} 공유하기
                 </button>
@@ -1186,14 +1234,16 @@ export default function Home() {
                   <button
                     onClick={handleSubmitToHallOfFame}
                     disabled={isSubmittingToHof || !selectedFavoriteJudge}
-                    className={`cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 transition-all duration-300 ${
-                      !selectedFavoriteJudge
-                        ? "border-dark-border text-gray-600 cursor-not-allowed bg-white/[0.02]"
-                        : "border-neon-yellow/60 text-neon-yellow bg-neon-yellow/10 cursor-pointer hover:bg-neon-yellow/20 hover:border-neon-yellow disabled:opacity-50 disabled:cursor-not-allowed"
-                    }`}
-                    style={{ boxShadow: selectedFavoriteJudge ? "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)" : undefined }}
-                    onMouseEnter={(e) => { if (selectedFavoriteJudge) { e.currentTarget.style.boxShadow = "0 0 35px rgba(240,225,48,0.3), inset 0 0 25px rgba(240,225,48,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(240,225,48,0.8), 0 0 25px rgba(240,225,48,0.4)"; } }}
-                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = selectedFavoriteJudge ? "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)" : "none"; e.currentTarget.style.textShadow = "none"; }}
+                    className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      borderColor: selectedFavoriteJudge ? "rgba(240,225,48,0.6)" : "rgba(255,255,255,0.1)",
+                      color: selectedFavoriteJudge ? "#f0e130" : "#4b5563",
+                      background: selectedFavoriteJudge ? "rgba(240,225,48,0.1)" : "rgba(255,255,255,0.02)",
+                      cursor: selectedFavoriteJudge ? "pointer" : "not-allowed",
+                      boxShadow: selectedFavoriteJudge ? "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)" : "none",
+                    }}
+                    onMouseEnter={(e) => { if (selectedFavoriteJudge) { e.currentTarget.style.boxShadow = "0 0 35px rgba(240,225,48,0.3), inset 0 0 25px rgba(240,225,48,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(240,225,48,0.8), 0 0 25px rgba(240,225,48,0.4)"; e.currentTarget.style.borderColor = "#f0e130"; e.currentTarget.style.background = "rgba(240,225,48,0.2)"; } }}
+                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = selectedFavoriteJudge ? "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)" : "none"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = selectedFavoriteJudge ? "rgba(240,225,48,0.6)" : "rgba(255,255,255,0.1)"; e.currentTarget.style.background = selectedFavoriteJudge ? "rgba(240,225,48,0.1)" : "rgba(255,255,255,0.02)"; }}
                   >
                     {isSubmittingToHof
                       ? "소집 중..."
@@ -1203,29 +1253,29 @@ export default function Home() {
                   </button>
                 ) : <div />}
 
-                {/* ⚖ 항소하기 */}
-                {!isAppealTrial ? (
+                {/* ⚖️ 항소하기 + ✏️ 새 재판 받기 — 가로 나란히 */}
+                <div className="flex gap-3 md:col-span-2 btn-row-wrap" style={{ flexWrap: "wrap" }}>
+                  {!isAppealTrial ? (
+                    <button
+                      onClick={handleAppealClick}
+                      className="cyber-clip-btn flex-1 py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300"
+                      style={{ borderColor: "rgba(191,90,242,0.6)", color: "#bf5af2", background: "rgba(191,90,242,0.1)", boxShadow: "0 0 20px rgba(191,90,242,0.15), inset 0 0 20px rgba(191,90,242,0.04)", minWidth: "0" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(191,90,242,0.3), inset 0 0 25px rgba(191,90,242,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(191,90,242,0.8), 0 0 25px rgba(191,90,242,0.4)"; e.currentTarget.style.borderColor = "#bf5af2"; e.currentTarget.style.background = "rgba(191,90,242,0.2)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(191,90,242,0.15), inset 0 0 20px rgba(191,90,242,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(191,90,242,0.6)"; e.currentTarget.style.background = "rgba(191,90,242,0.1)"; }}
+                    >
+                      &#x2696;&#xFE0F; 항소하기
+                    </button>
+                  ) : <div className="flex-1" />}
                   <button
-                    onClick={handleAppealClick}
-                    className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-pink/60 text-neon-pink bg-neon-pink/10 cursor-pointer hover:bg-neon-pink/20 hover:border-neon-pink transition-all duration-300"
-                    style={{ boxShadow: "0 0 20px rgba(255,45,149,0.15), inset 0 0 20px rgba(255,45,149,0.04)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(255,45,149,0.3), inset 0 0 25px rgba(255,45,149,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(255,45,149,0.8), 0 0 25px rgba(255,45,149,0.4)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(255,45,149,0.15), inset 0 0 20px rgba(255,45,149,0.04)"; e.currentTarget.style.textShadow = "none"; }}
+                    onClick={handleNewStory}
+                    className="cyber-clip-btn flex-1 py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300"
+                    style={{ borderColor: "rgba(48,209,88,0.6)", color: "#30d158", background: "rgba(48,209,88,0.1)", boxShadow: "0 0 20px rgba(48,209,88,0.15), inset 0 0 20px rgba(48,209,88,0.04)", minWidth: "0" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(48,209,88,0.3), inset 0 0 25px rgba(48,209,88,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(48,209,88,0.8), 0 0 25px rgba(48,209,88,0.4)"; e.currentTarget.style.borderColor = "#30d158"; e.currentTarget.style.background = "rgba(48,209,88,0.2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(48,209,88,0.15), inset 0 0 20px rgba(48,209,88,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(48,209,88,0.6)"; e.currentTarget.style.background = "rgba(48,209,88,0.1)"; }}
                   >
-                    &#x2696; 항소하기
+                    &#x270E;&#xFE0F; 새 재판 받기
                   </button>
-                ) : <div />}
-
-                {/* ✎ 새 사연 작성 */}
-                <button
-                  onClick={handleNewStory}
-                  className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-purple/60 text-neon-purple bg-neon-purple/10 cursor-pointer hover:bg-neon-purple/20 hover:border-neon-purple transition-all duration-300"
-                  style={{ boxShadow: "0 0 20px rgba(180,74,255,0.15), inset 0 0 20px rgba(180,74,255,0.04)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(180,74,255,0.3), inset 0 0 25px rgba(180,74,255,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(180,74,255,0.8), 0 0 25px rgba(180,74,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(180,74,255,0.15), inset 0 0 20px rgba(180,74,255,0.04)"; e.currentTarget.style.textShadow = "none"; }}
-                >
-                  &#x270E; 새 사연 작성
-                </button>
+                </div>
               </div>
             )}
           </section>
@@ -1233,7 +1283,7 @@ export default function Home() {
 
         {/* ===== VERDICT RESULT (streaming or complete) — single mode only ===== */}
         {trialMode === "single" && (verdict || isStreaming) && selectedJudgeData && (
-          <section ref={verdictRef} className="pb-12 verdict-reveal">
+          <section ref={verdictRef} className="pb-12 verdict-reveal" style={{ scrollMarginTop: '80px' }}>
             <div className="holo-line mb-8" />
 
             <h2 className="font-[family-name:var(--font-orbitron)] text-sm md:text-base font-bold mb-6 text-white flex items-center gap-3 uppercase tracking-wider">
@@ -1301,14 +1351,14 @@ export default function Home() {
 
             {/* 하단 2x2 액션 버튼 그리드 */}
             {verdict && !isStreaming && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+              <div ref={actionButtonsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                 {/* 🔗 공유하기 */}
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-blue/60 text-neon-blue bg-neon-blue/10 cursor-pointer hover:bg-neon-blue/20 hover:border-neon-blue transition-all duration-300"
-                  style={{ boxShadow: "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(0,240,255,0.3), inset 0 0 25px rgba(0,240,255,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(0,240,255,0.8), 0 0 25px rgba(0,240,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)"; e.currentTarget.style.textShadow = "none"; }}
+                  className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300"
+                  style={{ borderColor: "rgba(0,240,255,0.6)", color: "#00f0ff", background: "rgba(0,240,255,0.1)", boxShadow: "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(0,240,255,0.3), inset 0 0 25px rgba(0,240,255,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(0,240,255,0.8), 0 0 25px rgba(0,240,255,0.4)"; e.currentTarget.style.borderColor = "#00f0ff"; e.currentTarget.style.background = "rgba(0,240,255,0.2)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(0,240,255,0.6)"; e.currentTarget.style.background = "rgba(0,240,255,0.1)"; }}
                 >
                   {"\uD83D\uDD17"} 공유하기
                 </button>
@@ -1318,38 +1368,38 @@ export default function Home() {
                   <button
                     onClick={handleSubmitToHallOfFame}
                     disabled={isSubmittingToHof}
-                    className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-yellow/60 text-neon-yellow bg-neon-yellow/10 cursor-pointer hover:bg-neon-yellow/20 hover:border-neon-yellow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ boxShadow: "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(240,225,48,0.3), inset 0 0 25px rgba(240,225,48,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(240,225,48,0.8), 0 0 25px rgba(240,225,48,0.4)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)"; e.currentTarget.style.textShadow = "none"; }}
+                    className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ borderColor: "rgba(240,225,48,0.6)", color: "#f0e130", background: "rgba(240,225,48,0.1)", boxShadow: "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(240,225,48,0.3), inset 0 0 25px rgba(240,225,48,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(240,225,48,0.8), 0 0 25px rgba(240,225,48,0.4)"; e.currentTarget.style.borderColor = "#f0e130"; e.currentTarget.style.background = "rgba(240,225,48,0.2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(240,225,48,0.15), inset 0 0 20px rgba(240,225,48,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(240,225,48,0.6)"; e.currentTarget.style.background = "rgba(240,225,48,0.1)"; }}
                   >
                     {isSubmittingToHof ? "소집 중..." : "\uD83D\uDC68\u200D\u2696\uFE0F 국민 배심원 소집하기"}
                   </button>
                 ) : <div />}
 
-                {/* ⚖ 항소하기 */}
-                {!isAppealTrial ? (
+                {/* ⚖️ 항소하기 + ✏️ 새 재판 받기 — 가로 나란히 */}
+                <div className="flex gap-3 md:col-span-2 btn-row-wrap" style={{ flexWrap: "wrap" }}>
+                  {!isAppealTrial ? (
+                    <button
+                      onClick={handleAppealClick}
+                      className="cyber-clip-btn flex-1 py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300"
+                      style={{ borderColor: "rgba(191,90,242,0.6)", color: "#bf5af2", background: "rgba(191,90,242,0.1)", boxShadow: "0 0 20px rgba(191,90,242,0.15), inset 0 0 20px rgba(191,90,242,0.04)", minWidth: "0" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(191,90,242,0.3), inset 0 0 25px rgba(191,90,242,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(191,90,242,0.8), 0 0 25px rgba(191,90,242,0.4)"; e.currentTarget.style.borderColor = "#bf5af2"; e.currentTarget.style.background = "rgba(191,90,242,0.2)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(191,90,242,0.15), inset 0 0 20px rgba(191,90,242,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(191,90,242,0.6)"; e.currentTarget.style.background = "rgba(191,90,242,0.1)"; }}
+                    >
+                      &#x2696;&#xFE0F; 항소하기
+                    </button>
+                  ) : <div className="flex-1" />}
                   <button
-                    onClick={handleAppealClick}
-                    className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-pink/60 text-neon-pink bg-neon-pink/10 cursor-pointer hover:bg-neon-pink/20 hover:border-neon-pink transition-all duration-300"
-                    style={{ boxShadow: "0 0 20px rgba(255,45,149,0.15), inset 0 0 20px rgba(255,45,149,0.04)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(255,45,149,0.3), inset 0 0 25px rgba(255,45,149,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(255,45,149,0.8), 0 0 25px rgba(255,45,149,0.4)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(255,45,149,0.15), inset 0 0 20px rgba(255,45,149,0.04)"; e.currentTarget.style.textShadow = "none"; }}
+                    onClick={handleNewStory}
+                    className="cyber-clip-btn flex-1 py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 cursor-pointer transition-all duration-300"
+                    style={{ borderColor: "rgba(48,209,88,0.6)", color: "#30d158", background: "rgba(48,209,88,0.1)", boxShadow: "0 0 20px rgba(48,209,88,0.15), inset 0 0 20px rgba(48,209,88,0.04)", minWidth: "0" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(48,209,88,0.3), inset 0 0 25px rgba(48,209,88,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(48,209,88,0.8), 0 0 25px rgba(48,209,88,0.4)"; e.currentTarget.style.borderColor = "#30d158"; e.currentTarget.style.background = "rgba(48,209,88,0.2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(48,209,88,0.15), inset 0 0 20px rgba(48,209,88,0.04)"; e.currentTarget.style.textShadow = "none"; e.currentTarget.style.borderColor = "rgba(48,209,88,0.6)"; e.currentTarget.style.background = "rgba(48,209,88,0.1)"; }}
                   >
-                    &#x2696; 항소하기
+                    &#x270E;&#xFE0F; 새 재판 받기
                   </button>
-                ) : <div />}
-
-                {/* ✎ 새 사연 작성 */}
-                <button
-                  onClick={handleNewStory}
-                  className="cyber-clip-btn w-full py-4 px-5 font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase border-2 border-neon-purple/60 text-neon-purple bg-neon-purple/10 cursor-pointer hover:bg-neon-purple/20 hover:border-neon-purple transition-all duration-300"
-                  style={{ boxShadow: "0 0 20px rgba(180,74,255,0.15), inset 0 0 20px rgba(180,74,255,0.04)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 35px rgba(180,74,255,0.3), inset 0 0 25px rgba(180,74,255,0.08)"; e.currentTarget.style.textShadow = "0 0 10px rgba(180,74,255,0.8), 0 0 25px rgba(180,74,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 0 20px rgba(180,74,255,0.15), inset 0 0 20px rgba(180,74,255,0.04)"; e.currentTarget.style.textShadow = "none"; }}
-                >
-                  &#x270E; 새 사연 작성
-                </button>
+                </div>
               </div>
             )}
           </section>

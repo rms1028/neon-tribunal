@@ -137,7 +137,9 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Extract viral_quote and story_summary from accumulated text
+        // Extract tldr, viral_quote and story_summary from accumulated text
+        const tldrMatch = fullText.match(/\[\[TLDR:\s*(.+?)\]\]/);
+        const tldr = tldrMatch ? tldrMatch[1].trim() : undefined;
         const viralMatch = fullText.match(/\[\[VIRAL:\s*(.+?)\]\]/);
         const viralQuote = viralMatch ? viralMatch[1].trim() : undefined;
         const storyMatch = fullText.match(/\[\[STORY:\s*(.+?)\]\]/);
@@ -176,6 +178,7 @@ export async function POST(req: NextRequest) {
           imageUrl,
           viralQuote,
           storySummary,
+          tldr,
         });
       } catch (err) {
         console.error("Gemini API error:", err);

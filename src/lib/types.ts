@@ -10,6 +10,7 @@ export interface JudgeResponse {
   imageUrl?: string;
   viralQuote?: string;
   storySummary?: string;
+  tldr?: string;
 }
 
 export interface JudgeErrorResponse {
@@ -29,6 +30,7 @@ export interface FullCourtJudgeResult {
   imageUrl?: string;
   viralQuote?: string;
   storySummary?: string;
+  tldr?: string;
 }
 
 // --- Verdict History ---
@@ -58,7 +60,11 @@ export interface HallOfFameEntry {
   created_at: string;
   image_url?: string;
   viral_quote?: string;
+  tldr?: string;
   og_image_url?: string;
+  comment_count?: number;
+  author_nickname?: string;
+  author_icon?: string;
 }
 
 export interface HallOfFameSubmitRequest {
@@ -68,6 +74,7 @@ export interface HallOfFameSubmitRequest {
   verdict: string;
   imageUrl?: string;
   viralQuote?: string;
+  tldr?: string;
 }
 
 export interface HallOfFameListResponse {
@@ -77,4 +84,17 @@ export interface HallOfFameListResponse {
 
 export interface HallOfFameLikeResponse {
   likes: number;
+}
+
+// --- Verdict Comments ---
+
+export interface VerdictComment {
+  id: string;
+  verdict_id: string;
+  nickname: string;
+  content: string;
+  likes: number;
+  created_at: string;
+  vote_stance?: "agree" | "disagree" | null;
+  parent_id?: string | null;
 }

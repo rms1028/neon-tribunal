@@ -8,10 +8,12 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('og-images', 'og-images',
 ON CONFLICT (id) DO NOTHING;
 
 -- 3) OG 이미지 Storage 정책: 누구나 읽기 가능
+DROP POLICY IF EXISTS "Public read og-images" ON storage.objects;
 CREATE POLICY "Public read og-images" ON storage.objects
   FOR SELECT USING (bucket_id = 'og-images');
 
 -- 4) OG 이미지 Storage 정책: service_role만 업로드 가능
+DROP POLICY IF EXISTS "Service role upload og-images" ON storage.objects;
 CREATE POLICY "Service role upload og-images" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'og-images');
 

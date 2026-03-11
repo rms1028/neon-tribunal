@@ -447,3 +447,10 @@ html {
   background-size: 200% 100%;
   animation: holo-shift 3s ease infinite;
 }
+
+/* Ultra-narrow: stack side-by-side buttons vertically */
+@media (max-width: 360px) {
+  .btn-row-wrap {
+    flex-direction: column !important;
+  }
+}

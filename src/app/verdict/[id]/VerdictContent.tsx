@@ -43,7 +43,11 @@ function extractViralQuote(text: string): string | undefined {
 }
 
 function stripViralTag(text: string): string {
-  return text.replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*$/, "").trim();
+  return text
+    .replace(/\n*\[\[TLDR:\s*.+?\]\]\s*/g, "")
+    .replace(/\n*\[\[VIRAL:\s*.+?\]\]\s*/g, "")
+    .replace(/\n*\[\[STORY:\s*.+?\]\]\s*/g, "")
+    .trim();
 }
 
 export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
@@ -332,11 +336,16 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
               {/* Hall of Fame */}
               <Link
                 href="/hall-of-fame"
-                className="cyber-clip-btn w-full py-4 font-[family-name:var(--font-orbitron)] font-bold text-sm tracking-[0.12em] uppercase border border-neon-yellow/50 text-neon-yellow bg-neon-yellow/5 hover:bg-neon-yellow/15 transition-all duration-300 text-center block"
-                style={{ boxShadow: "0 0 20px rgba(240,225,48,0.12), inset 0 0 20px rgba(240,225,48,0.03)" }}
+                className="cyber-clip-btn w-full py-4 font-[family-name:var(--font-orbitron)] font-bold text-sm tracking-[0.12em] uppercase transition-all duration-300 text-center block"
+                style={{
+                  border: "1px solid rgba(240,225,48,0.5)",
+                  color: "#f0e130",
+                  background: "rgba(240,225,48,0.05)",
+                  boxShadow: "0 0 20px rgba(240,225,48,0.12), inset 0 0 20px rgba(240,225,48,0.03)",
+                }}
               >
                 <span className="flex items-center justify-center gap-2.5">
-                  {"\uD83D\uDCE2"} 공개 재판소
+                  {"\uD83D\uDC68\u200D\u2696\uFE0F"} 국민 배심원 소집하기
                 </span>
               </Link>
             </div>
@@ -362,7 +371,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
           {/* ─── LEFT on desktop / SECOND on mobile: JUDGE + VERDICT ─── */}
           <div className="lg:w-1/2 lg:order-1 flex flex-col gap-5 lg:min-h-0 lg:overflow-hidden">
 
-            {/* Judge Avatar with fire effect */}
+            {/* Author + Judge info */}
             <div className="flex items-center gap-4 shrink-0">
               <div className="relative">
                 {/* Fire glow background */}
@@ -379,11 +388,22 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
                 )}
               </div>
               <div>
+                {/* Author nickname */}
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{ fontSize: "20px" }}>{entry.author_icon || "😎"}</span>
+                  <span
+                    className="font-[family-name:var(--font-share-tech)] font-bold text-sm lg:text-base tracking-wide"
+                    style={{ color: "#eee" }}
+                  >
+                    {entry.author_nickname || "익명의 시민"}
+                  </span>
+                </div>
+                {/* Judge name (smaller) */}
                 <h1
-                  className="font-[family-name:var(--font-orbitron)] font-bold text-lg lg:text-xl uppercase tracking-wide"
-                  style={{ color: accentColor }}
+                  className="font-[family-name:var(--font-orbitron)] font-bold text-xs lg:text-sm uppercase tracking-wide"
+                  style={{ color: accentColor, opacity: 0.8 }}
                 >
-                  {entry.judge_name}
+                  {entry.judge_name}의 판결
                 </h1>
                 <p className="font-[family-name:var(--font-share-tech)] text-[10px] text-gray-600 tracking-wider">
                   {timeAgo(entry.created_at)} &middot; VERDICT_{entry.id.slice(0, 6).toUpperCase()}
@@ -462,6 +482,24 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
                     style={{ background: `linear-gradient(90deg, rgba(${glowRgb}, 0.3), transparent)` }}
                   />
                 </div>
+                {entry.tldr && (
+                  <div className="mb-3">
+                    <span
+                      style={{
+                        display: "inline-block",
+                        background: `rgba(${glowRgb}, 0.12)`,
+                        border: `1px solid rgba(${glowRgb}, 0.3)`,
+                        borderRadius: 99,
+                        padding: "5px 16px",
+                        fontWeight: 900,
+                        fontSize: "15px",
+                        color: accentColor,
+                      }}
+                    >
+                      {entry.tldr}
+                    </span>
+                  </div>
+                )}
                 <div
                   className="border-l-2 pl-4 py-2"
                   style={{ borderColor: `rgba(${glowRgb}, 0.3)` }}
@@ -473,31 +511,40 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
               </div>
             </div>
 
-            {/* "AI랑 한판 맞짱?" CTA */}
-            <Link
-              href="/"
-              className="shrink-0 cyber-clip-btn w-full py-3.5 text-center font-[family-name:var(--font-orbitron)] font-bold text-sm tracking-[0.12em] uppercase border border-neon-green/50 text-neon-green bg-neon-green/5 hover:bg-neon-green/15 transition-all duration-300"
-              style={{ boxShadow: "0 0 20px rgba(57,255,20,0.12), inset 0 0 20px rgba(57,255,20,0.03)" }}
-            >
-              <span className="flex items-center justify-center gap-2">
-                &#x26A1; AI랑 한판 맞짱?
-              </span>
-            </Link>
+            {/* 하단 버튼 2개 — 항소하기 + 새 재판 받기 */}
+            <div className="shrink-0 flex gap-3 btn-row-wrap" style={{ flexWrap: "wrap" }}>
+              <Link
+                href="/"
+                className="flex-1 cyber-clip-btn py-3.5 text-center font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase transition-all duration-300"
+                style={{
+                  border: "1px solid rgba(191,90,242,0.5)",
+                  color: "#bf5af2",
+                  background: "rgba(191,90,242,0.05)",
+                  boxShadow: "0 0 20px rgba(191,90,242,0.12), inset 0 0 20px rgba(191,90,242,0.03)",
+                  minWidth: "0",
+                }}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  &#x2696;&#xFE0F; 항소하기
+                </span>
+              </Link>
+              <Link
+                href="/"
+                className="flex-1 cyber-clip-btn py-3.5 text-center font-[family-name:var(--font-orbitron)] font-bold text-xs md:text-sm tracking-[0.12em] uppercase transition-all duration-300"
+                style={{
+                  border: "1px solid rgba(48,209,88,0.5)",
+                  color: "#30d158",
+                  background: "rgba(48,209,88,0.05)",
+                  boxShadow: "0 0 20px rgba(48,209,88,0.12), inset 0 0 20px rgba(48,209,88,0.03)",
+                  minWidth: "0",
+                }}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  &#x270E;&#xFE0F; 새 재판 받기
+                </span>
+              </Link>
+            </div>
           </div>
-        </div>
-
-        {/* ===== BOTTOM: 새 사연 작성 ===== */}
-        <div className="shrink-0 py-4 lg:py-3">
-          <Link
-            href="/"
-            className="block w-full max-w-md mx-auto text-center py-3 font-[family-name:var(--font-orbitron)] text-xs font-bold tracking-[0.15em] uppercase border border-neon-purple/40 text-neon-purple bg-neon-purple/5 hover:bg-neon-purple/10 transition-all duration-300"
-            style={{
-              clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-              boxShadow: "0 0 15px rgba(180,74,255,0.1)",
-            }}
-          >
-            &#x270E; 새 사연 작성
-          </Link>
         </div>
       </div>
 

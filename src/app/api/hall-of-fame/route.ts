@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { getSupabase } from "@/lib/supabase";
 import { hallOfFameWriteRateLimit, hallOfFameReadRateLimit } from "@/lib/rate-limit";
 import { sanitizeInput, containsProfanity, PROFANITY_ERROR_MESSAGE } from "@/lib/content-filter";
 import { generateOgImageBuffer } from "@/lib/generate-og-image";
+import { judges } from "@/lib/judges";
 import type {
   HallOfFameSubmitRequest,
   HallOfFameListResponse,
   HallOfFameEntry,
 } from "@/lib/types";
 
+const VALID_JUDGE_IDS = new Set(judges.map((j) => j.id));
+
 const PAGE_SIZE = 12;
+
+const AUTHOR_MODIFIERS = ["재판관", "시민", "배심원", "방청객", "목격자", "변호인", "증인"];
+const AUTHOR_ICONS = ["😎", "🦊", "🐱", "🎭", "🌙", "⚡", "🔥", "🎪", "🎯", "🎲"];
+
+function generateAuthorNickname(): string {
+  const mod = AUTHOR_MODIFIERS[Math.floor(Math.random() * AUTHOR_MODIFIERS.length)];
+  const num = String(Math.floor(1000 + Math.random() * 9000));
+  return `익명의 ${mod} #${num}`;
+}
+
+function randomAuthorIcon(): string {
+  return AUTHOR_ICONS[Math.floor(Math.random() * AUTHOR_ICONS.length)];
+}
 
 export async function GET(req: NextRequest) {
   const readRateLimitResponse = hallOfFameReadRateLimit(req);
@@ -50,8 +67,31 @@ export async function GET(req: NextRequest) {
   const hasMore = entries.length > PAGE_SIZE;
   const trimmed = hasMore ? entries.slice(0, PAGE_SIZE) : entries;
 
+  // Batch fetch comment counts
+  const entryIds = trimmed.map((e) => e.id);
+  let countMap = new Map<string, number>();
+  if (entryIds.length > 0) {
+    try {
+      const { data: countData } = await getSupabase().rpc("get_comment_counts", {
+        entry_ids: entryIds,
+      });
+      if (countData) {
+        for (const row of countData) {
+          countMap.set(row.verdict_id, Number(row.comment_count));
+        }
+      }
+    } catch {
+      // comment counts are optional, don't fail the request
+    }
+  }
+
+  const enriched = trimmed.map((e) => ({
+    ...e,
+    comment_count: countMap.get(e.id) || 0,
+  }));
+
   return NextResponse.json<HallOfFameListResponse>({
-    entries: trimmed,
+    entries: enriched,
     hasMore,
   });
 }
@@ -71,11 +111,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { judgeId, judgeName, story, verdict, imageUrl, viralQuote } = body;
+  const { judgeId, judgeName, story, verdict, imageUrl, viralQuote, tldr } = body;
 
   if (!judgeId || !judgeName || !story || !verdict) {
     return NextResponse.json(
       { error: "필수 항목이 누락되었습니다." },
+      { status: 400 }
+    );
+  }
+
+  if (!VALID_JUDGE_IDS.has(judgeId)) {
+    return NextResponse.json(
+      { error: "유효하지 않은 판사입니다." },
       { status: 400 }
     );
   }
@@ -97,18 +144,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const deleteToken = crypto.randomBytes(16).toString("hex");
+
   const insertData: Record<string, unknown> = {
     judge_id: sanitizeInput(judgeId),
     judge_name: sanitizeInput(judgeName).slice(0, 50),
     story: sanitizedStory.slice(0, 2000),
     verdict: sanitizedVerdict.slice(0, 5000),
     likes: 0,
+    delete_token: deleteToken,
+    author_nickname: generateAuthorNickname(),
+    author_icon: randomAuthorIcon(),
   };
-  if (imageUrl) {
-    insertData.image_url = imageUrl;
+  if (imageUrl && typeof imageUrl === "string") {
+    try {
+      const parsed = new URL(imageUrl);
+      if (parsed.protocol === "https:") {
+        insertData.image_url = imageUrl.slice(0, 2000);
+      }
+    } catch {
+      // 잘못된 URL은 무시
+    }
   }
   if (viralQuote) {
     insertData.viral_quote = sanitizeInput(String(viralQuote)).slice(0, 200);
+  }
+  if (tldr) {
+    insertData.tldr = sanitizeInput(String(tldr)).slice(0, 100);
   }
 
   const { data, error } = await getSupabase()
@@ -160,5 +222,50 @@ export async function POST(req: NextRequest) {
     // OG image generation failed, but verdict was saved successfully
   }
 
-  return NextResponse.json({ id: verdictId }, { status: 201 });
+  return NextResponse.json({ id: verdictId, deleteToken }, { status: 201 });
+}
+
+// DELETE — 본인 사연 삭제
+export async function DELETE(req: NextRequest) {
+  const rateLimitResponse = hallOfFameWriteRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
+
+  let body: { id: string; deleteToken: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 });
+  }
+
+  const { id, deleteToken } = body;
+  if (!id) {
+    return NextResponse.json({ error: "필수 항목이 누락되었습니다." }, { status: 400 });
+  }
+
+  // Verify token matches
+  const { data: verdict } = await getSupabase()
+    .from("verdicts")
+    .select("id, delete_token")
+    .eq("id", id)
+    .single();
+
+  if (!verdict) {
+    return NextResponse.json({ error: "존재하지 않는 판결입니다." }, { status: 404 });
+  }
+
+  // 삭제 토큰 검증: 반드시 일치해야 함
+  if (!deleteToken || !verdict.delete_token || verdict.delete_token !== deleteToken) {
+    return NextResponse.json({ error: "삭제 권한이 없습니다." }, { status: 403 });
+  }
+
+  // Delete comments first, then verdict
+  await getSupabase().from("verdict_comments").delete().eq("verdict_id", id);
+  const { error } = await getSupabase().from("verdicts").delete().eq("id", id);
+
+  if (error) {
+    console.error("Supabase delete error:", error);
+    return NextResponse.json({ error: "삭제에 실패했습니다." }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }

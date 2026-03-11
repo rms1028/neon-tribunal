@@ -34,9 +34,11 @@ function cleanup(windowMs: number) {
 }
 
 function getClientIp(req: NextRequest): string {
+  // x-real-ip: Vercel/Nginx가 설정하며 클라이언트가 변조 불가 (우선 사용)
+  // x-forwarded-for: 클라이언트가 위조 가능하므로 fallback으로만 사용
   return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown"
   );
 }
@@ -127,5 +129,23 @@ export const juryVoteRateLimit = rateLimit("jury-vote", {
 export const hallOfFameReadRateLimit = rateLimit("hall-of-fame-read", {
   windowMs: 60 * 1000,
   maxRequests: 60,
+});
+
+/** /api/verdict/[id]/comments POST — 1분당 10회 */
+export const commentWriteRateLimit = rateLimit("comment-write", {
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+});
+
+/** /api/verdict/[id]/comments GET — 1분당 60회 */
+export const commentReadRateLimit = rateLimit("comment-read", {
+  windowMs: 60 * 1000,
+  maxRequests: 60,
+});
+
+/** /api/verdict/[id]/comments/[commentId]/like — 1분당 30회 */
+export const commentLikeRateLimit = rateLimit("comment-like", {
+  windowMs: 60 * 1000,
+  maxRequests: 30,
 });
 
