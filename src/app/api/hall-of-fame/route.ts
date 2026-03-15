@@ -5,6 +5,7 @@ import { hallOfFameWriteRateLimit, hallOfFameReadRateLimit } from "@/lib/rate-li
 import { sanitizeInput, containsProfanity, PROFANITY_ERROR_MESSAGE } from "@/lib/content-filter";
 import { generateOgImageBuffer } from "@/lib/generate-og-image";
 import { judges } from "@/lib/judges";
+import { logger } from "@/lib/logger";
 import type {
   HallOfFameSubmitRequest,
   HallOfFameListResponse,
@@ -180,7 +181,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    console.error("Supabase insert error:", error);
+    logger.error("Supabase insert error", { error: error.message, code: error.code });
     return NextResponse.json(
       { error: "등록에 실패했습니다." },
       { status: 500 }
@@ -263,7 +264,7 @@ export async function DELETE(req: NextRequest) {
   const { error } = await getSupabase().from("verdicts").delete().eq("id", id);
 
   if (error) {
-    console.error("Supabase delete error:", error);
+    logger.error("Supabase delete error", { error: error.message, code: error.code });
     return NextResponse.json({ error: "삭제에 실패했습니다." }, { status: 500 });
   }
 

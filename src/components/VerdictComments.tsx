@@ -282,8 +282,8 @@ export default function VerdictComments({
         marginBottom: "8px",
         marginLeft: isReply ? "28px" : "0",
         background: isReply
-          ? "rgba(255,255,255,0.015)"
-          : "rgba(255,255,255,0.03)",
+          ? "var(--comment-reply-bg)"
+          : "var(--comment-bg)",
         borderRadius: "12px",
         border: `1px solid rgba(${glowRgb}, ${isReply ? "0.08" : "0.12"})`,
         transition: "background 0.2s",
@@ -341,7 +341,7 @@ export default function VerdictComments({
           fontFamily: "var(--font-share-tech)",
           fontSize: "13px",
           lineHeight: "1.7",
-          color: "#ddd",
+          color: "var(--text-primary)",
           wordBreak: "keep-all",
           overflowWrap: "break-word",
           whiteSpace: "pre-wrap",
@@ -393,7 +393,7 @@ export default function VerdictComments({
               e.currentTarget.style.color = accentColor;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#666";
+              e.currentTarget.style.color = "var(--text-muted)";
             }}
           >
             💬 답글
@@ -431,7 +431,7 @@ export default function VerdictComments({
               fontWeight: 700,
               letterSpacing: "0.2em",
               textTransform: "uppercase",
-              color: "#d1d1d1",
+              color: "var(--text-primary)",
             }}
           >
             배심원 의견
@@ -496,7 +496,7 @@ export default function VerdictComments({
             style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "12px",
-              color: "#aaa",
+              color: "var(--text-muted)",
             }}
           >
             ↩ <span style={{ color: accentColor, fontWeight: 700 }}>{replyTo.nickname}</span>에게 답글
@@ -584,19 +584,19 @@ export default function VerdictComments({
               background: "rgba(255,255,255,0.03)",
               border: `1px solid rgba(${glowRgb}, 0.2)`,
               borderRadius: "12px",
-              color: "#ddd",
+              color: "var(--text-primary)",
               outline: "none",
               resize: "none",
               boxSizing: "border-box",
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = accentColor;
-              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.background = "var(--comment-bg)";
               e.currentTarget.style.boxShadow = `0 0 12px rgba(${glowRgb}, 0.12)`;
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = `rgba(${glowRgb}, 0.2)`;
-              e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+              e.currentTarget.style.background = "var(--comment-reply-bg)";
               e.currentTarget.style.boxShadow = "none";
             }}
             onKeyDown={(e) => {

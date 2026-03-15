@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useTheme } from "@/components/theme-provider";
 
 export default function CyberNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   // 페이지 이동 시 메뉴 닫기
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function CyberNav() {
     { href: "/my-verdicts", label: "\uD83D\uDCDC 내 기록", activeColor: "text-neon-green", glowColor: "drop-shadow-[0_0_8px_#39ff14]" },
   ];
 
-  const showFab = pathname !== "/";
+  const showFab = pathname !== "/" && pathname !== "/hall-of-fame";
 
   return (
     <>
@@ -50,7 +52,7 @@ export default function CyberNav() {
         </Link>
 
         {/* 데스크톱 네비게이션 */}
-        <div className="hidden md:flex gap-6 font-[family-name:var(--font-share-tech)] text-xs tracking-widest uppercase">
+        <div className="hidden md:flex items-center gap-6 font-[family-name:var(--font-share-tech)] text-xs tracking-widest uppercase">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -64,31 +66,86 @@ export default function CyberNav() {
               {link.label}
             </Link>
           ))}
+          <button
+            onClick={toggleTheme}
+            className="ml-2 p-1.5 rounded-md transition-all duration-200 hover:bg-white/10"
+            aria-label={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
+            style={{
+              color: theme === "dark" ? "#f0e130" : "#b44aff",
+              fontSize: "16px",
+            }}
+          >
+            {theme === "dark" ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            )}
+          </button>
         </div>
 
-        {/* 햄버거 버튼 (모바일) */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-[5px] group"
-          aria-label={isOpen ? "메뉴 닫기" : "메뉴 열기"}
-          aria-expanded={isOpen}
-        >
-          <span
-            className={`block w-5 h-[2px] bg-neon-blue transition-all duration-300 ${
-              isOpen ? "rotate-45 translate-y-[7px]" : ""
-            }`}
-          />
-          <span
-            className={`block w-5 h-[2px] bg-neon-blue transition-all duration-300 ${
-              isOpen ? "opacity-0 scale-x-0" : ""
-            }`}
-          />
-          <span
-            className={`block w-5 h-[2px] bg-neon-blue transition-all duration-300 ${
-              isOpen ? "-rotate-45 -translate-y-[7px]" : ""
-            }`}
-          />
-        </button>
+        {/* 모바일 우측: 테마 토글 + 햄버거 */}
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-md transition-all duration-200"
+            aria-label={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
+            style={{
+              color: theme === "dark" ? "#f0e130" : "#b44aff",
+            }}
+          >
+            {theme === "dark" ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="relative w-8 h-8 flex flex-col items-center justify-center gap-[5px] group"
+            aria-label={isOpen ? "메뉴 닫기" : "메뉴 열기"}
+            aria-expanded={isOpen}
+          >
+            <span
+              className={`block w-5 h-[2px] bg-neon-blue transition-all duration-300 ${
+                isOpen ? "rotate-45 translate-y-[7px]" : ""
+              }`}
+            />
+            <span
+              className={`block w-5 h-[2px] bg-neon-blue transition-all duration-300 ${
+                isOpen ? "opacity-0 scale-x-0" : ""
+              }`}
+            />
+            <span
+              className={`block w-5 h-[2px] bg-neon-blue transition-all duration-300 ${
+                isOpen ? "-rotate-45 -translate-y-[7px]" : ""
+              }`}
+            />
+          </button>
+        </div>
       </nav>
 
       {/* 모바일 메뉴 오버레이 */}

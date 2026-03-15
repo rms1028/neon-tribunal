@@ -123,9 +123,11 @@ export default function MyVerdictsPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [shareTarget, setShareTarget] = useState<VerdictRecord | null>(null);
+  const [clientOrigin, setClientOrigin] = useState("");
 
   useEffect(() => {
     setRecords(getHistory());
+    setClientOrigin(window.location.origin);
   }, []);
 
   /* ── computed stats ── */
@@ -210,7 +212,7 @@ export default function MyVerdictsPage() {
         className="lg:sticky cyber-clip"
         style={{
           top: "80px",
-          background: "rgba(8,8,24,0.85)",
+          background: "var(--glass-bg)",
           backdropFilter: "blur(14px)",
           border: "1px solid rgba(57,255,20,0.18)",
           boxShadow: "0 0 40px rgba(57,255,20,0.06), inset 0 0 30px rgba(57,255,20,0.02)",
@@ -257,7 +259,7 @@ export default function MyVerdictsPage() {
             style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "11px",
-              color: "#9ca3af",
+              color: "var(--text-secondary)",
               fontWeight: 500,
               letterSpacing: "0.25em",
             }}
@@ -301,7 +303,7 @@ export default function MyVerdictsPage() {
             }}
           >
             {stats.total}
-            <span style={{ fontSize: "16px", color: "#9ca3af", marginLeft: "4px", fontWeight: 700 }}>회</span>
+            <span style={{ fontSize: "16px", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: 700 }}>회</span>
           </p>
         </div>
 
@@ -338,7 +340,7 @@ export default function MyVerdictsPage() {
                 flex: 1,
                 height: "12px",
                 borderRadius: "6px",
-                background: "rgba(255,255,255,0.08)",
+                background: "var(--comment-bg)",
                 overflow: "hidden",
               }}
             >
@@ -430,7 +432,7 @@ export default function MyVerdictsPage() {
                     fontFamily: "var(--font-orbitron)",
                     fontSize: "24px",
                     fontWeight: 900,
-                    color: "#f3f4f6",
+                    color: "var(--text-primary)",
                     textShadow: "0 0 8px rgba(255,255,255,0.2)",
                   }}
                 >
@@ -440,7 +442,7 @@ export default function MyVerdictsPage() {
                   style={{
                     fontFamily: "var(--font-share-tech)",
                     fontSize: "11px",
-                    color: "#9ca3af",
+                    color: "var(--text-secondary)",
                     fontWeight: 600,
                   }}
                 >
@@ -449,7 +451,7 @@ export default function MyVerdictsPage() {
               </div>
             </div>
           ) : (
-            <p style={{ fontFamily: "var(--font-share-tech)", fontSize: "14px", color: "#6b7280" }}>-</p>
+            <p style={{ fontFamily: "var(--font-share-tech)", fontSize: "14px", color: "var(--text-muted)" }}>-</p>
           )}
           {/* Legend */}
           <div className="flex flex-col" style={{ marginTop: "16px", gap: "10px" }}>
@@ -460,11 +462,11 @@ export default function MyVerdictsPage() {
               return (
                 <div key={j.id} className="flex items-center" style={{ gap: "10px" }}>
                   <div style={{ width: "10px", height: "10px", borderRadius: "3px", background: j.accentColor, boxShadow: `0 0 6px ${j.accentColor}70`, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "clamp(12px, 2.5vw, 14px)", color: "#d1d5db", flex: 1, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "clamp(12px, 2.5vw, 14px)", color: "var(--text-primary)", flex: 1, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {j.name}
                   </span>
                   <span style={{ fontFamily: "var(--font-orbitron)", fontSize: "clamp(11px, 2.5vw, 13px)", color: j.accentColor, fontWeight: 800, textShadow: `0 0 6px ${j.accentColor}40`, whiteSpace: "nowrap", flexShrink: 0 }}>
-                    {cnt} <span style={{ color: "#9ca3af", fontWeight: 500 }}>({pct}%)</span>
+                    {cnt} <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>({pct}%)</span>
                   </span>
                 </div>
               );
@@ -548,7 +550,7 @@ export default function MyVerdictsPage() {
               fontFamily: "var(--font-orbitron)",
               fontSize: "clamp(22px, 4vw, 42px)",
               fontWeight: 900,
-              color: "#ffffff",
+              color: "var(--text-primary)",
               letterSpacing: "0.1em",
               textShadow: "0 0 6px rgba(57,255,20,0.35), 0 0 18px rgba(57,255,20,0.12)",
               marginBottom: "8px",
@@ -561,7 +563,7 @@ export default function MyVerdictsPage() {
             style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "14px",
-              color: "#9ca3af",
+              color: "var(--text-secondary)",
               fontWeight: 500,
             }}
           >
@@ -576,7 +578,7 @@ export default function MyVerdictsPage() {
           <div
             className="lg:hidden mb-5"
             style={{
-              background: "rgba(8,8,24,0.85)",
+              background: "var(--glass-bg)",
               border: "1px solid rgba(57,255,20,0.18)",
               borderRadius: "8px",
               padding: "12px 16px",
@@ -613,7 +615,7 @@ export default function MyVerdictsPage() {
                   >
                     {stats.total}
                   </span>
-                  <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "11px", color: "#9ca3af" }}>회</span>
+                  <span style={{ fontFamily: "var(--font-share-tech)", fontSize: "11px", color: "var(--text-secondary)" }}>회</span>
                 </div>
               </div>
 
@@ -658,7 +660,7 @@ export default function MyVerdictsPage() {
                   style={{
                     fontFamily: "var(--font-share-tech)",
                     fontSize: "16px",
-                    color: "#9ca3af",
+                    color: "var(--text-secondary)",
                     fontWeight: 500,
                     marginBottom: "8px",
                   }}
@@ -670,7 +672,7 @@ export default function MyVerdictsPage() {
                   style={{
                     fontFamily: "var(--font-share-tech)",
                     fontSize: "14px",
-                    color: "#6b7280",
+                    color: "var(--text-muted)",
                     fontWeight: 500,
                     marginBottom: "28px",
                   }}
@@ -791,7 +793,7 @@ export default function MyVerdictsPage() {
                                   </span>
                                   <span
                                     className="sm:hidden"
-                                    style={{ fontFamily: "var(--font-share-tech)", fontSize: "10px", color: "#9ca3af" }}
+                                    style={{ fontFamily: "var(--font-share-tech)", fontSize: "10px", color: "var(--text-secondary)" }}
                                   >
                                     {timeAgo(record.createdAt)}
                                   </span>
@@ -801,7 +803,7 @@ export default function MyVerdictsPage() {
                                   style={{
                                     fontFamily: "var(--font-share-tech)",
                                     fontSize: "clamp(11px, 3vw, 14px)",
-                                    color: "#d1d5db",
+                                    color: "var(--text-primary)",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
@@ -815,7 +817,7 @@ export default function MyVerdictsPage() {
 
                               {/* Right side */}
                               <div className="flex items-center flex-shrink-0" style={{ gap: "8px" }}>
-                                <span className="hidden sm:inline" style={{ fontFamily: "var(--font-share-tech)", fontSize: "12px", color: "#9ca3af", fontWeight: 500 }}>
+                                <span className="hidden sm:inline" style={{ fontFamily: "var(--font-share-tech)", fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500 }}>
                                   {timeAgo(record.createdAt)}
                                 </span>
                                 {hasMore && (
@@ -886,7 +888,7 @@ export default function MyVerdictsPage() {
                                         fontFamily: "var(--font-share-tech)",
                                         fontSize: "16px",
                                         lineHeight: "1.75",
-                                        color: "#d1d5db",
+                                        color: "var(--text-primary)",
                                         fontStyle: "italic",
                                         fontWeight: 500,
                                       }}
@@ -903,7 +905,7 @@ export default function MyVerdictsPage() {
                                         style={{
                                           fontFamily: "var(--font-share-tech)",
                                           fontSize: "11px",
-                                          color: "#6b7280",
+                                          color: "var(--text-muted)",
                                           fontWeight: 600,
                                           marginBottom: "6px",
                                         }}
@@ -939,7 +941,7 @@ export default function MyVerdictsPage() {
                                         fontFamily: "var(--font-share-tech)",
                                         fontSize: "16px",
                                         lineHeight: "1.75",
-                                        color: "#f3f4f6",
+                                        color: "var(--text-primary)",
                                         fontWeight: 500,
                                       }}
                                     >
@@ -1029,7 +1031,7 @@ export default function MyVerdictsPage() {
                                           fontWeight: 500,
                                           letterSpacing: "0.05em",
                                           border: "1px solid rgba(255,255,255,0.08)",
-                                          color: "#9ca3af",
+                                          color: "var(--text-secondary)",
                                           background: "transparent",
                                           padding: "10px 16px",
                                           minHeight: "44px",
@@ -1041,7 +1043,7 @@ export default function MyVerdictsPage() {
                                         {"\u2715"} 삭제
                                       </button>
                                     </div>
-                                    <span className="tracking-widest uppercase hidden sm:inline" style={{ fontFamily: "var(--font-share-tech)", fontSize: "11px", color: "#6b7280", fontWeight: 500 }}>
+                                    <span className="tracking-widest uppercase hidden sm:inline" style={{ fontFamily: "var(--font-share-tech)", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
                                       CASE_{record.id.slice(0, 6).toUpperCase()}
                                     </span>
                                   </div>
@@ -1061,7 +1063,7 @@ export default function MyVerdictsPage() {
 
                 {/* Record count */}
                 <div className="text-center" style={{ marginTop: "28px" }}>
-                  <span className="tracking-widest" style={{ fontFamily: "var(--font-share-tech)", fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>
+                  <span className="tracking-widest" style={{ fontFamily: "var(--font-share-tech)", fontSize: "13px", color: "var(--text-muted)", fontWeight: 500 }}>
                     TOTAL_RECORDS: {records.length} / 50
                   </span>
                 </div>
@@ -1073,7 +1075,7 @@ export default function MyVerdictsPage() {
         {/* ===== FOOTER ===== */}
         <footer className="text-center" style={{ paddingTop: "48px" }}>
           <div className="holo-line" style={{ marginBottom: "20px" }} />
-          <p className="uppercase" style={{ fontFamily: "var(--font-share-tech)", fontSize: "12px", color: "#6b7280", letterSpacing: "0.25em", fontWeight: 500 }}>
+          <p className="uppercase" style={{ fontFamily: "var(--font-share-tech)", fontSize: "12px", color: "var(--text-muted)", letterSpacing: "0.25em", fontWeight: 500 }}>
             Neon Court System &copy; 2026 &mdash; All judgments are AI-generated
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginTop: "12px", fontFamily: "var(--font-share-tech)", fontSize: "9px", color: "#4b5563", letterSpacing: "0.15em" }}>
@@ -1091,11 +1093,11 @@ export default function MyVerdictsPage() {
         <ShareModal
           open={!!shareTarget}
           onClose={() => setShareTarget(null)}
-          shareUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/verdict/${shareTarget.id}`}
+          shareUrl={`${clientOrigin}/verdict/${shareTarget.id}`}
           onToast={handleToast}
           kakaoTitle={`[네온 코트] ${shareTarget.judgeName}의 판결`}
           kakaoDescription={shareTarget.viralQuote || shareTarget.verdict.slice(0, 80)}
-          kakaoImageUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/verdict/${shareTarget.id}/opengraph-image`}
+          kakaoImageUrl={`${clientOrigin}/verdict/${shareTarget.id}/opengraph-image`}
         />
       )}
 

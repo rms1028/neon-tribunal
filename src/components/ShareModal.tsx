@@ -13,11 +13,6 @@ interface ShareModalProps {
   kakaoImageUrl: string;
 }
 
-const NEON_IMAGE =
-  typeof window !== "undefined"
-    ? `${window.location.origin}/opengraph-image`
-    : "/opengraph-image";
-
 const copyToClipboard = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
@@ -45,11 +40,13 @@ export default function ShareModal({
   kakaoImageUrl,
 }: ShareModalProps) {
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     setCanNativeShare(
       typeof navigator !== "undefined" && typeof navigator.share === "function"
     );
+    setOrigin(window.location.origin);
   }, []);
 
   useEffect(() => {
@@ -67,7 +64,7 @@ export default function ShareModal({
 
   if (!open) return null;
 
-  const imageUrl = kakaoImageUrl || NEON_IMAGE;
+  const imageUrl = kakaoImageUrl || `${origin}/opengraph-image`;
 
   // ── 카카오톡 ──
   const handleKakao = async () => {
@@ -248,7 +245,7 @@ export default function ShareModal({
         className="relative w-full max-w-sm cyber-clip animate-modal-in"
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "rgba(8, 8, 24, 0.95)",
+          background: "var(--modal-bg)",
           border: "1px solid rgba(0, 240, 255, 0.2)",
           boxShadow:
             "0 0 40px rgba(0,240,255,0.08), inset 0 0 40px rgba(0,240,255,0.02)",

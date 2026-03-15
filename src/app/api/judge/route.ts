@@ -5,6 +5,7 @@ import { getSupabase } from "@/lib/supabase";
 import { judgeRateLimit } from "@/lib/rate-limit";
 import { sanitizeInput, containsProfanity, PROFANITY_ERROR_MESSAGE } from "@/lib/content-filter";
 import type { JudgeErrorResponse } from "@/lib/types";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -181,7 +182,7 @@ export async function POST(req: NextRequest) {
           tldr,
         });
       } catch (err) {
-        console.error("Gemini API error:", err);
+        logger.error("Gemini API error", { judgeId: judge.id, error: err instanceof Error ? err.message : String(err) });
         send({ type: "error", error: "AI 판결 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요." });
       } finally {
         controller.close();

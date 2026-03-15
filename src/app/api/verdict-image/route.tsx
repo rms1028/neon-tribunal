@@ -2,6 +2,7 @@
 import { ImageResponse } from "next/og";
 import { NextRequest, NextResponse } from "next/server";
 import { judges } from "@/lib/judges";
+import { logger } from "@/lib/logger";
 
 export const runtime = "edge";
 
@@ -550,7 +551,7 @@ export async function POST(req: NextRequest) {
       ],
     });
   } catch (err) {
-    console.error("Verdict image generation error:", err);
+    logger.error("Verdict image generation error", { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: "Image generation failed" }, { status: 500 });
   }
 }

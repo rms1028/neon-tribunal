@@ -285,8 +285,8 @@ export default function InlineComments({
         marginBottom: "8px",
         marginLeft: isReply ? "24px" : "0",
         background: isReply
-          ? "rgba(255,255,255,0.015)"
-          : "rgba(255,255,255,0.03)",
+          ? "var(--comment-reply-bg)"
+          : "var(--comment-bg)",
         borderRadius: "10px",
         border: `1px solid rgba(${glowRgb}, ${isReply ? "0.08" : "0.12"})`,
         transition: "background 0.2s",
@@ -344,7 +344,7 @@ export default function InlineComments({
           fontFamily: "var(--font-share-tech)",
           fontSize: "13px",
           lineHeight: "1.6",
-          color: "#ddd",
+          color: "var(--text-primary)",
           wordBreak: "keep-all",
           overflowWrap: "break-word",
           whiteSpace: "pre-wrap",
@@ -396,7 +396,7 @@ export default function InlineComments({
               e.currentTarget.style.color = accentColor;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#666";
+              e.currentTarget.style.color = "var(--text-muted)";
             }}
           >
             💬 답글
@@ -448,7 +448,7 @@ export default function InlineComments({
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive)
-                    e.currentTarget.style.color = "#666";
+                    e.currentTarget.style.color = "var(--text-muted)";
                 }}
               >
                 {label}
@@ -486,7 +486,7 @@ export default function InlineComments({
             style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "11px",
-              color: "#aaa",
+              color: "var(--text-muted)",
             }}
           >
             ↩ <span style={{ color: accentColor, fontWeight: 700 }}>{replyTo.nickname}</span>에게 답글
@@ -582,18 +582,18 @@ export default function InlineComments({
               background: "rgba(255,255,255,0.03)",
               border: `1px solid rgba(${glowRgb}, 0.2)`,
               borderRadius: "10px",
-              color: "#ddd",
+              color: "var(--text-primary)",
               outline: "none",
               resize: "none",
               boxSizing: "border-box",
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = accentColor;
-              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.background = "var(--comment-bg)";
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = `rgba(${glowRgb}, 0.2)`;
-              e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+              e.currentTarget.style.background = "var(--comment-reply-bg)";
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {

@@ -106,8 +106,8 @@ export default function CompactVerdictView({
     <div
       style={{
         minHeight: "100vh",
-        background: "#0a0a0f",
-        color: "#eee",
+        background: "var(--bg-primary)",
+        color: "var(--text-primary)",
       }}
     >
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 16px 80px" }}>
@@ -121,7 +121,7 @@ export default function CompactVerdictView({
             display: "flex",
             alignItems: "center",
             gap: "6px",
-            color: "#777",
+            color: "var(--text-muted)",
             fontSize: "14px",
             padding: "0 0 20px",
             fontFamily: "var(--font-share-tech)",
@@ -166,7 +166,7 @@ export default function CompactVerdictView({
             <div style={{
               fontFamily: "var(--font-share-tech)",
               fontSize: "12px",
-              color: "#555",
+              color: "var(--text-muted)",
             }}>
               {timeAgo(entry.created_at)} · VERDICT_{entry.id.slice(0, 6).toUpperCase()}
             </div>
@@ -184,7 +184,7 @@ export default function CompactVerdictView({
           <div style={{
             fontFamily: "var(--font-share-tech)",
             fontSize: "11px",
-            color: "#555",
+            color: "var(--text-muted)",
             letterSpacing: "1.5px",
             marginBottom: "10px",
           }}>
@@ -194,7 +194,7 @@ export default function CompactVerdictView({
             fontFamily: "var(--font-orbitron)",
             fontWeight: 800,
             fontSize: "22px",
-            color: "#fff",
+            color: "var(--text-primary)",
             margin: "0 0 14px",
             lineHeight: 1.3,
           }}>
@@ -203,7 +203,7 @@ export default function CompactVerdictView({
           <p style={{
             fontFamily: "var(--font-share-tech)",
             fontSize: "15px",
-            color: "#999",
+            color: "var(--text-secondary)",
             lineHeight: 1.8,
             margin: 0,
             whiteSpace: "pre-wrap",
@@ -275,7 +275,7 @@ export default function CompactVerdictView({
             fontFamily: "var(--font-share-tech)",
             fontWeight: 900,
             fontSize: "20px",
-            color: "#fff",
+            color: "var(--text-primary)",
             margin: 0,
             lineHeight: 1.5,
             whiteSpace: "pre-wrap",
@@ -295,7 +295,7 @@ export default function CompactVerdictView({
           <div style={{
             fontFamily: "var(--font-share-tech)",
             fontSize: "11px",
-            color: "#555",
+            color: "var(--text-muted)",
             letterSpacing: "1.5px",
             marginBottom: "16px",
           }}>

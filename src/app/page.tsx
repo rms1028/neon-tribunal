@@ -40,11 +40,16 @@ export default function Home() {
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [appealReason, setAppealReason] = useState("");
   const [isAppealTrial, setIsAppealTrial] = useState(false);
+  const [clientOrigin, setClientOrigin] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
   const verdictRef = useRef<HTMLDivElement>(null);
   const actionButtonsRef = useRef<HTMLDivElement>(null);
   const appealDataRef = useRef<{ reason: string; originalVerdict: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setClientOrigin(window.location.origin);
+  }, []);
 
   // 스트리밍 중 레이아웃이 변해도 확실히 판결 섹션까지 도달하도록 반복 스크롤
   const scrollToVerdict = () => {
@@ -655,8 +660,7 @@ export default function Home() {
   };
 
   const getShareUrl = () => {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return hofId ? `${origin}/verdict/${hofId}` : origin;
+    return hofId ? `${clientOrigin}/verdict/${hofId}` : clientOrigin;
   };
 
   const getStorySummaryText = () => {
@@ -732,7 +736,7 @@ export default function Home() {
           <span
             className="relative z-20"
             style={{
-              color: "#ffffff",
+              color: "var(--text-primary)",
               textShadow:
                 "0 0 10px rgba(0,240,255,1), 0 0 40px rgba(0,240,255,0.7), 0 0 80px rgba(0,240,255,0.4)",
             }}
@@ -949,13 +953,13 @@ export default function Home() {
                     )}
 
                     <div className="absolute top-2.5 right-4 flex items-center gap-1.5">
-                      <span className="font-[family-name:var(--font-share-tech)] text-[8px] md:text-[9px] tracking-wider" style={{ color: isSelected ? judge.accentColor : '#444' }}>
+                      <span className="font-[family-name:var(--font-share-tech)] text-[8px] md:text-[9px] tracking-wider" style={{ color: isSelected ? judge.accentColor : 'var(--text-muted)' }}>
                         {isSelected ? "ACTIVE" : "STANDBY"}
                       </span>
                       <div
                         className={`w-2 h-2 ${isSelected ? "animate-neon-pulse" : ""}`}
                         style={{
-                          backgroundColor: isSelected ? judge.accentColor : "#333",
+                          backgroundColor: isSelected ? judge.accentColor : "var(--bg-border)",
                           clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
                         }}
                       />
@@ -965,7 +969,7 @@ export default function Home() {
 
                     <h3
                       className="font-[family-name:var(--font-orbitron)] font-bold text-[10px] md:text-sm mb-0.5 md:mb-1 transition-colors uppercase tracking-wide"
-                      style={{ color: isSelected ? judge.accentColor : "#e0e0f0" }}
+                      style={{ color: isSelected ? judge.accentColor : "var(--text-primary)" }}
                     >
                       {judge.name}
                     </h3>
@@ -1465,10 +1469,7 @@ export default function Home() {
         onToast={showToast}
         kakaoTitle={getShareTitle()}
         kakaoDescription={getShareDescription()}
-        kakaoImageUrl={(() => {
-          const origin = typeof window !== "undefined" ? window.location.origin : "";
-          return hofId ? `${origin}/verdict/${hofId}/opengraph-image` : `${origin}/opengraph-image`;
-        })()}
+        kakaoImageUrl={hofId ? `${clientOrigin}/verdict/${hofId}/opengraph-image` : `${clientOrigin}/opengraph-image`}
       />
 
       {/* Appeal Modal */}
@@ -1483,7 +1484,7 @@ export default function Home() {
             className="relative w-full max-w-md cyber-clip animate-modal-in"
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: "rgba(8, 8, 24, 0.97)",
+              background: "var(--modal-bg)",
               border: "1px solid rgba(0, 240, 255, 0.3)",
               boxShadow: "0 0 60px rgba(0,240,255,0.12), inset 0 0 60px rgba(0,240,255,0.03), 0 0 120px rgba(180,74,255,0.08)",
             }}

@@ -300,7 +300,7 @@ export default function LegalPage() {
               color: "#9ca3af",
             }}
           >
-            <p className="mb-1" style={{ color: "#d1d5db", fontWeight: 600 }}>
+            <p className="mb-1" style={{ color: "var(--text-primary)", fontWeight: 600 }}>
               &copy; 2026 네온즈(Neons). All Rights Reserved.
             </p>
             <p>

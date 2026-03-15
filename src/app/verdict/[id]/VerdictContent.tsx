@@ -66,6 +66,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
   const [animating, setAnimating] = useState(false);
   const [isSavingShareCard, setIsSavingShareCard] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [clientOrigin, setClientOrigin] = useState("");
   const [toast, setToast] = useState({ message: "", visible: false });
   const shareCardRef = useRef<HTMLDivElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,6 +74,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
   useEffect(() => {
     setIsLiked(getLikedIds().has(entry.id));
     setCanNativeShare(typeof navigator !== "undefined" && "share" in navigator);
+    setClientOrigin(window.location.origin);
   }, [entry.id]);
 
   const handleLike = async () => {
@@ -106,8 +108,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
   };
 
   const getShareUrl = () => {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `${origin}/verdict/${entry.id}`;
+    return `${clientOrigin}/verdict/${entry.id}`;
   };
 
   const showToast = (msg: string) => {
@@ -121,11 +122,10 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
 
   const handleShare = async () => {
     const shareUrl = getShareUrl();
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const title = "\uD83D\uDEA8 AI 판사의 미친 팩폭 ㅋㅋㅋ";
     const storySummaryText = entry.story.length > 50 ? entry.story.slice(0, 50) + "..." : entry.story;
     const description = `${storySummaryText} 과연 결과는? 지금 들어와서 국민 배심원 투표에 참여해 보세요!`;
-    const ogImageUrl = entry.og_image_url || `${origin}/verdict/${entry.id}/opengraph-image`;
+    const ogImageUrl = entry.og_image_url || `${clientOrigin}/verdict/${entry.id}/opengraph-image`;
 
     if (typeof window !== "undefined" && window.Kakao && window.Kakao.isInitialized()) {
       try {
@@ -252,7 +252,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
               <p
                 className="animate-neon-sign font-[family-name:var(--font-orbitron)] font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl leading-tight tracking-wide break-keep max-w-lg"
                 style={{
-                  color: "#ffffff",
+                  color: "var(--text-primary)",
                   textShadow: `
                     0 0 10px rgba(${glowRgb}, 0.9),
                     0 0 30px rgba(${glowRgb}, 0.7),
@@ -393,7 +393,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
                   <span style={{ fontSize: "20px" }}>{entry.author_icon || "😎"}</span>
                   <span
                     className="font-[family-name:var(--font-share-tech)] font-bold text-sm lg:text-base tracking-wide"
-                    style={{ color: "#eee" }}
+                    style={{ color: "var(--text-primary)" }}
                   >
                     {entry.author_nickname || "익명의 시민"}
                   </span>

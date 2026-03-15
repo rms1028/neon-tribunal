@@ -23,7 +23,7 @@ export default function NotFound() {
             className="glitch text-[120px] md:text-[180px] font-[family-name:var(--font-orbitron)] font-black leading-none select-none"
             data-text="404"
             style={{
-              color: "#ffffff",
+              color: "var(--text-primary)",
               textShadow:
                 "0 0 20px rgba(255,45,149,0.8), 0 0 60px rgba(255,45,149,0.4), 0 0 120px rgba(255,45,149,0.2)",
             }}

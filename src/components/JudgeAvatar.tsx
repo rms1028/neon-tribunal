@@ -37,7 +37,7 @@ export default function JudgeAvatar({ avatarUrl, name, size = 40, className = ""
         height={size}
         className="relative rounded-full object-cover"
         style={{ width: size, height: size }}
-        unoptimized
+        loading="lazy"
       />
     </div>
   );

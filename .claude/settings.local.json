@@ -41,7 +41,9 @@
       "WebFetch(domain:neon-court.vercel.app)",
       "Bash(git:*)",
       "WebFetch(domain:serwist.pages.dev)",
-      "Bash(npx cap:*)"
+      "Bash(npx cap:*)",
+      "Bash(npx:*)",
+      "Bash(done)"
     ]
   }
 }

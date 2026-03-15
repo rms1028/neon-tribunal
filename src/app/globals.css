@@ -3,7 +3,219 @@
 :root {
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Semantic theme variables (dark defaults) */
+  --bg-primary: #05050e;
+  --bg-surface: #0c0c1a;
+  --bg-card: #111125;
+  --bg-border: #1e1e3a;
+  --text-primary: #c8c8e0;
+  --text-secondary: rgba(255,255,255,0.6);
+  --text-muted: #666;
+  --glass-bg: rgba(8, 8, 24, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --overlay-bg: rgba(5, 5, 14, 0.6);
+  --modal-bg: rgba(8, 8, 24, 0.95);
+  --input-bg: rgba(8, 8, 24, 0.8);
+  --comment-bg: rgba(255,255,255,0.03);
+  --comment-reply-bg: rgba(255,255,255,0.015);
+  --skeleton-from: rgba(255,255,255,0.03);
+  --skeleton-mid: rgba(255,255,255,0.08);
+  --track-bg: rgba(255,255,255,0.05);
+  --glow-intensity: 1;
 }
+
+/* ========================================
+   LIGHT MODE OVERRIDES
+   ======================================== */
+[data-theme="light"] {
+  --bg-primary: #f0f2f5;
+  --bg-surface: #e4e6eb;
+  --bg-card: #ffffff;
+  --bg-border: #d0d2d8;
+  --text-primary: #1a1a2e;
+  --text-secondary: rgba(0,0,0,0.6);
+  --text-muted: #6b7280;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --overlay-bg: rgba(0, 0, 0, 0.3);
+  --modal-bg: rgba(255, 255, 255, 0.96);
+  --input-bg: rgba(240, 242, 245, 0.9);
+  --comment-bg: rgba(0,0,0,0.03);
+  --comment-reply-bg: rgba(0,0,0,0.015);
+  --skeleton-from: rgba(0,0,0,0.04);
+  --skeleton-mid: rgba(0,0,0,0.08);
+  --track-bg: rgba(0,0,0,0.06);
+  --glow-intensity: 0.3;
+
+  /* Tailwind @theme variable overrides */
+  --color-dark-bg: #f0f2f5;
+  --color-dark-surface: #e4e6eb;
+  --color-dark-card: #ffffff;
+  --color-dark-border: #d0d2d8;
+
+  /* Neon accents: slightly deeper for light bg contrast */
+  --color-neon-blue: #00b8cc;
+  --color-neon-purple: #9933cc;
+  --color-neon-pink: #d91a6e;
+  --color-neon-green: #1faa00;
+  --color-neon-yellow: #c4a800;
+}
+
+/* ========================================
+   LIGHT MODE: Tailwind utility overrides
+   Tailwind v4 compiles utilities to hardcoded colors,
+   so we must override each class explicitly.
+   ======================================== */
+
+/* -- Background: dark surfaces → light surfaces -- */
+[data-theme="light"] .bg-dark-bg { background-color: #f0f2f5 !important; }
+[data-theme="light"] .bg-dark-bg\/60 { background-color: rgba(240,242,245,0.6) !important; }
+[data-theme="light"] .bg-dark-bg\/80 { background-color: rgba(240,242,245,0.8) !important; }
+[data-theme="light"] .bg-dark-bg\/95 { background-color: rgba(240,242,245,0.95) !important; }
+[data-theme="light"] .bg-dark-surface\/50 { background-color: rgba(228,230,235,0.5) !important; }
+[data-theme="light"] .bg-dark-surface\/80 { background-color: rgba(228,230,235,0.8) !important; }
+[data-theme="light"] .bg-dark-border { background-color: #d0d2d8 !important; }
+
+/* -- Border: dark → light -- */
+[data-theme="light"] .border-dark-border { border-color: #d0d2d8 !important; }
+
+/* -- Text: neon colors → deeper for readability -- */
+[data-theme="light"] .text-neon-blue { color: #0088aa !important; }
+[data-theme="light"] .text-neon-blue\/30 { color: rgba(0,136,170,0.3) !important; }
+[data-theme="light"] .text-neon-blue\/50 { color: rgba(0,136,170,0.5) !important; }
+[data-theme="light"] .text-neon-green { color: #1a8f00 !important; }
+[data-theme="light"] .text-neon-green\/60 { color: rgba(26,143,0,0.6) !important; }
+[data-theme="light"] .text-neon-green\/80 { color: rgba(26,143,0,0.8) !important; }
+[data-theme="light"] .text-neon-pink { color: #c01560 !important; }
+[data-theme="light"] .text-neon-pink\/70 { color: rgba(192,21,96,0.7) !important; }
+[data-theme="light"] .text-neon-pink\/80 { color: rgba(192,21,96,0.8) !important; }
+[data-theme="light"] .text-neon-purple { color: #7722aa !important; }
+[data-theme="light"] .text-neon-purple\/60 { color: rgba(119,34,170,0.6) !important; }
+[data-theme="light"] .text-neon-yellow { color: #9a8500 !important; }
+
+/* -- Border: neon colors → deeper -- */
+[data-theme="light"] .border-neon-blue\/20 { border-color: rgba(0,136,170,0.2) !important; }
+[data-theme="light"] .border-neon-blue\/30 { border-color: rgba(0,136,170,0.3) !important; }
+[data-theme="light"] .border-neon-blue\/40 { border-color: rgba(0,136,170,0.4) !important; }
+[data-theme="light"] .border-neon-blue\/50 { border-color: rgba(0,136,170,0.5) !important; }
+[data-theme="light"] .border-neon-blue\/60 { border-color: rgba(0,136,170,0.6) !important; }
+[data-theme="light"] .border-neon-blue\/70 { border-color: rgba(0,136,170,0.7) !important; }
+[data-theme="light"] .border-neon-green\/30 { border-color: rgba(26,143,0,0.3) !important; }
+[data-theme="light"] .border-neon-green\/60 { border-color: rgba(26,143,0,0.6) !important; }
+[data-theme="light"] .border-neon-pink\/20 { border-color: rgba(192,21,96,0.2) !important; }
+[data-theme="light"] .border-neon-pink\/30 { border-color: rgba(192,21,96,0.3) !important; }
+[data-theme="light"] .border-neon-pink\/50 { border-color: rgba(192,21,96,0.5) !important; }
+[data-theme="light"] .border-neon-pink\/60 { border-color: rgba(192,21,96,0.6) !important; }
+
+/* -- Background: neon accent buttons -- */
+[data-theme="light"] .bg-neon-green\/5 { background-color: rgba(26,143,0,0.05) !important; }
+[data-theme="light"] .bg-neon-green\/10 { background-color: rgba(26,143,0,0.1) !important; }
+[data-theme="light"] .bg-neon-green\/15 { background-color: rgba(26,143,0,0.15) !important; }
+[data-theme="light"] .bg-neon-pink { background-color: #c01560 !important; }
+[data-theme="light"] .bg-neon-pink\/5 { background-color: rgba(192,21,96,0.05) !important; }
+[data-theme="light"] .bg-neon-pink\/8 { background-color: rgba(192,21,96,0.08) !important; }
+[data-theme="light"] .bg-neon-pink\/10 { background-color: rgba(192,21,96,0.1) !important; }
+[data-theme="light"] .bg-neon-pink\/15 { background-color: rgba(192,21,96,0.15) !important; }
+
+/* -- Hover states for neon buttons -- */
+[data-theme="light"] .hover\:bg-neon-blue\/10:hover { background-color: rgba(0,136,170,0.1) !important; }
+[data-theme="light"] .hover\:bg-neon-blue\/15:hover { background-color: rgba(0,136,170,0.15) !important; }
+[data-theme="light"] .hover\:bg-neon-blue\/20:hover { background-color: rgba(0,136,170,0.2) !important; }
+[data-theme="light"] .hover\:bg-neon-green\/10:hover { background-color: rgba(26,143,0,0.1) !important; }
+[data-theme="light"] .hover\:bg-neon-pink\/10:hover { background-color: rgba(192,21,96,0.1) !important; }
+[data-theme="light"] .hover\:bg-neon-pink\/15:hover { background-color: rgba(192,21,96,0.15) !important; }
+[data-theme="light"] .hover\:bg-neon-purple\/15:hover { background-color: rgba(119,34,170,0.15) !important; }
+[data-theme="light"] .hover\:bg-neon-yellow\/10:hover { background-color: rgba(154,133,0,0.1) !important; }
+[data-theme="light"] .hover\:bg-neon-yellow\/15:hover { background-color: rgba(154,133,0,0.15) !important; }
+[data-theme="light"] .hover\:border-dark-border:hover { border-color: #d0d2d8 !important; }
+[data-theme="light"] .hover\:border-neon-blue\/40:hover { border-color: rgba(0,136,170,0.4) !important; }
+[data-theme="light"] .hover\:border-neon-blue\/70:hover { border-color: rgba(0,136,170,0.7) !important; }
+[data-theme="light"] .hover\:border-neon-purple\/70:hover { border-color: rgba(119,34,170,0.7) !important; }
+[data-theme="light"] .hover\:text-neon-blue:hover { color: #0088aa !important; }
+[data-theme="light"] .hover\:text-neon-pink:hover { color: #c01560 !important; }
+[data-theme="light"] .hover\:text-white:hover { color: #1a1a2e !important; }
+
+/* -- White text → dark in light mode -- */
+[data-theme="light"] .text-white { color: #1a1a2e !important; }
+[data-theme="light"] .text-white\/60 { color: rgba(26,26,46,0.6) !important; }
+[data-theme="light"] .text-white\/80 { color: rgba(26,26,46,0.8) !important; }
+
+/* -- Gray text readability -- */
+[data-theme="light"] .text-gray-100 { color: #1f2937 !important; }
+[data-theme="light"] .text-gray-200 { color: #374151 !important; }
+[data-theme="light"] .text-gray-300 { color: #4b5563 !important; }
+[data-theme="light"] .text-gray-400 { color: #6b7280 !important; }
+[data-theme="light"] .text-gray-500 { color: #6b7280 !important; }
+[data-theme="light"] .text-gray-600 { color: #9ca3af !important; }
+[data-theme="light"] .text-gray-700 { color: #4b5563 !important; }
+[data-theme="light"] .hover\:text-gray-300:hover { color: #1f2937 !important; }
+[data-theme="light"] .hover\:text-gray-400:hover { color: #374151 !important; }
+
+/* -- Zinc text readability -- */
+[data-theme="light"] .text-zinc-50 { color: #1a1a2e !important; }
+[data-theme="light"] .text-zinc-100 { color: #27272a !important; }
+[data-theme="light"] .text-zinc-300 { color: #52525b !important; }
+[data-theme="light"] .text-zinc-400 { color: #71717a !important; }
+[data-theme="light"] .text-zinc-500 { color: #71717a !important; }
+[data-theme="light"] .text-zinc-600 { color: #a1a1aa !important; }
+[data-theme="light"] .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
+
+/* -- Red text for light mode -- */
+[data-theme="light"] .text-red-300 { color: #dc2626 !important; }
+[data-theme="light"] .text-red-400 { color: #b91c1c !important; }
+[data-theme="light"] .text-red-500\/50 { color: rgba(185,28,28,0.5) !important; }
+[data-theme="light"] .hover\:text-red-300:hover { color: #dc2626 !important; }
+[data-theme="light"] .hover\:text-red-400:hover { color: #b91c1c !important; }
+
+/* -- Cyan text for light mode -- */
+[data-theme="light"] .text-cyan-300 { color: #0891b2 !important; }
+[data-theme="light"] .text-cyan-400 { color: #0e7490 !important; }
+[data-theme="light"] .hover\:text-cyan-300:hover { color: #0891b2 !important; }
+[data-theme="light"] .hover\:text-cyan-400:hover { color: #0e7490 !important; }
+
+/* -- Violet text for light mode -- */
+[data-theme="light"] .text-violet-300 { color: #7c3aed !important; }
+[data-theme="light"] .hover\:text-violet-300:hover { color: #7c3aed !important; }
+
+/* -- Group hover -- */
+[data-theme="light"] .group-hover\:text-gray-300 { color: #1f2937 !important; }
+
+/* -- Placeholder text -- */
+[data-theme="light"] .placeholder-gray-500::placeholder { color: #9ca3af !important; }
+[data-theme="light"] .placeholder-gray-600::placeholder { color: #9ca3af !important; }
+
+/* -- bg-white/black transparency fixes -- */
+[data-theme="light"] .bg-white\/5 { background-color: rgba(0, 0, 0, 0.04) !important; }
+[data-theme="light"] .bg-white\/10 { background-color: rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: rgba(0, 0, 0, 0.08) !important; }
+[data-theme="light"] .hover\:bg-white\/\[0\.02\]:hover { background-color: rgba(0, 0, 0, 0.03) !important; }
+[data-theme="light"] .bg-black\/60 { background-color: rgba(0, 0, 0, 0.4) !important; }
+[data-theme="light"] .bg-black\/70 { background-color: rgba(0, 0, 0, 0.5) !important; }
+
+/* -- Hamburger & misc neon-blue bg -- */
+[data-theme="light"] .bg-neon-blue { background-color: #0088aa !important; }
+[data-theme="light"] .bg-neon-blue\/10 { background-color: rgba(0,136,170,0.1) !important; }
+[data-theme="light"] .bg-neon-blue\/15 { background-color: rgba(0,136,170,0.15) !important; }
+
+/* -- Drop shadow glow overrides -- */
+[data-theme="light"] .drop-shadow-\[0_0_8px_\#00f0ff\] { filter: drop-shadow(0 0 4px rgba(0,136,170,0.4)) !important; }
+[data-theme="light"] .drop-shadow-\[0_0_8px_\#f0e130\] { filter: drop-shadow(0 0 4px rgba(154,133,0,0.4)) !important; }
+[data-theme="light"] .drop-shadow-\[0_0_8px_\#39ff14\] { filter: drop-shadow(0 0 4px rgba(26,143,0,0.4)) !important; }
+
+/* -- Neon purple, yellow, blue bg -- */
+[data-theme="light"] .bg-neon-purple { background-color: #7722aa !important; }
+[data-theme="light"] .bg-neon-purple\/5 { background-color: rgba(119,34,170,0.05) !important; }
+[data-theme="light"] .bg-neon-purple\/8 { background-color: rgba(119,34,170,0.08) !important; }
+[data-theme="light"] .bg-neon-purple\/10 { background-color: rgba(119,34,170,0.1) !important; }
+[data-theme="light"] .bg-neon-purple\/15 { background-color: rgba(119,34,170,0.15) !important; }
+[data-theme="light"] .bg-neon-yellow\/5 { background-color: rgba(154,133,0,0.05) !important; }
+[data-theme="light"] .bg-neon-yellow\/10 { background-color: rgba(154,133,0,0.1) !important; }
+[data-theme="light"] .bg-neon-yellow\/15 { background-color: rgba(154,133,0,0.15) !important; }
+[data-theme="light"] .bg-neon-blue\/5 { background-color: rgba(0,136,170,0.05) !important; }
+[data-theme="light"] .bg-neon-blue\/10 { background-color: rgba(0,136,170,0.1) !important; }
+[data-theme="light"] .bg-neon-blue\/15 { background-color: rgba(0,136,170,0.15) !important; }
+[data-theme="light"] .bg-neon-blue\/20 { background-color: rgba(0,136,170,0.2) !important; }
 
 @theme inline {
   --color-neon-blue: #00f0ff;
@@ -31,10 +243,11 @@
    BASE
    ======================================== */
 body {
-  background: var(--color-dark-bg);
-  color: #c8c8e0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html {
@@ -61,6 +274,12 @@ html {
     linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
   background-size: 50px 50px;
+}
+
+[data-theme="light"] .cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 120, 180, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 120, 180, 0.06) 1px, transparent 1px);
 }
 
 /* ========================================
@@ -182,11 +401,12 @@ html {
    GLASSMORPHISM / 홀로그램 카드
    ======================================== */
 .glass-card {
-  background: rgba(8, 8, 24, 0.6);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
   position: relative;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* 그라데이션 보더 글로우 — pseudo element */
@@ -371,6 +591,34 @@ html {
     inset 0 0 8px rgba(0, 240, 255, 0.1);
 }
 
+/* Light mode: reduce neon glow */
+[data-theme="light"] .neon-text-blue {
+  text-shadow: 0 0 4px rgba(0, 180, 200, 0.3);
+}
+[data-theme="light"] .neon-text-purple {
+  text-shadow: 0 0 4px rgba(140, 50, 200, 0.3);
+}
+[data-theme="light"] .neon-border-blue {
+  box-shadow: 0 0 4px rgba(0, 180, 200, 0.2);
+}
+
+/* Light mode: glass card gradient border tone down */
+[data-theme="light"] .glass-card::before {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 180, 200, 0.15),
+    rgba(140, 50, 200, 0.05),
+    transparent 50%,
+    rgba(200, 30, 120, 0.05),
+    rgba(0, 180, 200, 0.1)
+  );
+}
+
+/* Light mode: scrollbar */
+[data-theme="light"]::-webkit-scrollbar-thumb {
+  background: rgba(0, 180, 200, 0.5);
+}
+
 /* ========================================
    ACCENT BAR (섹션 제목 좌측 바)
    ======================================== */
@@ -405,9 +653,9 @@ html {
 .skeleton-line {
   background: linear-gradient(
     90deg,
-    rgba(255,255,255,0.03) 25%,
-    rgba(255,255,255,0.08) 50%,
-    rgba(255,255,255,0.03) 75%
+    var(--skeleton-from) 25%,
+    var(--skeleton-mid) 50%,
+    var(--skeleton-from) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;

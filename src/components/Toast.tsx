@@ -33,7 +33,7 @@ export default function Toast({ message, visible }: ToastProps) {
       <div
         className="flex items-start gap-3 px-4 py-3 rounded-lg border border-neon-green/30"
         style={{
-          background: "rgba(8, 8, 24, 0.95)",
+          background: "var(--modal-bg)",
           backdropFilter: "blur(12px)",
           boxShadow:
             "0 0 20px rgba(57,255,20,0.1), inset 0 0 20px rgba(57,255,20,0.02)",

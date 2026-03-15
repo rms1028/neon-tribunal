@@ -286,7 +286,7 @@ export default function JuryVoteSection({
                 판결 완료
               </span>
             </div>
-            <div className="h-2 rounded-sm overflow-hidden bg-white/5">
+            <div className="h-2 rounded-sm overflow-hidden" style={{ background: "var(--track-bg)" }}>
               <div
                 className="h-full rounded-sm transition-all duration-500"
                 style={{
@@ -311,7 +311,7 @@ export default function JuryVoteSection({
                 {total > 0 ? `${agreePercent}% (${agree}명)` : "0명"}
               </span>
             </div>
-            <div className="h-2 rounded-sm overflow-hidden bg-white/5">
+            <div className="h-2 rounded-sm overflow-hidden" style={{ background: "var(--track-bg)" }}>
               <div
                 className="h-full rounded-sm transition-all duration-700 ease-out"
                 style={{
@@ -336,7 +336,7 @@ export default function JuryVoteSection({
                 {total > 0 ? `${disagreePercent}% (${disagree}명)` : "0명"}
               </span>
             </div>
-            <div className="h-2 rounded-sm overflow-hidden bg-white/5">
+            <div className="h-2 rounded-sm overflow-hidden" style={{ background: "var(--track-bg)" }}>
               <div
                 className="h-full rounded-sm transition-all duration-700 ease-out"
                 style={{

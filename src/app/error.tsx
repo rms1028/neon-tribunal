@@ -50,7 +50,7 @@ export default function ErrorPage({
           <div
             className="font-[family-name:var(--font-orbitron)] text-4xl md:text-5xl font-black uppercase tracking-wider mt-2"
             style={{
-              color: "#ffffff",
+              color: "var(--text-primary)",
               textShadow:
                 "0 0 10px rgba(255,68,68,0.6), 0 0 40px rgba(255,68,68,0.3)",
             }}

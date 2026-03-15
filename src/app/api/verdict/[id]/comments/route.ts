@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { commentReadRateLimit, commentWriteRateLimit } from "@/lib/rate-limit";
 import { sanitizeInput, containsProfanity, PROFANITY_ERROR_MESSAGE } from "@/lib/content-filter";
+import { logger } from "@/lib/logger";
 
 // GET — 댓글 목록 조회
 export async function GET(
@@ -135,7 +136,7 @@ export async function POST(
     .single();
 
   if (error) {
-    console.error("[verdict_comments] INSERT error:", error.message, error.code, error.details);
+    logger.error("Comment insert failed", { verdictId: id, error: error.message, code: error.code });
     return NextResponse.json(
       { error: "댓글 등록에 실패했습니다." },
       { status: 500 }
