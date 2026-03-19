@@ -37,14 +37,24 @@ export async function GET(req: NextRequest) {
   const sort = searchParams.get("sort") === "popular" ? "popular" : "newest";
   const offset = parseInt(searchParams.get("cursor") || "0", 10);
   const judge = searchParams.get("judge");
+  const q = searchParams.get("q")?.trim();
+  const category = searchParams.get("category");
 
   let query = getSupabase()
     .from("verdicts")
-    .select("*")
+    .select("id, judge_id, judge_name, story, verdict, likes, jury_agree, jury_disagree, created_at, image_url, viral_quote, tldr, og_image_url, author_nickname, author_icon, category")
     .range(offset, offset + PAGE_SIZE);
 
   if (judge) {
     query = query.eq("judge_id", judge);
+  }
+
+  if (category) {
+    query = query.eq("category", category);
+  }
+
+  if (q && q.length >= 2) {
+    query = query.textSearch("search_vector", q, { type: "plain" });
   }
 
   if (sort === "popular") {
@@ -112,7 +122,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { judgeId, judgeName, story, verdict, imageUrl, viralQuote, tldr } = body;
+  const { judgeId, judgeName, story, verdict, imageUrl, viralQuote, tldr, category } = body;
 
   if (!judgeId || !judgeName || !story || !verdict) {
     return NextResponse.json(
@@ -172,6 +182,12 @@ export async function POST(req: NextRequest) {
   }
   if (tldr) {
     insertData.tldr = sanitizeInput(String(tldr)).slice(0, 100);
+  }
+  const VALID_CATEGORIES = new Set(["연애", "직장", "가족", "친구", "돈", "학교", "이웃", "기타"]);
+  if (category && VALID_CATEGORIES.has(category)) {
+    insertData.category = category;
+  } else {
+    insertData.category = "기타";
   }
 
   const { data, error } = await getSupabase()

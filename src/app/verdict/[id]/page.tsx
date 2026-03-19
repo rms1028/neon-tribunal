@@ -9,7 +9,7 @@ import CompactVerdictView from "./CompactVerdictView";
 async function getVerdict(id: string): Promise<HallOfFameEntry | null> {
   const { data, error } = await getSupabase()
     .from("verdicts")
-    .select("*")
+    .select("id, judge_id, judge_name, story, verdict, likes, jury_agree, jury_disagree, created_at, image_url, viral_quote, tldr, og_image_url, author_nickname, author_icon, category")
     .eq("id", id)
     .single();
 

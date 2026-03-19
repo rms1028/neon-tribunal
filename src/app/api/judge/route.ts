@@ -145,6 +145,9 @@ export async function POST(req: NextRequest) {
         const viralQuote = viralMatch ? viralMatch[1].trim() : undefined;
         const storyMatch = fullText.match(/\[\[STORY:\s*(.+?)\]\]/);
         const storySummary = storyMatch ? storyMatch[1].trim() : undefined;
+        const categoryMatch = fullText.match(/\[\[CATEGORY:\s*(.+?)\]\]/);
+        const VALID_CATEGORIES = new Set(["연애", "직장", "가족", "친구", "돈", "학교", "이웃", "기타"]);
+        const category = categoryMatch && VALID_CATEGORIES.has(categoryMatch[1].trim()) ? categoryMatch[1].trim() : "기타";
 
         // Upload image to Supabase Storage after streaming completes
         let imageUrl: string | undefined;
@@ -180,6 +183,7 @@ export async function POST(req: NextRequest) {
           viralQuote,
           storySummary,
           tldr,
+          category,
         });
       } catch (err) {
         logger.error("Gemini API error", { judgeId: judge.id, error: err instanceof Error ? err.message : String(err) });

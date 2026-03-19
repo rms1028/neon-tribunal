@@ -149,3 +149,9 @@ export const commentLikeRateLimit = rateLimit("comment-like", {
   maxRequests: 30,
 });
 
+/** /api/hall-of-fame/search-log — 1분당 20회 */
+export const searchLogRateLimit = rateLimit("search-log", {
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+});
+

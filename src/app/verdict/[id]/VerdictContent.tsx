@@ -7,7 +7,7 @@ import type { HallOfFameEntry } from "@/lib/types";
 import ShareCard from "@/components/ShareCard";
 import Toast from "@/components/Toast";
 import JudgeAvatar from "@/components/JudgeAvatar";
-import { toPng } from "html-to-image";
+// html-to-image is lazy-loaded to reduce initial bundle size
 
 const LIKED_KEY = "neon-court-liked-ids";
 
@@ -179,6 +179,7 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
     if (!shareCardRef.current) return;
     setIsSavingShareCard(true);
     try {
+      const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(shareCardRef.current, {
         pixelRatio: 2,
         cacheBust: true,

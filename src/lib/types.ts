@@ -11,6 +11,7 @@ export interface JudgeResponse {
   viralQuote?: string;
   storySummary?: string;
   tldr?: string;
+  category?: string;
 }
 
 export interface JudgeErrorResponse {
@@ -31,6 +32,7 @@ export interface FullCourtJudgeResult {
   viralQuote?: string;
   storySummary?: string;
   tldr?: string;
+  category?: string;
 }
 
 // --- Verdict History ---
@@ -65,6 +67,7 @@ export interface HallOfFameEntry {
   comment_count?: number;
   author_nickname?: string;
   author_icon?: string;
+  category?: string;
 }
 
 export interface HallOfFameSubmitRequest {
@@ -75,6 +78,7 @@ export interface HallOfFameSubmitRequest {
   imageUrl?: string;
   viralQuote?: string;
   tldr?: string;
+  category?: string;
 }
 
 export interface HallOfFameListResponse {

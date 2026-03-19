@@ -16,7 +16,7 @@ const InlineComments = dynamic(() => import("@/components/InlineComments"), {
 const LIKED_KEY = "neon-court-liked-ids";
 const MY_VERDICTS_KEY = "neon-court-my-verdicts";
 const JURY_VOTES_KEY = "neon-court-jury-votes";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 function getLikedIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -112,20 +112,20 @@ function saveBookmarkedIds(ids: Set<string>) {
   localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...ids]));
 }
 
-function SkeletonCard() {
+function SkeletonCard({ delay = 0 }: { delay?: number }) {
   return (
     <div className="feed-card" style={{ animation: "none", opacity: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px 8px" }}>
-        <div className="skeleton-pulse" style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0 }} />
+        <div className="skeleton-shimmer" style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0, animationDelay: `${delay}ms` }} />
         <div style={{ flex: 1 }}>
-          <div className="skeleton-pulse" style={{ width: "60%", height: 14, marginBottom: 6 }} />
-          <div className="skeleton-pulse" style={{ width: "40%", height: 10 }} />
+          <div className="skeleton-shimmer" style={{ width: "60%", height: 14, marginBottom: 6, animationDelay: `${delay + 100}ms` }} />
+          <div className="skeleton-shimmer" style={{ width: "40%", height: 10, animationDelay: `${delay + 200}ms` }} />
         </div>
       </div>
       <div style={{ padding: "0 16px 12px" }}>
-        <div className="skeleton-pulse" style={{ width: "100%", height: 14, marginBottom: 8 }} />
-        <div className="skeleton-pulse" style={{ width: "90%", height: 14, marginBottom: 8 }} />
-        <div className="skeleton-pulse" style={{ width: "70%", height: 14 }} />
+        <div className="skeleton-shimmer" style={{ width: "100%", height: 14, marginBottom: 8, animationDelay: `${delay + 100}ms` }} />
+        <div className="skeleton-shimmer" style={{ width: "90%", height: 14, marginBottom: 8, animationDelay: `${delay + 200}ms` }} />
+        <div className="skeleton-shimmer" style={{ width: "70%", height: 14, animationDelay: `${delay + 300}ms` }} />
       </div>
     </div>
   );
@@ -171,6 +171,13 @@ export default function HallOfFamePage() {
     index: number;
   } | null>(null);
 
+  // Search & Category
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [trendingKeywords, setTrendingKeywords] = useState<string[]>([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   // Pull to refresh
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -179,7 +186,8 @@ export default function HallOfFamePage() {
   const [storyPaused, setStoryPaused] = useState(false);
 
   // Refs
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     setLikedIds(getLikedIds());
@@ -190,13 +198,15 @@ export default function HallOfFamePage() {
   }, []);
 
   const fetchEntries = useCallback(
-    async (sortMode: SortMode, cursorOffset: number, judge: string | null, append = false) => {
+    async (sortMode: SortMode, cursorOffset: number, judge: string | null, append = false, search?: string, cat?: string | null) => {
       if (append) setIsLoadingMore(true);
       else setIsLoading(true);
       setLoadError(false);
       try {
         let url = `/api/hall-of-fame?sort=${sortMode}&cursor=${cursorOffset}`;
         if (judge) url += `&judge=${judge}`;
+        if (search && search.length >= 2) url += `&q=${encodeURIComponent(search)}`;
+        if (cat) url += `&category=${encodeURIComponent(cat)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("API error");
         const data: HallOfFameListResponse = await res.json();
@@ -218,8 +228,56 @@ export default function HallOfFamePage() {
   );
 
   useEffect(() => {
-    fetchEntries(sort, 0, judgeFilter);
-  }, [sort, judgeFilter, fetchEntries]);
+    fetchEntries(sort, 0, judgeFilter, false, debouncedQuery, selectedCategory);
+  }, [sort, judgeFilter, debouncedQuery, selectedCategory, fetchEntries]);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+      if (searchQuery !== debouncedQuery) {
+        setOffset(0);
+        setEntries([]);
+        setFilterKey((k) => k + 1);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
+  // Log search keywords for trending
+  useEffect(() => {
+    if (debouncedQuery.length >= 2) {
+      fetch("/api/hall-of-fame/search-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword: debouncedQuery }),
+      }).catch(() => {});
+    }
+  }, [debouncedQuery]);
+
+  // Fetch trending keywords on mount
+  useEffect(() => {
+    fetch("/api/hall-of-fame/trending")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.trendingKeywords?.length > 0) {
+          setTrendingKeywords(data.trendingKeywords.map((k: { keyword: string }) => k.keyword));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleCategoryChange = (cat: string | null) => {
+    if (cat === selectedCategory) {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(cat);
+    }
+    setOffset(0);
+    setEntries([]);
+    setFilterKey((k) => k + 1);
+  };
 
   const handleSortChange = (newSort: SortMode) => {
     if (newSort === sort) return;
@@ -240,8 +298,22 @@ export default function HallOfFamePage() {
   const handleLoadMore = () => {
     const newOffset = offset + PAGE_SIZE;
     setOffset(newOffset);
-    fetchEntries(sort, newOffset, judgeFilter, true);
+    fetchEntries(sort, newOffset, judgeFilter, true, debouncedQuery, selectedCategory);
   };
+
+  // Keep loadMoreRef always current to avoid stale closures in IntersectionObserver
+  loadMoreRef.current = handleLoadMore;
+
+  // Callback ref for infinite scroll sentinel
+  const sentinelCallback = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    if (!node || !hasMore || isLoading || isLoadingMore) return;
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMoreRef.current(); },
+      { rootMargin: "600px" }
+    );
+    observerRef.current.observe(node);
+  }, [hasMore, isLoading, isLoadingMore]);
 
   const handleDelete = async (id: string) => {
     const token = deleteTokens[id] || "";
@@ -472,21 +544,7 @@ export default function HallOfFamePage() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [storyData]);
 
-  // ── Infinite Scroll ──
-  useEffect(() => {
-    if (!hasMore || isLoading || isLoadingMore) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) handleLoadMore();
-      },
-      { rootMargin: "300px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, isLoading, isLoadingMore]);
+  // IntersectionObserver is now handled via sentinelCallback ref
 
   // ── Pull to Refresh ──
   useEffect(() => {
@@ -516,7 +574,7 @@ export default function HallOfFamePage() {
       if (pullRef.current > 60 && !isRefreshing) {
         setIsRefreshing(true);
         setOffset(0);
-        fetchEntries(sort, 0, judgeFilter).then(() => setIsRefreshing(false));
+        fetchEntries(sort, 0, judgeFilter, false, debouncedQuery, selectedCategory).then(() => setIsRefreshing(false));
       }
       setPullDistance(0);
       pulling = false;
@@ -623,6 +681,96 @@ export default function HallOfFamePage() {
           </div>
         </div>
 
+        {/* ===== SEARCH BAR ===== */}
+        <div style={{ padding: "10px 12px 4px" }}>
+          <div
+            className="search-bar-container"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: "var(--glass-bg)", border: isSearchFocused ? "1px solid rgba(0,229,255,0.4)" : "1px solid var(--glass-border)",
+              borderRadius: 12, padding: "8px 14px",
+              transition: "border-color 0.2s, box-shadow 0.2s",
+              boxShadow: isSearchFocused ? "0 0 12px rgba(0,229,255,0.15)" : "none",
+            }}
+          >
+            <span style={{ fontSize: 15, opacity: 0.5 }}>🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              placeholder="사연이나 판결을 검색하세요..."
+              style={{
+                flex: 1, background: "transparent", border: "none", outline: "none",
+                color: "var(--text-primary)", fontFamily: "var(--font-share-tech)", fontSize: 13,
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(""); setDebouncedQuery(""); }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 14, padding: "2px 4px" }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Trending Keywords */}
+          {trendingKeywords.length > 0 && !searchQuery && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, paddingLeft: 2 }}>
+              <span style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-share-tech)", letterSpacing: "0.05em", alignSelf: "center" }}>
+                인기
+              </span>
+              {trendingKeywords.slice(0, 5).map((kw) => (
+                <button
+                  key={kw}
+                  onClick={() => { setSearchQuery(kw); }}
+                  style={{
+                    padding: "3px 10px", borderRadius: 16,
+                    border: "1px solid rgba(255,45,149,0.25)", background: "rgba(255,45,149,0.06)",
+                    color: "#ff2d95", fontSize: 11, fontWeight: 600,
+                    fontFamily: "var(--font-share-tech)", cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {kw}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ===== CATEGORY CHIPS ===== */}
+        <div className="feed-tabs-scroll scrollbar-hide" style={{ padding: "6px 12px" }}>
+          {[
+            { id: "연애", emoji: "💕" },
+            { id: "직장", emoji: "💼" },
+            { id: "가족", emoji: "👨‍👩‍👧" },
+            { id: "친구", emoji: "🤝" },
+            { id: "돈", emoji: "💰" },
+            { id: "학교", emoji: "🎓" },
+            { id: "이웃", emoji: "🏘️" },
+            { id: "기타", emoji: "📌" },
+          ].map((cat) => {
+            const isActive = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                className="feed-tab"
+                style={isActive ? {
+                  borderColor: "rgba(180,74,255,0.4)",
+                  color: "#b44aff",
+                  background: "rgba(180,74,255,0.08)",
+                } : {}}
+              >
+                {cat.emoji} {cat.id}
+              </button>
+            );
+          })}
+        </div>
+
         {/* ===== SORT BAR ===== */}
         <div className="feed-sort">
           {(["newest", "popular"] as SortMode[]).map((s) => {
@@ -709,35 +857,58 @@ export default function HallOfFamePage() {
         {/* ===== EMPTY ===== */}
         {!isLoading && entries.length === 0 && (
           <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }}>⚖️</div>
+            <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 16 }}>
+              {debouncedQuery || selectedCategory ? "🔍" : "⚖️"}
+            </div>
             <p style={{ fontFamily: "var(--font-share-tech)", fontSize: 13, color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}>
-              {judgeFilter
-                ? "해당 판사의 재판이 아직 없어요"
-                : "아직 등록된 판결이 없습니다"}
+              {debouncedQuery
+                ? `"${debouncedQuery}" 검색 결과가 없습니다`
+                : selectedCategory
+                  ? `"${selectedCategory}" 카테고리에 판결이 없습니다`
+                  : judgeFilter
+                    ? "해당 판사의 재판이 아직 없어요"
+                    : "아직 등록된 판결이 없습니다"}
             </p>
             <p style={{ fontFamily: "var(--font-share-tech)", fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>
-              {judgeFilter
-                ? "다른 판사를 선택하거나 새 재판을 열어보세요!"
-                : "판결을 받고 국민 배심원을 소집해보세요!"}
+              {debouncedQuery || selectedCategory
+                ? "다른 키워드나 카테고리로 검색해보세요!"
+                : judgeFilter
+                  ? "다른 판사를 선택하거나 새 재판을 열어보세요!"
+                  : "판결을 받고 국민 배심원을 소집해보세요!"}
             </p>
-            <button
-              onClick={() => { setOffset(0); fetchEntries(sort, 0, judgeFilter); }}
-              style={{
-                marginTop: 16, padding: "8px 20px", borderRadius: 20,
-                border: "1px solid rgba(0,229,255,0.3)", background: "rgba(0,229,255,0.06)",
-                color: "#00E5FF", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                fontFamily: "var(--font-share-tech)", letterSpacing: "0.1em",
-              }}
-            >
-              ↻ 다시 시도
-            </button>
+            {(debouncedQuery || selectedCategory) && (
+              <button
+                onClick={() => { setSearchQuery(""); setDebouncedQuery(""); setSelectedCategory(null); }}
+                style={{
+                  marginTop: 16, padding: "8px 20px", borderRadius: 20,
+                  border: "1px solid rgba(180,74,255,0.3)", background: "rgba(180,74,255,0.06)",
+                  color: "#b44aff", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "var(--font-share-tech)", letterSpacing: "0.1em",
+                }}
+              >
+                ✕ 필터 초기화
+              </button>
+            )}
+            {!debouncedQuery && !selectedCategory && (
+              <button
+                onClick={() => { setOffset(0); fetchEntries(sort, 0, judgeFilter); }}
+                style={{
+                  marginTop: 16, padding: "8px 20px", borderRadius: 20,
+                  border: "1px solid rgba(0,229,255,0.3)", background: "rgba(0,229,255,0.06)",
+                  color: "#00E5FF", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "var(--font-share-tech)", letterSpacing: "0.1em",
+                }}
+              >
+                ↻ 다시 시도
+              </button>
+            )}
           </div>
         )}
 
         {/* ===== FEED ===== */}
         {!isLoading && entries.length > 0 && (
           <div key={filterKey} style={{ display: "flex", flexDirection: "column" }}>
-            {entries.map((entry) => {
+            {entries.map((entry, _idx) => {
               const judge = getJudgeData(entry.judge_id);
               const isLiked = likedIds.has(entry.id);
               const accentColor = judge?.accentColor || "#00f0ff";
@@ -758,6 +929,7 @@ export default function HallOfFamePage() {
                 <article
                   key={entry.id}
                   className={`feed-card ${isVoteGlow && voteAnimType === "agree" ? "vote-glow-green" : ""} ${isVoteGlow && voteAnimType === "disagree" ? "vote-glow-pink" : ""}`}
+                  style={{ animationDelay: `${(_idx % PAGE_SIZE) * 40}ms` }}
                 >
                   {/* ── Card Header ── */}
                   <div className="feed-card-header">
@@ -773,6 +945,16 @@ export default function HallOfFamePage() {
                             {" "}{entry.judge_name}
                           </span>
                           <span className="feed-time">{timeAgo(entry.created_at)}</span>
+                          {entry.category && entry.category !== "기타" && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 8,
+                              background: "rgba(180,74,255,0.1)", color: "#b44aff",
+                              border: "1px solid rgba(180,74,255,0.2)",
+                              fontFamily: "var(--font-share-tech)", letterSpacing: "0.3px",
+                            }}>
+                              {entry.category}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1009,12 +1191,13 @@ export default function HallOfFamePage() {
 
         {/* ===== INFINITE SCROLL SENTINEL ===== */}
         {hasMore && !isLoading && (
-          <div ref={sentinelRef}>
+          <div ref={sentinelCallback}>
             {isLoadingMore && (
               <>
-                <SkeletonCard />
-                <SkeletonCard />
-                <SkeletonCard />
+                <SkeletonCard delay={0} />
+                <SkeletonCard delay={100} />
+                <SkeletonCard delay={200} />
+                <SkeletonCard delay={300} />
               </>
             )}
           </div>

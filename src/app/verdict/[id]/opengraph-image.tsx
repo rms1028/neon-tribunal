@@ -51,7 +51,7 @@ export default async function OgImage({
       fetch(`${baseUrl}/fonts/NotoSansKR-Bold.woff`).then((r) => r.arrayBuffer()),
       fetch(`${baseUrl}/fonts/Orbitron-Bold.ttf`).then((r) => r.arrayBuffer()),
       fetch(`${baseUrl}/fonts/ShareTechMono-Regular.ttf`).then((r) => r.arrayBuffer()),
-      getSupabase().from("verdicts").select("*").eq("id", id).single(),
+      getSupabase().from("verdicts").select("judge_id, judge_name, story, verdict, likes, og_image_url").eq("id", id).single(),
     ]);
   } catch {
     return fallbackImage("NEON COURT");
