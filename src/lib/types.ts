@@ -90,6 +90,9 @@ export interface HallOfFameLikeResponse {
   likes: number;
 }
 
+export type SortMode = "newest" | "popular";
+export type VoteType = "agree" | "disagree";
+
 // --- Verdict Comments ---
 
 export interface VerdictComment {

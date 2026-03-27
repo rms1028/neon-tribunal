@@ -3,6 +3,7 @@
 import React from "react";
 import type { JudgeResponse } from "@/lib/types";
 import JudgeAvatar from "@/components/JudgeAvatar";
+import EvidenceImage from "@/components/EvidenceImage";
 import { stripMetaTags } from "@/lib/verdict-utils";
 
 interface JudgeData {
@@ -86,10 +87,10 @@ export default function SingleVerdictSection({
             <p className="font-[family-name:var(--font-share-tech)] text-[9px] text-gray-600 tracking-widest uppercase mb-2">
               EVIDENCE_FILE
             </p>
-            <img
+            <EvidenceImage
               src={verdict.imageUrl}
-              alt="증거 사진"
-              className="max-w-full max-h-[300px] object-contain border border-dark-border"
+              maxHeight={300}
+              className="border border-dark-border"
               style={{ clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))" }}
             />
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
+import Image from "next/image";
 
 interface ShareCardProps {
   viralQuote: string;
@@ -89,10 +90,12 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               {/* Fire aura */}
               <div style={{ position: "absolute", top: "50%", left: "50%", width: 64, height: 64, marginTop: -32, marginLeft: -32, borderRadius: "50%", filter: "blur(14px)", opacity: 0.55, background: `radial-gradient(circle, rgba(${glowRgb},0.9), rgba(255,80,20,0.5), transparent 70%)` }} />
               {judgeAvatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={judgeAvatarUrl}
                   alt={judgeName}
+                  width={44}
+                  height={44}
+                  unoptimized
                   style={{
                     position: "relative",
                     width: 44,

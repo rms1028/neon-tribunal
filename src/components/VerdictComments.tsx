@@ -2,59 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { VerdictComment } from "@/lib/types";
+import { timeAgo } from "@/lib/format-utils";
+import { getOrCreateCommentAuthor, getLikedCommentIds, saveLikedCommentIds } from "@/lib/comment-utils";
 
 const PAGE_SIZE = 20;
 const MAX_CHARS = 200;
-const LIKED_COMMENTS_KEY = "neon-court-liked-comment-ids";
-const COMMENT_AUTHORS_KEY = "neon-court-comment-authors";
-
-const COMMENT_MODIFIERS = ["재판관", "시민", "배심원", "방청객", "목격자", "변호인", "증인"];
-const COMMENT_ICONS = ["😎", "🦊", "🐱", "🎭", "🌙", "⚡", "🔥", "🎪", "🎯", "🎲"];
-
-function getOrCreateCommentAuthor(verdictId: string): { nickname: string; icon: string } {
-  if (typeof window === "undefined") return { nickname: "익명의 시민", icon: "😎" };
-  try {
-    const raw = localStorage.getItem(COMMENT_AUTHORS_KEY);
-    const authors: Record<string, { nickname: string; icon: string }> = raw ? JSON.parse(raw) : {};
-    if (authors[verdictId]) return authors[verdictId];
-
-    const mod = COMMENT_MODIFIERS[Math.floor(Math.random() * COMMENT_MODIFIERS.length)];
-    const num = String(Math.floor(1000 + Math.random() * 9000));
-    const icon = COMMENT_ICONS[Math.floor(Math.random() * COMMENT_ICONS.length)];
-    const newAuthor = { nickname: `익명의 ${mod} #${num}`, icon };
-    authors[verdictId] = newAuthor;
-    localStorage.setItem(COMMENT_AUTHORS_KEY, JSON.stringify(authors));
-    return newAuthor;
-  } catch {
-    return { nickname: "익명의 시민", icon: "😎" };
-  }
-}
-
-function getLikedCommentIds(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = localStorage.getItem(LIKED_COMMENTS_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function saveLikedCommentIds(ids: Set<string>) {
-  localStorage.setItem(LIKED_COMMENTS_KEY, JSON.stringify([...ids]));
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "방금 전";
-  if (minutes < 60) return `${minutes}분 전`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}시간 전`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}일 전`;
-  return new Date(dateStr).toLocaleDateString("ko-KR");
-}
 
 interface VerdictCommentsProps {
   verdictId: string;

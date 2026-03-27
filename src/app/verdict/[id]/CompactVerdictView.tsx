@@ -7,6 +7,7 @@ import type { HallOfFameEntry } from "@/lib/types";
 import JudgeAvatar from "@/components/JudgeAvatar";
 import JuryVoteSection from "@/components/JuryVoteSection";
 import VerdictComments from "@/components/VerdictComments";
+import EvidenceImage from "@/components/EvidenceImage";
 import Toast from "@/components/Toast";
 
 const LIKED_KEY = "neon-court-liked-ids";
@@ -217,13 +218,10 @@ export default function CompactVerdictView({
         {/* Evidence image */}
         {entry.image_url && (
           <div style={{ marginBottom: 20 }}>
-            <img
+            <EvidenceImage
               src={entry.image_url}
-              alt="증거 사진"
+              maxHeight={300}
               style={{
-                width: "100%",
-                maxHeight: "300px",
-                objectFit: "contain",
                 borderRadius: 16,
                 border: "1px solid #1a1a2e",
               }}

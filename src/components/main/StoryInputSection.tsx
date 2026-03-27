@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import EvidenceImage from "@/components/EvidenceImage";
 
 interface StoryInputSectionProps {
   story: string;
@@ -85,11 +86,12 @@ export default function StoryInputSection({
         ) : (
           <div className="relative border border-neon-blue/30 bg-black/30 p-2">
             <div className="flex items-center gap-3">
-              <img
+              <EvidenceImage
                 src={imagePreview}
                 alt="증거 사진 미리보기"
-                className="w-16 h-16 object-cover border border-dark-border"
-                style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
+                maxHeight={64}
+                className="w-16 h-16 border border-dark-border"
+                style={{ objectFit: "cover", clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
               />
               <div className="flex-1">
                 <p className="font-[family-name:var(--font-share-tech)] text-[10px] text-neon-blue tracking-widest uppercase">

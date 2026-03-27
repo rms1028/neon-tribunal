@@ -7,6 +7,7 @@ import type { HallOfFameEntry } from "@/lib/types";
 import ShareCard from "@/components/ShareCard";
 import Toast from "@/components/Toast";
 import JudgeAvatar from "@/components/JudgeAvatar";
+import EvidenceImage from "@/components/EvidenceImage";
 // html-to-image is lazy-loaded to reduce initial bundle size
 
 const LIKED_KEY = "neon-court-liked-ids";
@@ -458,10 +459,10 @@ export default function VerdictContent({ entry }: { entry: HallOfFameEntry }) {
                     </span>
                     <div className="flex-1 h-px bg-white/5" />
                   </div>
-                  <img
+                  <EvidenceImage
                     src={entry.image_url}
-                    alt="증거 사진"
-                    className="max-h-[250px] w-full object-contain border border-dark-border"
+                    maxHeight={250}
+                    className="border border-dark-border"
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
                     }}
